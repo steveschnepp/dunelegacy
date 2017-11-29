@@ -27,10 +27,10 @@
 static Uint32 Seed;
 
 // a point that has 2 coordinates
-typedef struct  {
+typedef struct {
     Uint16 x;
     Uint16 y;
-} Point;
+} LocalPoint;
 
 // some values
 const Uint8 BoolArray[] = {0,1,0,0,1,1,1,1,0,0,1,1,1,1,0,0,0,0,1,0,0};
@@ -228,7 +228,7 @@ void createMapWithSeed(Uint32 Para_Seed,Uint16 *pResultMap)
 {
     Uint8 Array4x4TerrainGrid[16*16+16+1];
     Uint32 MapArray[65*65];
-    Point point;
+    LocalPoint point;
     Uint16 randNum;
     Uint16 randNum2;
     Uint16 randNum3;
