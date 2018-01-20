@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <mutex>
 
 FileManager::FileManager() {
     SDL_Log("\nFileManager is loading PAK-Files...");
@@ -65,15 +66,18 @@ FileManager::FileManager() {
 
 FileManager::~FileManager() = default;
 
-std::vector<std::string> FileManager::getSearchPath() {
-    std::vector<std::string> searchPath;
+const std::vector<std::string>& FileManager::getSearchPath() {
+    static std::vector<std::string> search_path;
+    static std::once_flag flag;
 
-    searchPath.push_back(getDuneLegacyDataDir());
-    char tmp[FILENAME_MAX];
-    fnkdat("data", tmp, FILENAME_MAX, FNKDAT_USER | FNKDAT_CREAT);
-    searchPath.push_back(tmp);
+    std::call_once(flag, [] {
+        search_path.push_back(getDuneLegacyDataDir());
+        char tmp[FILENAME_MAX];
+        fnkdat("data", tmp, FILENAME_MAX, FNKDAT_USER | FNKDAT_CREAT);
+        search_path.emplace_back(tmp);
+        });
 
-    return searchPath;
+    return search_path;
 }
 
 std::vector<std::string> FileManager::getNeededFiles() {
@@ -110,11 +114,12 @@ std::vector<std::string> FileManager::getMissingFiles() {
     std::vector<std::string> MissingFiles;
     std::vector<std::string> searchPath = getSearchPath();
 
-    for(const std::string& fileName : getNeededFiles()) {
-        bool bFound = false;
-        for(const std::string& searchPath : getSearchPath()) {
-            std::string filepath = searchPath + "/" + fileName;
-            if(getCaseInsensitiveFilename(filepath) == true) {
+    for(const auto& fileName : getNeededFiles()) {
+        auto bFound = false;
+        for(const auto& sp : searchPath) {
+            auto filepath = sp + "/";
+            filepath += fileName;
+            if(getCaseInsensitiveFilename(filepath)) {
                 bFound = true;
                 break;
             }
