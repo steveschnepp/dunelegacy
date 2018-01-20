@@ -1,0 +1,4 @@
+[submodule "IDE/VC/vcpkg"]
+	path = IDE/VC/vcpkg
+	url = https://github.com/henricj/vcpkg-ltcg.git
+	branch = ltcg
