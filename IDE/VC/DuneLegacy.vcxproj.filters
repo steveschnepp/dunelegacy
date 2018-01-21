@@ -939,6 +939,15 @@
     <ClInclude Include="stdafx.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\misc\RngSupport.h">
+      <Filter>include\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\misc\random_xoroshiro128plus.h">
+      <Filter>include\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\misc\random_xorshift1024star.h">
+      <Filter>include\misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\AStarSearch.cpp">
@@ -1555,6 +1564,9 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\RngSupport.cpp">
+      <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\misc\Random.cpp">
       <Filter>src\misc</Filter>
