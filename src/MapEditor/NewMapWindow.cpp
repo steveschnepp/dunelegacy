@@ -35,6 +35,7 @@
 #include <FileClasses/GFXManager.h>
 #include <FileClasses/TextManager.h>
 
+#include <random>
 NewMapWindow::NewMapWindow(HOUSETYPE currentHouse) : Window(0,0,0,0), house(currentHouse), mapSeed(INVALID) {
 
     color = SDL2RGB(palette[houseToPaletteIndex[house]+3]);
@@ -115,11 +116,15 @@ NewMapWindow::NewMapWindow(HOUSETYPE currentHouse) : Window(0,0,0,0), house(curr
     basicMapPropertiesVBox.addWidget(VSpacer::create(4));
     basicMapPropertiesVBox.addWidget(&rngHBox);
 
+    std::random_device rd;
+    std::uniform_int_distribution<> uniform{ 0, 32767 };
+
     rngSeedLabel.setText(_("Random Seed:"));
     rngSeedLabel.setTextColor(color);
     rngHBox.addWidget(&rngSeedLabel);
     rngSeedTextBox.setMinMax(0, 32767);
-    rngSeedTextBox.setValue(rand() % 32768);
+
+    rngSeedTextBox.setValue(uniform(rd));
     rngSeedTextBox.setColor(house, color);
     rngSeedTextBox.setOnValueChange(std::bind(&NewMapWindow::onMapPropertiesChanged,this));
     rngHBox.addWidget(&rngSeedTextBox,80);

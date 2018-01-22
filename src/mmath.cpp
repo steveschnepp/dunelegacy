@@ -23,13 +23,14 @@
 #include <algorithm>
 #include <limits>
 
+#include "misc/RngSupport.h"
+
 extern int currentZoomlevel;
 
 
 int getRandomInt(int min, int max)
 {
-    max++;
-    return ((rand() % (max-min)) + min);
+    return RandomUniformInt(min, max);
 }
 
 
