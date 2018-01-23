@@ -28,12 +28,16 @@
 
 #include <list>
 #include <vector>
+#include <algorithm>
 
+#ifdef __cpp_coroutines
+#include "misc/generator.h"
+#endif 
 
 #define DAMAGE_PER_TILE 5
 
 
-// forward declarations
+ // forward declarations
 class House;
 class ObjectBase;
 class UnitBase;
@@ -66,31 +70,31 @@ typedef struct
 } DEADUNITTYPE;
 
 enum destroyedStructureEnum {
-    DestroyedStructure_None             = -1,
-    DestroyedStructure_Wall             = 0,
-    Destroyed1x1Structure               = 1,
+    DestroyedStructure_None = -1,
+    DestroyedStructure_Wall = 0,
+    Destroyed1x1Structure = 1,
 
-    Destroyed3x3Structure_TopLeft       = 2,
-    Destroyed3x3Structure_TopCenter     = 3,
-    Destroyed3x3Structure_TopRight      = 4,
-    Destroyed3x3Structure_CenterLeft    = 5,
-    Destroyed3x3Structure_CenterCenter  = 6,
-    Destroyed3x3Structure_CenterRight   = 7,
-    Destroyed3x3Structure_BottomLeft    = 8,
-    Destroyed3x3Structure_BottomCenter  = 9,
-    Destroyed3x3Structure_BottomRight   = 10,
+    Destroyed3x3Structure_TopLeft = 2,
+    Destroyed3x3Structure_TopCenter = 3,
+    Destroyed3x3Structure_TopRight = 4,
+    Destroyed3x3Structure_CenterLeft = 5,
+    Destroyed3x3Structure_CenterCenter = 6,
+    Destroyed3x3Structure_CenterRight = 7,
+    Destroyed3x3Structure_BottomLeft = 8,
+    Destroyed3x3Structure_BottomCenter = 9,
+    Destroyed3x3Structure_BottomRight = 10,
 
-    Destroyed3x2Structure_TopLeft       = 5,
-    Destroyed3x2Structure_TopCenter     = 6,
-    Destroyed3x2Structure_TopRight      = 7,
-    Destroyed3x2Structure_BottomLeft    = 8,
-    Destroyed3x2Structure_BottomCenter  = 9,
-    Destroyed3x2Structure_BottomRight   = 10,
+    Destroyed3x2Structure_TopLeft = 5,
+    Destroyed3x2Structure_TopCenter = 6,
+    Destroyed3x2Structure_TopRight = 7,
+    Destroyed3x2Structure_BottomLeft = 8,
+    Destroyed3x2Structure_BottomCenter = 9,
+    Destroyed3x2Structure_BottomRight = 10,
 
-    Destroyed2x2Structure_TopLeft       = 1,
-    Destroyed2x2Structure_TopRight      = 11,
-    Destroyed2x2Structure_BottomLeft    = 12,
-    Destroyed2x2Structure_BottomRight   = 13
+    Destroyed2x2Structure_TopLeft = 1,
+    Destroyed2x2Structure_TopRight = 11,
+    Destroyed2x2Structure_BottomLeft = 12,
+    Destroyed2x2Structure_BottomRight = 13
 };
 
 
@@ -116,104 +120,104 @@ public:
     } ROCKDAMAGETYPE;
 
     typedef enum {
-        TerrainTile_SlabHalfDestroyed   = 0x00,
-        TerrainTile_SlabDestroyed       = 0x01,
-        TerrainTile_Slab                = 0x02,
+        TerrainTile_SlabHalfDestroyed = 0x00,
+        TerrainTile_SlabDestroyed = 0x01,
+        TerrainTile_Slab = 0x02,
 
-        TerrainTile_Sand                = 0x03,
+        TerrainTile_Sand = 0x03,
 
-        TerrainTile_Rock                = 0x04,
-        TerrainTile_RockIsland          = TerrainTile_Rock + 0x00,
-        TerrainTile_RockUp              = TerrainTile_Rock + 0x01,
-        TerrainTile_RockRight           = TerrainTile_Rock + 0x02,
-        TerrainTile_RockUpRight         = TerrainTile_Rock + 0x03,
-        TerrainTile_RockDown            = TerrainTile_Rock + 0x04,
-        TerrainTile_RockUpDown          = TerrainTile_Rock + 0x05,
-        TerrainTile_RockDownRight       = TerrainTile_Rock + 0x06,
-        TerrainTile_RockNotLeft         = TerrainTile_Rock + 0x07,
-        TerrainTile_RockLeft            = TerrainTile_Rock + 0x08,
-        TerrainTile_RockUpLeft          = TerrainTile_Rock + 0x09,
-        TerrainTile_RockLeftRight       = TerrainTile_Rock + 0x0A,
-        TerrainTile_RockNotDown         = TerrainTile_Rock + 0x0B,
-        TerrainTile_RockDownLeft        = TerrainTile_Rock + 0x0C,
-        TerrainTile_RockNotRight        = TerrainTile_Rock + 0x0D,
-        TerrainTile_RockNotUp           = TerrainTile_Rock + 0x0E,
-        TerrainTile_RockFull            = TerrainTile_Rock + 0x0F,
+        TerrainTile_Rock = 0x04,
+        TerrainTile_RockIsland = TerrainTile_Rock + 0x00,
+        TerrainTile_RockUp = TerrainTile_Rock + 0x01,
+        TerrainTile_RockRight = TerrainTile_Rock + 0x02,
+        TerrainTile_RockUpRight = TerrainTile_Rock + 0x03,
+        TerrainTile_RockDown = TerrainTile_Rock + 0x04,
+        TerrainTile_RockUpDown = TerrainTile_Rock + 0x05,
+        TerrainTile_RockDownRight = TerrainTile_Rock + 0x06,
+        TerrainTile_RockNotLeft = TerrainTile_Rock + 0x07,
+        TerrainTile_RockLeft = TerrainTile_Rock + 0x08,
+        TerrainTile_RockUpLeft = TerrainTile_Rock + 0x09,
+        TerrainTile_RockLeftRight = TerrainTile_Rock + 0x0A,
+        TerrainTile_RockNotDown = TerrainTile_Rock + 0x0B,
+        TerrainTile_RockDownLeft = TerrainTile_Rock + 0x0C,
+        TerrainTile_RockNotRight = TerrainTile_Rock + 0x0D,
+        TerrainTile_RockNotUp = TerrainTile_Rock + 0x0E,
+        TerrainTile_RockFull = TerrainTile_Rock + 0x0F,
 
-        TerrainTile_Dunes               = 0x14,
-        TerrainTile_DunesIsland         = TerrainTile_Dunes + 0x00,
-        TerrainTile_DunesUp             = TerrainTile_Dunes + 0x01,
-        TerrainTile_DunesRight          = TerrainTile_Dunes + 0x02,
-        TerrainTile_DunesUpRight        = TerrainTile_Dunes + 0x03,
-        TerrainTile_DunesDown           = TerrainTile_Dunes + 0x04,
-        TerrainTile_DunesUpDown         = TerrainTile_Dunes + 0x05,
-        TerrainTile_DunesDownRight      = TerrainTile_Dunes + 0x06,
-        TerrainTile_DunesNotLeft        = TerrainTile_Dunes + 0x07,
-        TerrainTile_DunesLeft           = TerrainTile_Dunes + 0x08,
-        TerrainTile_DunesUpLeft         = TerrainTile_Dunes + 0x09,
-        TerrainTile_DunesLeftRight      = TerrainTile_Dunes + 0x0A,
-        TerrainTile_DunesNotDown        = TerrainTile_Dunes + 0x0B,
-        TerrainTile_DunesDownLeft       = TerrainTile_Dunes + 0x0C,
-        TerrainTile_DunesNotRight       = TerrainTile_Dunes + 0x0D,
-        TerrainTile_DunesNotUp          = TerrainTile_Dunes + 0x0E,
-        TerrainTile_DunesFull           = TerrainTile_Dunes + 0x0F,
+        TerrainTile_Dunes = 0x14,
+        TerrainTile_DunesIsland = TerrainTile_Dunes + 0x00,
+        TerrainTile_DunesUp = TerrainTile_Dunes + 0x01,
+        TerrainTile_DunesRight = TerrainTile_Dunes + 0x02,
+        TerrainTile_DunesUpRight = TerrainTile_Dunes + 0x03,
+        TerrainTile_DunesDown = TerrainTile_Dunes + 0x04,
+        TerrainTile_DunesUpDown = TerrainTile_Dunes + 0x05,
+        TerrainTile_DunesDownRight = TerrainTile_Dunes + 0x06,
+        TerrainTile_DunesNotLeft = TerrainTile_Dunes + 0x07,
+        TerrainTile_DunesLeft = TerrainTile_Dunes + 0x08,
+        TerrainTile_DunesUpLeft = TerrainTile_Dunes + 0x09,
+        TerrainTile_DunesLeftRight = TerrainTile_Dunes + 0x0A,
+        TerrainTile_DunesNotDown = TerrainTile_Dunes + 0x0B,
+        TerrainTile_DunesDownLeft = TerrainTile_Dunes + 0x0C,
+        TerrainTile_DunesNotRight = TerrainTile_Dunes + 0x0D,
+        TerrainTile_DunesNotUp = TerrainTile_Dunes + 0x0E,
+        TerrainTile_DunesFull = TerrainTile_Dunes + 0x0F,
 
-        TerrainTile_Mountain            = 0x24,
-        TerrainTile_MountainIsland      = TerrainTile_Mountain + 0x00,
-        TerrainTile_MountainUp          = TerrainTile_Mountain + 0x01,
-        TerrainTile_MountainRight       = TerrainTile_Mountain + 0x02,
-        TerrainTile_MountainUpRight     = TerrainTile_Mountain + 0x03,
-        TerrainTile_MountainDown        = TerrainTile_Mountain + 0x04,
-        TerrainTile_MountainUpDown      = TerrainTile_Mountain + 0x05,
-        TerrainTile_MountainDownRight   = TerrainTile_Mountain + 0x06,
-        TerrainTile_MountainNotLeft     = TerrainTile_Mountain + 0x07,
-        TerrainTile_MountainLeft        = TerrainTile_Mountain + 0x08,
-        TerrainTile_MountainUpLeft      = TerrainTile_Mountain + 0x09,
-        TerrainTile_MountainLeftRight   = TerrainTile_Mountain + 0x0A,
-        TerrainTile_MountainNotDown     = TerrainTile_Mountain + 0x0B,
-        TerrainTile_MountainDownLeft    = TerrainTile_Mountain + 0x0C,
-        TerrainTile_MountainNotRight    = TerrainTile_Mountain + 0x0D,
-        TerrainTile_MountainNotUp       = TerrainTile_Mountain + 0x0E,
-        TerrainTile_MountainFull        = TerrainTile_Mountain + 0x0F,
+        TerrainTile_Mountain = 0x24,
+        TerrainTile_MountainIsland = TerrainTile_Mountain + 0x00,
+        TerrainTile_MountainUp = TerrainTile_Mountain + 0x01,
+        TerrainTile_MountainRight = TerrainTile_Mountain + 0x02,
+        TerrainTile_MountainUpRight = TerrainTile_Mountain + 0x03,
+        TerrainTile_MountainDown = TerrainTile_Mountain + 0x04,
+        TerrainTile_MountainUpDown = TerrainTile_Mountain + 0x05,
+        TerrainTile_MountainDownRight = TerrainTile_Mountain + 0x06,
+        TerrainTile_MountainNotLeft = TerrainTile_Mountain + 0x07,
+        TerrainTile_MountainLeft = TerrainTile_Mountain + 0x08,
+        TerrainTile_MountainUpLeft = TerrainTile_Mountain + 0x09,
+        TerrainTile_MountainLeftRight = TerrainTile_Mountain + 0x0A,
+        TerrainTile_MountainNotDown = TerrainTile_Mountain + 0x0B,
+        TerrainTile_MountainDownLeft = TerrainTile_Mountain + 0x0C,
+        TerrainTile_MountainNotRight = TerrainTile_Mountain + 0x0D,
+        TerrainTile_MountainNotUp = TerrainTile_Mountain + 0x0E,
+        TerrainTile_MountainFull = TerrainTile_Mountain + 0x0F,
 
-        TerrainTile_Spice               = 0x34,
-        TerrainTile_SpiceIsland         = TerrainTile_Spice + 0x00,
-        TerrainTile_SpiceUp             = TerrainTile_Spice + 0x01,
-        TerrainTile_SpiceRight          = TerrainTile_Spice + 0x02,
-        TerrainTile_SpiceUpRight        = TerrainTile_Spice + 0x03,
-        TerrainTile_SpiceDown           = TerrainTile_Spice + 0x04,
-        TerrainTile_SpiceUpDown         = TerrainTile_Spice + 0x05,
-        TerrainTile_SpiceDownRight      = TerrainTile_Spice + 0x06,
-        TerrainTile_SpiceNotLeft        = TerrainTile_Spice + 0x07,
-        TerrainTile_SpiceLeft           = TerrainTile_Spice + 0x08,
-        TerrainTile_SpiceUpLeft         = TerrainTile_Spice + 0x09,
-        TerrainTile_SpiceLeftRight      = TerrainTile_Spice + 0x0A,
-        TerrainTile_SpiceNotDown        = TerrainTile_Spice + 0x0B,
-        TerrainTile_SpiceDownLeft       = TerrainTile_Spice + 0x0C,
-        TerrainTile_SpiceNotRight       = TerrainTile_Spice + 0x0D,
-        TerrainTile_SpiceNotUp          = TerrainTile_Spice + 0x0E,
-        TerrainTile_SpiceFull           = TerrainTile_Spice + 0x0F,
+        TerrainTile_Spice = 0x34,
+        TerrainTile_SpiceIsland = TerrainTile_Spice + 0x00,
+        TerrainTile_SpiceUp = TerrainTile_Spice + 0x01,
+        TerrainTile_SpiceRight = TerrainTile_Spice + 0x02,
+        TerrainTile_SpiceUpRight = TerrainTile_Spice + 0x03,
+        TerrainTile_SpiceDown = TerrainTile_Spice + 0x04,
+        TerrainTile_SpiceUpDown = TerrainTile_Spice + 0x05,
+        TerrainTile_SpiceDownRight = TerrainTile_Spice + 0x06,
+        TerrainTile_SpiceNotLeft = TerrainTile_Spice + 0x07,
+        TerrainTile_SpiceLeft = TerrainTile_Spice + 0x08,
+        TerrainTile_SpiceUpLeft = TerrainTile_Spice + 0x09,
+        TerrainTile_SpiceLeftRight = TerrainTile_Spice + 0x0A,
+        TerrainTile_SpiceNotDown = TerrainTile_Spice + 0x0B,
+        TerrainTile_SpiceDownLeft = TerrainTile_Spice + 0x0C,
+        TerrainTile_SpiceNotRight = TerrainTile_Spice + 0x0D,
+        TerrainTile_SpiceNotUp = TerrainTile_Spice + 0x0E,
+        TerrainTile_SpiceFull = TerrainTile_Spice + 0x0F,
 
-        TerrainTile_ThickSpice          = 0x44,
-        TerrainTile_ThickSpiceIsland    = TerrainTile_ThickSpice + 0x00,
-        TerrainTile_ThickSpiceUp        = TerrainTile_ThickSpice + 0x01,
-        TerrainTile_ThickSpiceRight     = TerrainTile_ThickSpice + 0x02,
-        TerrainTile_ThickSpiceUpRight   = TerrainTile_ThickSpice + 0x03,
-        TerrainTile_ThickSpiceDown      = TerrainTile_ThickSpice + 0x04,
-        TerrainTile_ThickSpiceUpDown    = TerrainTile_ThickSpice + 0x05,
+        TerrainTile_ThickSpice = 0x44,
+        TerrainTile_ThickSpiceIsland = TerrainTile_ThickSpice + 0x00,
+        TerrainTile_ThickSpiceUp = TerrainTile_ThickSpice + 0x01,
+        TerrainTile_ThickSpiceRight = TerrainTile_ThickSpice + 0x02,
+        TerrainTile_ThickSpiceUpRight = TerrainTile_ThickSpice + 0x03,
+        TerrainTile_ThickSpiceDown = TerrainTile_ThickSpice + 0x04,
+        TerrainTile_ThickSpiceUpDown = TerrainTile_ThickSpice + 0x05,
         TerrainTile_ThickSpiceDownRight = TerrainTile_ThickSpice + 0x06,
-        TerrainTile_ThickSpiceNotLeft   = TerrainTile_ThickSpice + 0x07,
-        TerrainTile_ThickSpiceLeft      = TerrainTile_ThickSpice + 0x08,
-        TerrainTile_ThickSpiceUpLeft    = TerrainTile_ThickSpice + 0x09,
+        TerrainTile_ThickSpiceNotLeft = TerrainTile_ThickSpice + 0x07,
+        TerrainTile_ThickSpiceLeft = TerrainTile_ThickSpice + 0x08,
+        TerrainTile_ThickSpiceUpLeft = TerrainTile_ThickSpice + 0x09,
         TerrainTile_ThickSpiceLeftRight = TerrainTile_ThickSpice + 0x0A,
-        TerrainTile_ThickSpiceNotDown   = TerrainTile_ThickSpice + 0x0B,
-        TerrainTile_ThickSpiceDownLeft  = TerrainTile_ThickSpice + 0x0C,
-        TerrainTile_ThickSpiceNotRight  = TerrainTile_ThickSpice + 0x0D,
-        TerrainTile_ThickSpiceNotUp     = TerrainTile_ThickSpice + 0x0E,
-        TerrainTile_ThickSpiceFull      = TerrainTile_ThickSpice + 0x0F,
+        TerrainTile_ThickSpiceNotDown = TerrainTile_ThickSpice + 0x0B,
+        TerrainTile_ThickSpiceDownLeft = TerrainTile_ThickSpice + 0x0C,
+        TerrainTile_ThickSpiceNotRight = TerrainTile_ThickSpice + 0x0D,
+        TerrainTile_ThickSpiceNotUp = TerrainTile_ThickSpice + 0x0E,
+        TerrainTile_ThickSpiceFull = TerrainTile_ThickSpice + 0x0F,
 
-        TerrainTile_SpiceBloom          = 0x54,
-        TerrainTile_SpecialBloom        = 0x55
+        TerrainTile_SpiceBloom = 0x54,
+        TerrainTile_SpecialBloom = 0x55
     } TERRAINTILETYPE;
 
 
@@ -254,14 +258,14 @@ public:
         \param xPos the x position of the left top corner of this tile on the screen
         \param yPos the y position of the left top corner of this tile on the screen
     */
-    void blitStructures(int xPos, int yPos);
+    void blitStructures(int xPos, int yPos) const;
 
     /**
         This method draws the underground units of this tile.
         \param xPos the x position of the left top corner of this tile on the screen
         \param yPos the y position of the left top corner of this tile on the screen
     */
-    void blitUndergroundUnits(int xPos, int yPos);
+    void blitUndergroundUnits(int xPos, int yPos) const;
 
     /**
         This method draws the dead units of this tile.
@@ -296,18 +300,14 @@ public:
         \param xPos the x position of the left top corner of this tile on the screen
         \param yPos the y position of the left top corner of this tile on the screen
     */
-    void blitSelectionRects(int xPos, int yPos);
+    void blitSelectionRects(int xPos, int yPos) const;
 
 
-    inline void update() {
-        for(int i=0 ; i < (int)deadUnits.size() ; i++) {
-            if(deadUnits[i].timer == 0) {
-                deadUnits.erase(deadUnits.begin()+i);
-                i--;
-            } else {
-                deadUnits[i].timer--;
-            }
-        }
+    void update() {
+        if (deadUnits.empty())
+            return;
+
+        update_impl();
     }
 
     void clearTerrain();
@@ -322,8 +322,8 @@ public:
     void unassignInfantry(Uint32 objectID, int currentPosition);
     void unassignUndergroundUnit(Uint32 objectID);
     void setType(int newType);
-    void squash();
-    int getInfantryTeam();
+    void squash() const;
+    int getInfantryTeam() const;
     FixPoint harvestSpice();
     void setSpice(FixPoint newSpice);
 
@@ -332,55 +332,55 @@ public:
         \return the center point in world coordinates
     */
     Coord getCenterPoint() const {
-        return Coord( location.x*TILESIZE + (TILESIZE/2), location.y*TILESIZE + (TILESIZE/2) );
+        return Coord(location.x*TILESIZE + (TILESIZE / 2), location.y*TILESIZE + (TILESIZE / 2));
     }
 
     /*!
         returns a pointer to an air unit on this tile (if there's one)
         @return AirUnit* pointer to air unit
     */
-    AirUnit* getAirUnit();
+    AirUnit* getAirUnit() const;
 
     /*!
         returns a pointer to a non infantry ground object on this tile (if there's one)
         @return ObjectBase*  pointer to non infantry ground object
     */
-    ObjectBase* getNonInfantryGroundObject();
+    ObjectBase* getNonInfantryGroundObject() const;
     /*!
         returns a pointer to an underground object on this tile (if there's one)
         @return UnitBase*  pointer to underground object(sandworm?)
     */
-    UnitBase* getUndergroundUnit();
+    UnitBase* getUndergroundUnit() const;
 
     /*!
         returns a pointer to an ground object on this tile (if there's one)
         @return ObjectBase*  pointer to ground object
     */
-    ObjectBase* getGroundObject();
+    ObjectBase* getGroundObject() const;
 
     /*!
         returns a pointer to infantry object on this tile (if there's one)
         @return InfantryBase*  pointer to infantry object
     */
-    InfantryBase* getInfantry();
-    ObjectBase* getObject();
-    ObjectBase* getObjectAt(int x, int y);
-    ObjectBase* getObjectWithID(Uint32 objectID);
+    InfantryBase* getInfantry() const;
+    ObjectBase* getObject() const;
+    ObjectBase* getObjectAt(int x, int y) const;
+    ObjectBase* getObjectWithID(Uint32 objectID) const;
 
 
-    const std::list<Uint32>& getAirUnitList() const {
+    const std::vector<Uint32>& getAirUnitList() const {
         return assignedAirUnitList;
     }
 
-    const std::list<Uint32>& getInfantryList() const {
+    const std::vector<Uint32>& getInfantryList() const {
         return assignedInfantryList;
     }
 
-    const std::list<Uint32>& getUndergroundUnitList() const {
+    const std::vector<Uint32>& getUndergroundUnitList() const {
         return assignedUndergroundUnitList;
     }
 
-    const std::list<Uint32>& getNonInfantryGroundObjectList() const {
+    const std::vector<Uint32>& getNonInfantryGroundObjectList() const {
         return assignedNonInfantryGroundObjectList;
     }
 
@@ -401,68 +401,68 @@ public:
         \param  houseID the house this tile should be explored for
         \param  cycle   the cycle this happens (normally the current game cycle)
     */
-    inline void setExplored(int houseID, Uint32 cycle) {
+    void setExplored(int houseID, Uint32 cycle) {
         lastAccess[houseID] = cycle;
         explored[houseID] = true;
     }
 
-    inline void setOwner(int newOwner) { owner = newOwner; }
-    inline void setSandRegion(Uint32 newSandRegion) { sandRegion = newSandRegion; }
-    inline void setDestroyedStructureTile(int newDestroyedStructureTile) { destroyedStructureTile = newDestroyedStructureTile; };
+    void setOwner(int newOwner) noexcept { owner = newOwner; }
+    void setSandRegion(Uint32 newSandRegion) noexcept { sandRegion = newSandRegion; }
+    void setDestroyedStructureTile(int newDestroyedStructureTile) noexcept { destroyedStructureTile = newDestroyedStructureTile; };
 
-    inline bool hasAGroundObject() const { return (hasInfantry() || hasANonInfantryGroundObject()); }
-    inline bool hasAnAirUnit() const { return !assignedAirUnitList.empty(); }
-    inline bool hasAnUndergroundUnit() const { return !assignedUndergroundUnitList.empty(); }
-    inline bool hasANonInfantryGroundObject() const { return !assignedNonInfantryGroundObjectList.empty(); }
+    bool hasAGroundObject() const noexcept { return (hasInfantry() || hasANonInfantryGroundObject()); }
+    bool hasAnAirUnit() const noexcept { return !assignedAirUnitList.empty(); }
+    bool hasAnUndergroundUnit() const noexcept { return !assignedUndergroundUnitList.empty(); }
+    bool hasANonInfantryGroundObject() const noexcept { return !assignedNonInfantryGroundObjectList.empty(); }
     bool hasAStructure() const;
-    inline bool hasInfantry() const { return !assignedInfantryList.empty(); }
-    inline bool hasAnObject() { return (hasAGroundObject() || hasAnAirUnit() || hasAnUndergroundUnit()); }
+    bool hasInfantry() const noexcept { return !assignedInfantryList.empty(); }
+    bool hasAnObject() const noexcept { return (hasAGroundObject() || hasAnAirUnit() || hasAnUndergroundUnit()); }
 
-    inline bool hasSpice() const { return (spice > 0); }
-    inline bool infantryNotFull() const { return (assignedInfantryList.size() < NUM_INFANTRY_PER_TILE); }
-    inline bool isConcrete() const { return (type == Terrain_Slab); }
-    inline bool isExplored(int houseID) const {return explored[houseID];}
+    bool hasSpice() const noexcept { return (spice > 0); }
+    bool infantryNotFull() const noexcept { return (assignedInfantryList.size() < NUM_INFANTRY_PER_TILE); }
+    bool isConcrete() const noexcept { return (type == Terrain_Slab); }
+    bool isExplored(int houseID) const { return explored[houseID]; }
 
-    bool isFogged(int houseID);
-    inline bool isMountain() const { return (type == Terrain_Mountain);}
-    inline bool isRock() const { return ((type == Terrain_Rock) || (type == Terrain_Slab) || (type == Terrain_Mountain));}
+    bool isFogged(int houseID) const noexcept;
+    bool isMountain() const noexcept { return (type == Terrain_Mountain); }
+    bool isRock() const noexcept { return ((type == Terrain_Rock) || (type == Terrain_Slab) || (type == Terrain_Mountain)); }
 
-    inline bool isSand() const { return (type == Terrain_Sand); }
-    inline bool isDunes() const { return (type == Terrain_Dunes); }
-    inline bool isSpiceBloom() const { return (type == Terrain_SpiceBloom); }
-    inline bool isSpecialBloom() const { return (type == Terrain_SpecialBloom); }
-    inline bool isSpice() const { return ((type == Terrain_Spice) || (type == Terrain_ThickSpice)); }
-    inline bool isThickSpice() const { return (type == Terrain_ThickSpice); }
+    bool isSand() const noexcept { return (type == Terrain_Sand); }
+    bool isDunes() const noexcept { return (type == Terrain_Dunes); }
+    bool isSpiceBloom() const noexcept { return (type == Terrain_SpiceBloom); }
+    bool isSpecialBloom() const noexcept { return (type == Terrain_SpecialBloom); }
+    bool isSpice() const noexcept { return ((type == Terrain_Spice) || (type == Terrain_ThickSpice)); }
+    bool isThickSpice() const noexcept { return (type == Terrain_ThickSpice); }
 
-    inline Uint32 getSandRegion() const { return sandRegion; }
-    inline int getOwner() const { return owner; }
-    inline int getType() const {    return type; }
-    inline FixPoint getSpice() const { return spice; }
+    Uint32 getSandRegion() const noexcept { return sandRegion; }
+    int getOwner() const noexcept { return owner; }
+    int getType() const noexcept { return type; }
+    FixPoint getSpice() const noexcept { return spice; }
 
-    inline FixPoint getSpiceRemaining() { return spice; }
+    FixPoint getSpiceRemaining() const noexcept { return spice; }
 
-    inline const Coord& getLocation() const { return location; }
+    const Coord& getLocation() const noexcept { return location; }
 
     Uint32 getRadarColor(House* pHouse, bool radar);
     int getTerrainTile() const;
     int getHideTile(int houseID) const;
     int getFogTile(int houseID) const;
-    int getDestroyedStructureTile() const { return  destroyedStructureTile; };
+    int getDestroyedStructureTile() const noexcept { return  destroyedStructureTile; };
 
-    bool isBlocked() const {
+    bool isBlocked() const noexcept {
         return (isMountain() || hasAGroundObject());
     }
 
 
     void addDamage(Uint32 damageType, int tile, Coord realPos) {
-        if(damage.size() < DAMAGE_PER_TILE) {
-            DAMAGETYPE newDamage;
-            newDamage.tile = tile;
-            newDamage.damageType = damageType;
-            newDamage.realPos = realPos;
+        if (damage.size() >= DAMAGE_PER_TILE) return;
 
-            damage.push_back(newDamage);
-        }
+        DAMAGETYPE newDamage;
+        newDamage.tile = tile;
+        newDamage.damageType = damageType;
+        newDamage.realPos = realPos;
+
+        damage.push_back(newDamage);
     }
 
     Coord   location;   ///< location of this tile in map coordinates
@@ -485,13 +485,22 @@ private:
     std::vector<DAMAGETYPE>         damage;                         ///< damage positions
     std::vector<DEADUNITTYPE>       deadUnits;                      ///< dead units
 
-    std::list<Uint32>   assignedAirUnitList;                        ///< all the air units on this tile
-    std::list<Uint32>   assignedInfantryList;                       ///< all infantry units on this tile
-    std::list<Uint32>   assignedUndergroundUnitList;                ///< all underground units on this tile
-    std::list<Uint32>   assignedNonInfantryGroundObjectList;        ///< all structures/vehicles on this tile
+    std::vector<Uint32>   assignedAirUnitList;                      ///< all the air units on this tile
+    std::vector<Uint32>   assignedInfantryList;                     ///< all infantry units on this tile
+    std::vector<Uint32>   assignedUndergroundUnitList;              ///< all underground units on this tile
+    std::vector<Uint32>   assignedNonInfantryGroundObjectList;      ///< all structures/vehicles on this tile
 
     Uint32      lastAccess[NUM_TEAMS];    ///< contains for every team when this tile was seen last by this house
     bool        explored[NUM_TEAMS];      ///< contains for every team if this tile is explored
+
+    void update_impl();
+
+    template<typename Pred>
+    void selectFilter(int houseID, ObjectBase** lastCheckedObject, ObjectBase** lastSelectedObject, Pred&& predicate);
+
+#ifdef __cpp_coroutines
+    generator<Uint32> all_assigned() const noexcept;
+#endif
 };
 
 
