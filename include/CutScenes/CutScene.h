@@ -50,7 +50,7 @@ public:
     /**
         Quit this cutscene before the next scene draw.
     */
-    void quit() { quiting = true; };
+    void quit() noexcept { quiting = true; };
 
     /**
         This method starts a new scene.

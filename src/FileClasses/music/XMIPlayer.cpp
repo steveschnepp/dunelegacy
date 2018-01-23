@@ -207,7 +207,7 @@ void XMIPlayer::changeMusic(MUSICTYPE musicType)
 
     currentMusicType = musicType;
 
-    if((musicOn == true) && (filename != "")) {
+    if((musicOn == true) && (!filename.empty())) {
         SDL_RWops* inputrwop = pFileManager->openFile(filename);
         SDLDataSource input(inputrwop,1);
 

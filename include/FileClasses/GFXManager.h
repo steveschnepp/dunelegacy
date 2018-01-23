@@ -524,7 +524,7 @@ public:
     SDL_Surface*    getUIGraphicSurface(unsigned int id, int house=HOUSE_HARKONNEN);
     SDL_Surface*    getMapChoicePieceSurface(unsigned int num, int house);
 
-    SDL_Surface*    getBackgroundSurface() { return pBackgroundSurface; };
+    SDL_Surface*    getBackgroundSurface() const noexcept { return pBackgroundSurface; };
 
     Animation*      getAnimation(unsigned int id);
 
@@ -542,9 +542,9 @@ private:
     SDL_Surface*    generateTripledObjPic(unsigned int id, int h);
 
     // 8-bit surfaces kept in main memory for processing as needed, e.g. color remapping
-    SDL_Surface*    objPic[NUM_OBJPICS][(int) NUM_HOUSES][NUM_ZOOMLEVEL];
-    SDL_Surface*    uiGraphic[NUM_UIGRAPHICS][(int) NUM_HOUSES];
-    SDL_Surface*    mapChoicePieces[NUM_MAPCHOICEPIECES][(int) NUM_HOUSES];
+    SDL_Surface*    objPic[NUM_OBJPICS][static_cast<int>(NUM_HOUSES)][NUM_ZOOMLEVEL];
+    SDL_Surface*    uiGraphic[NUM_UIGRAPHICS][static_cast<int>(NUM_HOUSES)];
+    SDL_Surface*    mapChoicePieces[NUM_MAPCHOICEPIECES][static_cast<int>(NUM_HOUSES)];
     Animation*      animation[NUM_ANIMATION];
 
     // 32-bit surfaces

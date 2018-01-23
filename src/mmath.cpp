@@ -19,7 +19,7 @@
 
 #include <Definitions.h>
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <algorithm>
 #include <limits>
 
@@ -35,14 +35,14 @@ int getRandomInt(int min, int max)
 
 
 int getRandomOf(int numParam, ...) {
-    int nthParam = getRandomInt(0,numParam-1);
+    const int nthParam = getRandomInt(0,numParam-1);
 
     va_list arg_ptr;
     va_start(arg_ptr, numParam);
 
-    int ret = va_arg(arg_ptr, int);
+    auto ret = va_arg(arg_ptr, int);
 
-    for(int i = 1; i <= nthParam; i++) {
+    for(auto i = 1; i <= nthParam; i++) {
         ret = va_arg(arg_ptr, int);
     }
     va_end(arg_ptr);
@@ -58,14 +58,14 @@ FixPoint destinationAngleRad(const Coord& p1, const Coord& p2)
 FixPoint destinationAngleRad(FixPoint x1, FixPoint y1, FixPoint x2, FixPoint y2)
 {
 
-    FixPoint diffX = x2 - x1;
-    FixPoint diffY = -(y2 - y1);    // flip y
+    const FixPoint diffX = x2 - x1;
+    const FixPoint diffY = -(y2 - y1);    // flip y
 
     if(diffX == 0 && diffY == 0) {
         return FixPt_PI/2;
     }
 
-    FixPoint destAngle = FixPoint::atan2(diffY, diffX);
+    auto destAngle = FixPoint::atan2(diffY, diffX);
 
     if(destAngle < 0) {
         destAngle += (FixPt_PI << 1);   // add 360°
@@ -77,20 +77,20 @@ FixPoint destinationAngleRad(FixPoint x1, FixPoint y1, FixPoint x2, FixPoint y2)
 
 FixPoint distanceFrom(const Coord& p1, const Coord& p2)
 {
-    FixPoint first = (p1.x - p2.x);
-    FixPoint second = (p1.y - p2.y);
+    const FixPoint first = (p1.x - p2.x);
+    const FixPoint second = (p1.y - p2.y);
 
-    FixPoint z = FixPoint::sqrt(first*first + second*second);
+    const FixPoint z = FixPoint::sqrt(first*first + second*second);
 
     return z;
 }
 
 FixPoint distanceFrom(FixPoint x, FixPoint y, FixPoint to_x, FixPoint to_y)
 {
-    FixPoint first = (x - to_x);
-    FixPoint second = (y - to_y);
+    const FixPoint first = (x - to_x);
+    const FixPoint second = (y - to_y);
 
-    FixPoint z = FixPoint::sqrt(first*first + second*second);
+   const  FixPoint z = FixPoint::sqrt(first*first + second*second);
 
     return z;
 }

@@ -41,6 +41,11 @@ public:
     FontManager();
     ~FontManager();
 
+    FontManager(const FontManager &) = delete;
+    FontManager(FontManager &&) = delete;
+    FontManager& operator=(const FontManager &) = delete;
+    FontManager& operator=(FontManager &&) = delete;
+
     void drawTextOnSurface(SDL_Surface* pSurface, const std::string& text, Uint32 color, unsigned int fontNum);
     int getTextWidth(const std::string& text, unsigned int fontNum);
     int getTextHeight(unsigned int fontNum);

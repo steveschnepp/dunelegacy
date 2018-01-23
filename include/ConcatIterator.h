@@ -34,8 +34,13 @@ private:
     TListOfList_Iter listOfListIter;
     TListOfList listOfList;
 public:
-    ConcatIterator() = default;
+    ConcatIterator() noexcept = default;
     ~ConcatIterator() = default;
+
+    ConcatIterator(const ConcatIterator &) = delete;
+    ConcatIterator(ConcatIterator &&) = delete;
+    ConcatIterator& operator=(const ConcatIterator &) = delete;
+    ConcatIterator& operator=(ConcatIterator &&) = delete;
 
     void addList(std::list<T>& _List) {
         if(_List.empty()) {

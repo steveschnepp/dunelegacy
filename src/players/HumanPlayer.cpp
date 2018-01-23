@@ -97,7 +97,7 @@ void HumanPlayer::onPlaceStructure(const StructureBase* pStructure) {
         return;
     }
 
-    int itemID = (pStructure == nullptr) ? Structure_Slab1 : pStructure->getItemID();
+    const auto itemID = (pStructure == nullptr) ? Structure_Slab1 : pStructure->getItemID();
 
     triggerStructureTutorialHint(itemID);
 }
@@ -112,7 +112,7 @@ void HumanPlayer::onUnitDeployed(const UnitBase* pUnit) {
     }
 
     if(pUnit->getItemID() == Unit_Harvester) {
-        ChatManager& chatManager = currentGame->getGameInterface().getChatManager();
+        auto& chatManager = currentGame->getGameInterface().getChatManager();
         chatManager.addHintMessage(_("@MESSAGE.ENG|27#Look out for spice fields."), pGFXManager->getTinyPicture(TinyPicture_Spice));
         alreadyShownTutorialHints |= (1 << static_cast<int>(TutorialHint::HarvestSpice));
     }
@@ -120,7 +120,7 @@ void HumanPlayer::onUnitDeployed(const UnitBase* pUnit) {
 
 }
 
-void HumanPlayer::onSelectionChanged(const std::set<Uint32>& selectedObjectIDs) {
+void HumanPlayer::onSelectionChanged(const Dune::selected_set_type& selectedObjectIDs) {
     if(settings.general.showTutorialHints == false) {
         return;
     }
@@ -129,8 +129,8 @@ void HumanPlayer::onSelectionChanged(const std::set<Uint32>& selectedObjectIDs) 
         return;
     }
 
-    for(Uint32 objectID : selectedObjectIDs) {
-        ObjectBase* pObject = currentGame->getObjectManager().getObject(objectID);
+    for(auto objectID : selectedObjectIDs) {
+        auto pObject = currentGame->getObjectManager().getObject(objectID);
         if(pObject->getOwner() != getHouse()) {
             continue;
         }
@@ -139,10 +139,10 @@ void HumanPlayer::onSelectionChanged(const std::set<Uint32>& selectedObjectIDs) 
     }
 }
 
-void HumanPlayer::setGroupList(int groupListIndex, const std::set<Uint32>& newGroupList) {
+void HumanPlayer::setGroupList(int groupListIndex, const Dune::selected_set_type& newGroupList) {
     selectedLists[groupListIndex].clear();
 
-    for(Uint32 objectID : newGroupList) {
+    for(auto objectID : newGroupList) {
         if(currentGame->getObjectManager().getObject(objectID) != nullptr) {
             selectedLists[groupListIndex].insert(objectID);
         }

@@ -21,6 +21,7 @@
 #include <misc/exceptions.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_rwops.h>
@@ -36,14 +37,14 @@ public:
 
     class MentatEntry {
     public:
-        MentatEntry(const std::string& title,
+        MentatEntry(std::string  title,
                     unsigned int numMenuEntry,
                     unsigned int menuLevel,
                     unsigned int techLevel,
-                    const std::string& filename,
-                    const std::string& name,
-                    const std::string& content)
-         : title(title), numMenuEntry(numMenuEntry), menuLevel(menuLevel), techLevel(techLevel), filename(filename), name(name), content(content) {
+                    std::string  filename,
+                    std::string  name,
+                    std::string  content)
+         : title(std::move(title)), numMenuEntry(numMenuEntry), menuLevel(menuLevel), techLevel(techLevel), filename(std::move(filename)), name(std::move(name)), content(std::move(content)) {
         }
 
         std::string title;
@@ -58,6 +59,10 @@ public:
     explicit MentatTextFile(SDL_RWops* rwop);
     ~MentatTextFile();
 
+    MentatTextFile(const MentatTextFile &) = delete;
+    MentatTextFile(MentatTextFile &&) = delete;
+    MentatTextFile& operator=(const MentatTextFile &) = delete;
+    MentatTextFile& operator=(MentatTextFile &&) = delete;
 
     /// This method returns the nth entry in this text file.
     /**

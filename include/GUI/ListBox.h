@@ -22,6 +22,7 @@
 #include "ScrollBar.h"
 
 #include <SDL2/SDL.h>
+#include <utility>
 #include <vector>
 #include <string>
 #include <functional>
@@ -466,11 +467,11 @@ private:
 
     class ListEntry {
     public:
-        ListEntry(const std::string& text, int intData) : text(text) {
+        ListEntry(std::string  text, int intData) : text(std::move(text)) {
             data.intData = intData;
         }
 
-        ListEntry(const std::string& text, void* ptrData) : text(text) {
+        ListEntry(std::string  text, void* ptrData) : text(std::move(text)) {
             data.ptrData = ptrData;
         }
 

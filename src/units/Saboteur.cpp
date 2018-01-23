@@ -65,51 +65,45 @@ void Saboteur::checkPos()
 {
     InfantryBase::checkPos();
 
-    if(active) {
-        bool canBeSeen[NUM_TEAMS];
-        for(int i = 0; i < NUM_TEAMS; i++) {
-            canBeSeen[i] = false;
-        }
+    if(!active)
+        return;
 
-        for(int x = location.x - 2; (x <= location.x + 2); x++) {
-            for(int y = location.y - 2; (y <= location.y + 2); y++) {
-                if(currentGameMap->tileExists(x, y) && currentGameMap->getTile(x, y)->hasAnObject()) {
-                    canBeSeen[currentGameMap->getTile(x, y)->getObject()->getOwner()->getTeam()] = true;
-                }
+    std::array<bool, NUM_TEAMS> canBeSeen{};
+
+    for(auto x = location.x - 2; (x <= location.x + 2); x++) {
+        for(auto y = location.y - 2; (y <= location.y + 2); y++) {
+            if(currentGameMap->tileExists(x, y) && currentGameMap->getTile(x, y)->hasAnObject()) {
+                canBeSeen[currentGameMap->getTile(x, y)->getObject()->getOwner()->getTeam()] = true;
             }
         }
-
-        for(int i = 0; i < NUM_TEAMS; i++) {
-            setVisible(i, canBeSeen[i]);
-        }
-
-        setVisible(getOwner()->getTeam(), true);    //owner team can always see it
-        //setVisible(pLocalHouse->getTeam(), true);
     }
+
+    for(auto i = 0; i < NUM_TEAMS; i++) {
+        setVisible(i, canBeSeen[i]);
+    }
+
+    setVisible(getOwner()->getTeam(), true);    //owner team can always see it
+    //setVisible(pLocalHouse->getTeam(), true);
 }
 
 bool Saboteur::update() {
-    if(active) {
-        if(!moving) {
-            //check to see if close enough to blow up target
-            if(target.getObjPointer() != nullptr){ //&& target.getObjPointer()->isAStructure()
-                if(getOwner()->getTeam() != target.getObjPointer()->getOwner()->getTeam())
-                {
-                    Coord   closestPoint;
-                    closestPoint = target.getObjPointer()->getClosestPoint(location);
+    if(active && !moving) {
+        //check to see if close enough to blow up target
+        if(target.getObjPointer() != nullptr){ //&& target.getObjPointer()->isAStructure()
+            if(getOwner()->getTeam() != target.getObjPointer()->getOwner()->getTeam())
+            {
+                const Coord closestPoint = target.getObjPointer()->getClosestPoint(location);
 
-
-                    if(blockDistance(location, closestPoint) <= FixPt(1,5)) {
-                        if(isVisible(getOwner()->getTeam())) {
-                            screenborder->shakeScreen(18);
-                        }
-
-                        ObjectBase* pObject = target.getObjPointer();
-                        destroy();
-                        pObject->setHealth(0);
-                        pObject->destroy();
-                        return false;
+                if(blockDistance(location, closestPoint) <= FixPt(1,5)) {
+                    if(isVisible(getOwner()->getTeam())) {
+                        screenborder->shakeScreen(18);
                     }
+
+                    auto pObject = target.getObjPointer();
+                    destroy();
+                    pObject->setHealth(0);
+                    pObject->destroy();
+                    return false;
                 }
             }
         }
@@ -127,25 +121,16 @@ void Saboteur::deploy(const Coord& newLocation) {
 
 
 bool Saboteur::canAttack(const ObjectBase* object) const {
-    if(object != nullptr){
-        if((object->isAStructure() || (object->isAGroundUnit() && !object->isInfantry() && object->getItemID() != Unit_Sandworm)) /* allow attack tanks*/
-            && (object->getOwner()->getTeam() != owner->getTeam())
-            && object->isVisible(getOwner()->getTeam())){
-
-            return true;
-        }
-
-    }
-
-    return false;
-
-
+    return object != nullptr
+        && ((object->isAStructure() || (object->isAGroundUnit() && !object->isInfantry() && object->getItemID() != Unit_Sandworm)) /* allow attack tanks*/
+            && object->getOwner()->getTeam() != owner->getTeam()
+            && object->isVisible(getOwner()->getTeam()));
 }
 
 void Saboteur::destroy()
 {
-    Coord realPos(lround(realX), lround(realY));
-    Uint32 explosionID = currentGame->randomGen.getRandOf(2,Explosion_Medium1, Explosion_Medium2);
+    const Coord realPos(lround(realX), lround(realY));
+    const Uint32 explosionID = currentGame->randomGen.getRandOf(2,Explosion_Medium1, Explosion_Medium2);
     currentGame->getExplosionList().push_back(new Explosion(explosionID, realPos, owner->getHouseID()));
 
     if(isVisible(getOwner()->getTeam())) {

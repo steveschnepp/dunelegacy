@@ -38,9 +38,10 @@
 
 #include <sand.h>
 #include <globals.h>
+ #include <utility>
 
 
-Player::Player(House* associatedHouse, const std::string& playername) : pHouse(associatedHouse), playerID(0), playername(playername) {
+Player::Player(House* associatedHouse, std::string playername) : pHouse(associatedHouse), playerID(0), playername(std::move(playername)) {
 }
 
 Player::Player(InputStream& stream, House* associatedHouse) : pHouse(associatedHouse) {
@@ -57,7 +58,7 @@ void Player::save(OutputStream& stream) const {
     stream.writeString(playername);
 }
 
-void Player::logDebug(const char* fmt, ...) {
+void Player::logDebug(const char* fmt, ...) const {
 #ifdef DEBUG_AI
     std::string house = getHouseNameByNumber((HOUSETYPE) pHouse->getHouseID());
     fprintf(stderr, "%s (%s):   ", playername.c_str(), house.c_str());
@@ -69,8 +70,8 @@ void Player::logDebug(const char* fmt, ...) {
 #endif
 }
 
-void Player::logWarn(const char* fmt, ...) {
-    std::string house = getHouseNameByNumber((HOUSETYPE) pHouse->getHouseID());
+void Player::logWarn(const char* fmt, ...) const {
+    std::string house = getHouseNameByNumber(static_cast<HOUSETYPE>(pHouse->getHouseID()));
     fprintf(stderr, "%s (%s):   ", playername.c_str(), house.c_str());
     va_list arg;
     va_start(arg, fmt);
@@ -79,42 +80,42 @@ void Player::logWarn(const char* fmt, ...) {
     fprintf(stderr, "\n");
 }
 
-Random& Player::getRandomGen() const {
+Random& Player::getRandomGen() {
     return currentGame->randomGen;
 }
 
-const GameInitSettings& Player::getGameInitSettings() const {
+const GameInitSettings& Player::getGameInitSettings() {
     return currentGame->getGameInitSettings();
 }
 
-Uint32 Player::getGameCylceCount() const {
+Uint32 Player::getGameCycleCount() {
     return currentGame->getGameCycleCount();
 }
 
-const Map& Player::getMap() const {
+const Map& Player::getMap() {
     return *currentGameMap;
 }
 
-const ObjectBase* Player::getObject(Uint32 objectID) const {
+const ObjectBase* Player::getObject(Uint32 objectID) {
     return currentGame->getObjectManager().getObject(objectID);
 }
 
-const RobustList<const StructureBase*>& Player::getStructureList() const {
+const RobustList<const StructureBase*>& Player::getStructureList() {
     return reinterpret_cast<const RobustList<const StructureBase*>&>(structureList);
 }
 
-const RobustList<const UnitBase*>& Player::getUnitList() const {
+const RobustList<const UnitBase*>& Player::getUnitList() {
     return reinterpret_cast<const RobustList<const UnitBase*>&>(unitList);
 }
 
-const House* Player::getHouse(int houseID) const {
+const House* Player::getHouse(int houseID) {
     if(houseID < 0 || houseID >= NUM_HOUSES) {
         return nullptr;
     }
     return currentGame->getHouse(houseID);
 }
 
-void Player::doRepair(const ObjectBase* pObject) {
+void Player::doRepair(const ObjectBase* pObject) const {
     if(pObject->getOwner() == getHouse() && pObject->isActive()) {
         const_cast<ObjectBase*>(pObject)->doRepair();
     } else {
@@ -122,7 +123,7 @@ void Player::doRepair(const ObjectBase* pObject) {
     }
 }
 
-void Player::doSetDeployPosition(const StructureBase* pStructure, int x, int y) {
+void Player::doSetDeployPosition(const StructureBase* pStructure, int x, int y) const {
     if(pStructure->getOwner() == getHouse() && pStructure->isActive()) {
         const_cast<StructureBase*>(pStructure)->doSetDeployPosition(x, y);
     } else {
@@ -130,7 +131,7 @@ void Player::doSetDeployPosition(const StructureBase* pStructure, int x, int y) 
     }
 }
 
-bool Player::doUpgrade(const BuilderBase* pBuilder) {
+bool Player::doUpgrade(const BuilderBase* pBuilder) const {
     if(pBuilder->getOwner() == getHouse() && pBuilder->isActive()) {
         return const_cast<BuilderBase*>(pBuilder)->doUpgrade();
     } else {
@@ -139,7 +140,7 @@ bool Player::doUpgrade(const BuilderBase* pBuilder) {
     }
 }
 
-void Player::doProduceItem(const BuilderBase* pBuilder, Uint32 itemID) {
+void Player::doProduceItem(const BuilderBase* pBuilder, Uint32 itemID) const {
     if(pBuilder->getOwner() == getHouse() && pBuilder->isActive()) {
         const_cast<BuilderBase*>(pBuilder)->doProduceItem(itemID);
     } else {
@@ -147,7 +148,7 @@ void Player::doProduceItem(const BuilderBase* pBuilder, Uint32 itemID) {
     }
 }
 
-void Player::doCancelItem(const BuilderBase* pBuilder, Uint32 itemID) {
+void Player::doCancelItem(const BuilderBase* pBuilder, Uint32 itemID) const {
     if(pBuilder->getOwner() == getHouse() && pBuilder->isActive()) {
         const_cast<BuilderBase*>(pBuilder)->doCancelItem(itemID);
     } else {
@@ -155,7 +156,7 @@ void Player::doCancelItem(const BuilderBase* pBuilder, Uint32 itemID) {
     }
 }
 
-void Player::doSetOnHold(const BuilderBase* pBuilder, bool bOnHold) {
+void Player::doSetOnHold(const BuilderBase* pBuilder, bool bOnHold) const {
     if(pBuilder->getOwner() == getHouse() && pBuilder->isActive()) {
         const_cast<BuilderBase*>(pBuilder)->doSetOnHold(bOnHold);
     } else {
@@ -163,7 +164,7 @@ void Player::doSetOnHold(const BuilderBase* pBuilder, bool bOnHold) {
     }
 }
 
-void Player::doBuildRandom(const BuilderBase* pBuilder) {
+void Player::doBuildRandom(const BuilderBase* pBuilder) const {
     if(pBuilder->getOwner() == getHouse() && pBuilder->isActive()) {
         const_cast<BuilderBase*>(pBuilder)->doBuildRandom();
     } else {
@@ -171,7 +172,7 @@ void Player::doBuildRandom(const BuilderBase* pBuilder) {
     }
 }
 
-void Player::doPlaceOrder(const StarPort* pStarport) {
+void Player::doPlaceOrder(const StarPort* pStarport) const {
     if(pStarport->getOwner() == getHouse() && pStarport->isActive()) {
         const_cast<StarPort*>(pStarport)->doPlaceOrder();
     } else {
@@ -179,7 +180,7 @@ void Player::doPlaceOrder(const StarPort* pStarport) {
     }
 }
 
-bool Player::doPlaceStructure(const ConstructionYard* pConstYard, int x, int y) {
+bool Player::doPlaceStructure(const ConstructionYard* pConstYard, int x, int y) const {
     if(pConstYard->getOwner() == getHouse() && pConstYard->isActive()) {
         return const_cast<ConstructionYard*>(pConstYard)->doPlaceStructure(x, y);
     } else {
@@ -188,7 +189,7 @@ bool Player::doPlaceStructure(const ConstructionYard* pConstYard, int x, int y) 
     }
 }
 
-void Player::doSpecialWeapon(const Palace* pPalace) {
+void Player::doSpecialWeapon(const Palace* pPalace) const {
     if(pPalace->getOwner() == getHouse() && pPalace->isActive()) {
         const_cast<Palace*>(pPalace)->doSpecialWeapon();
     } else {
@@ -196,7 +197,7 @@ void Player::doSpecialWeapon(const Palace* pPalace) {
     }
 }
 
-void Player::doLaunchDeathhand(const Palace* pPalace, int x, int y) {
+void Player::doLaunchDeathhand(const Palace* pPalace, int x, int y) const {
     if(pPalace->getOwner() == getHouse() && pPalace->isActive()) {
         const_cast<Palace*>(pPalace)->doLaunchDeathhand(x, y);
     } else {
@@ -204,7 +205,7 @@ void Player::doLaunchDeathhand(const Palace* pPalace, int x, int y) {
     }
 }
 
-void Player::doAttackObject(const TurretBase* pTurret, const ObjectBase* pTargetObject) {
+void Player::doAttackObject(const TurretBase* pTurret, const ObjectBase* pTargetObject) const {
     if(pTurret->getOwner() == getHouse() && pTurret->isActive()) {
         const_cast<TurretBase*>(pTurret)->doAttackObject(pTargetObject);
     } else {
@@ -215,7 +216,7 @@ void Player::doAttackObject(const TurretBase* pTurret, const ObjectBase* pTarget
 
 
 
-void Player::doMove2Pos(const UnitBase* pUnit, int x, int y, bool bForced) {
+void Player::doMove2Pos(const UnitBase* pUnit, int x, int y, bool bForced) const {
     if(pUnit->getOwner() == getHouse() && pUnit->isActive()) {
         const_cast<UnitBase*>(pUnit)->doMove2Pos(x, y, bForced);
     } else {
@@ -224,7 +225,7 @@ void Player::doMove2Pos(const UnitBase* pUnit, int x, int y, bool bForced) {
     }
 }
 
-void Player::doMove2Object(const UnitBase* pUnit, const ObjectBase* pTargetObject) {
+void Player::doMove2Object(const UnitBase* pUnit, const ObjectBase* pTargetObject) const {
     if(pUnit->getOwner() == getHouse() && pUnit->isActive()) {
         const_cast<UnitBase*>(pUnit)->doMove2Object(pTargetObject);
     } else {
@@ -233,7 +234,7 @@ void Player::doMove2Object(const UnitBase* pUnit, const ObjectBase* pTargetObjec
     }
 }
 
-void Player::doAttackPos(const UnitBase* pUnit, int x, int y, bool bForced) {
+void Player::doAttackPos(const UnitBase* pUnit, int x, int y, bool bForced) const {
     if(pUnit->getOwner() == getHouse() && pUnit->isActive()) {
         const_cast<UnitBase*>(pUnit)->doAttackPos(x, y, bForced);
     } else {
@@ -242,7 +243,7 @@ void Player::doAttackPos(const UnitBase* pUnit, int x, int y, bool bForced) {
     }
 }
 
-void Player::doAttackObject(const UnitBase* pUnit, const ObjectBase* pTargetObject, bool bForced) {
+void Player::doAttackObject(const UnitBase* pUnit, const ObjectBase* pTargetObject, bool bForced) const {
     if(pUnit->getOwner() == getHouse() && pUnit->isActive()) {
         const_cast<UnitBase*>(pUnit)->doAttackObject(pTargetObject, bForced);
     } else {
@@ -251,7 +252,7 @@ void Player::doAttackObject(const UnitBase* pUnit, const ObjectBase* pTargetObje
     }
 }
 
-void Player::doSetAttackMode(const UnitBase* pUnit, ATTACKMODE attackMode) {
+void Player::doSetAttackMode(const UnitBase* pUnit, ATTACKMODE attackMode) const {
     if(pUnit->getOwner() == getHouse() && pUnit->isActive()) {
         const_cast<UnitBase*>(pUnit)->doSetAttackMode(attackMode);
     } else {
@@ -260,7 +261,7 @@ void Player::doSetAttackMode(const UnitBase* pUnit, ATTACKMODE attackMode) {
     }
 }
 
-void Player::doStartDevastate(const Devastator* pDevastator) {
+void Player::doStartDevastate(const Devastator* pDevastator) const {
     if(pDevastator->getOwner() == getHouse() && pDevastator->isActive()) {
         const_cast<Devastator*>(pDevastator)->doStartDevastate();
     } else {
@@ -269,7 +270,7 @@ void Player::doStartDevastate(const Devastator* pDevastator) {
     }
 }
 
-void Player::doReturn(const Harvester* pHarvester) {
+void Player::doReturn(const Harvester* pHarvester) const {
     if(pHarvester->getOwner() == getHouse() && pHarvester->isActive()) {
         const_cast<Harvester*>(pHarvester)->doReturn();
     } else {
@@ -278,7 +279,7 @@ void Player::doReturn(const Harvester* pHarvester) {
     }
 }
 
-void Player::doCaptureStructure(const InfantryBase* pInfantry, const StructureBase* pTargetStructure) {
+void Player::doCaptureStructure(const InfantryBase* pInfantry, const StructureBase* pTargetStructure) const {
     if(pInfantry->getOwner() == getHouse() && pInfantry->isActive()) {
         const_cast<InfantryBase*>(pInfantry)->doCaptureStructure(pTargetStructure);
     } else {
@@ -287,7 +288,7 @@ void Player::doCaptureStructure(const InfantryBase* pInfantry, const StructureBa
     }
 }
 
-bool Player::doDeploy(const MCV* pMCV) {
+bool Player::doDeploy(const MCV* pMCV) const {
     if(pMCV->getOwner() == getHouse() && pMCV->isActive()) {
         return const_cast<MCV*>(pMCV)->doDeploy();
     } else {
@@ -297,7 +298,7 @@ bool Player::doDeploy(const MCV* pMCV) {
 }
 
 
-bool Player::doRequestCarryallDrop(const GroundUnit* pGroundUnit) {
+bool Player::doRequestCarryallDrop(const GroundUnit* pGroundUnit) const {
     if(pGroundUnit->getOwner() == getHouse() && pGroundUnit->isActive()) {
         return const_cast<GroundUnit*>(pGroundUnit)->requestCarryall();
     } else {

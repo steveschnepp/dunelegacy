@@ -170,166 +170,167 @@ void InfantryBase::checkPos() {
         }
     }
 
-    if(justStoppedMoving) {
-        walkFrame = 0;
+    if(!justStoppedMoving)
+        return;
 
-        if(currentGameMap->getTile(location)->isSpiceBloom()) {
+    walkFrame = 0;
+
+    if(currentGameMap->getTile(location)->isSpiceBloom()) {
+        setHealth(0);
+        currentGameMap->getTile(location)->triggerSpiceBloom(getOwner());
+    } else if(currentGameMap->getTile(location)->isSpecialBloom()){
+        currentGameMap->getTile(location)->triggerSpecialBloom(getOwner());
+    }
+
+    const auto object = target.getObjPointer();
+
+    if (!object || !object->isAStructure())
+        return;
+
+    //check to see if close enough to blow up target
+    if(getOwner()->getTeam() == object->getOwner()->getTeam())
+    {
+        const auto closestPoint = object->getClosestPoint(location);
+
+        if(blockDistance(location, closestPoint) <= FixPt(0,5)) {
+            // destroy unit indirectly
+            setTarget(nullptr);
             setHealth(0);
-            currentGameMap->getTile(location)->triggerSpiceBloom(getOwner());
-        } else if(currentGameMap->getTile(location)->isSpecialBloom()){
-            currentGameMap->getTile(location)->triggerSpecialBloom(getOwner());
         }
 
-        //check to see if close enough to blow up target
-        if(target.getObjPointer() != nullptr
-            && target.getObjPointer()->isAStructure()
-            && (getOwner()->getTeam() != target.getObjPointer()->getOwner()->getTeam()))
-        {
-            Coord   closestPoint;
+        return;
+    }
 
-            closestPoint = target.getObjPointer()->getClosestPoint(location);
+    const auto closestPoint = object->getClosestPoint(location);
 
-            if(blockDistance(location, closestPoint) <= FixPt(0,5)) {
-                StructureBase* pCapturedStructure = target.getStructurePointer();
-                if(pCapturedStructure->getHealthColor() == COLOR_RED) {
-                    House* pOwner = pCapturedStructure->getOwner();
-                    int targetID = pCapturedStructure->getItemID();
-                    int posX = pCapturedStructure->getX();
-                    int posY = pCapturedStructure->getY();
-                    int origHouse = pCapturedStructure->getOriginalHouseID();
-                    int oldHealth = lround(pCapturedStructure->getHealth());
-                    bool isSelected = pCapturedStructure->isSelected();
-                    bool isSelectedByOtherPlayer = pCapturedStructure->isSelectedByOtherPlayer();
+    if(blockDistance(location, closestPoint) <= FixPt(0,5)) {
+        auto pCapturedStructure = target.getStructurePointer();
+        if(pCapturedStructure->getHealthColor() == COLOR_RED) {
+            House* pOwner = pCapturedStructure->getOwner();
+            int targetID = pCapturedStructure->getItemID();
+            int posX = pCapturedStructure->getX();
+            int posY = pCapturedStructure->getY();
+            int origHouse = pCapturedStructure->getOriginalHouseID();
+            int oldHealth = lround(pCapturedStructure->getHealth());
+            bool isSelected = pCapturedStructure->isSelected();
+            bool isSelectedByOtherPlayer = pCapturedStructure->isSelectedByOtherPlayer();
 
-                    FixPoint capturedSpice = 0;
+            FixPoint capturedSpice = 0;
 
-                    UnitBase* pContainedUnit = nullptr;
+            UnitBase* pContainedUnit = nullptr;
 
-                    if(pCapturedStructure->getItemID() == Structure_Silo) {
-                        capturedSpice = currentGame->objectData.data[Structure_Silo][originalHouseID].capacity * (pOwner->getStoredCredits() / pOwner->getCapacity());
-                    } else if(pCapturedStructure->getItemID() == Structure_Refinery) {
-                        capturedSpice = currentGame->objectData.data[Structure_Silo][originalHouseID].capacity * (pOwner->getStoredCredits() / pOwner->getCapacity());
-                        Refinery* pRefinery = dynamic_cast<Refinery*>(pCapturedStructure);
-                        if(pRefinery->isFree() == false) {
-                            pContainedUnit = pRefinery->getHarvester();
-                        }
-                    } else if(pCapturedStructure->getItemID() == Structure_RepairYard) {
-                        RepairYard* pRepairYard = dynamic_cast<RepairYard*>(pCapturedStructure);
-                        if(pRepairYard->isFree() == false) {
-                            pContainedUnit = pRepairYard->getRepairUnit();
-                        }
-                    }
-
-                    Uint32 containedUnitID = NONE_ID;
-                    FixPoint containedUnitHealth = 0;
-                    FixPoint containedHarvesterSpice = 0;
-                    if(pContainedUnit != nullptr) {
-                        containedUnitID = pContainedUnit->getItemID();
-                        containedUnitHealth = pContainedUnit->getHealth();
-                        if(containedUnitID == Unit_Harvester) {
-                            containedHarvesterSpice = dynamic_cast<Harvester*>(pContainedUnit)->getAmountOfSpice();
-                        }
-
-                        // will be destroyed by the captured structure
-                        pContainedUnit = nullptr;
-                    }
-
-                    // remove all other infantry units capturing this building
-                    Coord capturedStructureLocation = pCapturedStructure->getLocation();
-                    for(int i = capturedStructureLocation.x; i < capturedStructureLocation.x + pCapturedStructure->getStructureSizeX(); i++) {
-                        for(int j = capturedStructureLocation.y; j < capturedStructureLocation.y + pCapturedStructure->getStructureSizeY(); j++) {
-
-                            // make a copy of infantry list to avoid problems of modifying the list during iteration (!)
-                            const std::list<Uint32> infantryList = currentGameMap->getTile(i,j)->getInfantryList();
-                            for(const Uint32& infantryID : infantryList) {
-                                if(infantryID != getObjectID()) {
-                                    ObjectBase* pObject = currentGame->getObjectManager().getObject(infantryID);
-                                    if(pObject->getLocation() == Coord(i,j)) {
-                                        pObject->destroy();
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-
-
-                    // destroy captured structure ...
-                    pCapturedStructure->setHealth(0);
-                    delete pCapturedStructure;
-
-                    // ... and create a new one
-                    StructureBase* pNewStructure = owner->placeStructure(NONE_ID, targetID, posX, posY, true);
-
-                    pNewStructure->setOriginalHouseID(origHouse);
-                    pNewStructure->setHealth(oldHealth);
-                    if(isSelected == true) {
-                        pNewStructure->setSelected(true);
-                        currentGame->getSelectedList().insert(pNewStructure->getObjectID());
-                        currentGame->selectionChanged();
-                    }
-
-                    if(isSelectedByOtherPlayer == true) {
-                        pNewStructure->setSelectedByOtherPlayer(true);
-                        currentGame->getSelectedByOtherPlayerList().insert(pNewStructure->getObjectID());
-                    }
-
-                    if(containedUnitID != NONE_ID) {
-                        UnitBase* pNewUnit = owner->createUnit(containedUnitID);
-
-                        pNewUnit->setRespondable(false);
-                        pNewUnit->setActive(false);
-                        pNewUnit->setVisible(VIS_ALL, false);
-                        pNewUnit->setHealth(containedUnitHealth);
-
-                        if(pNewUnit->getItemID() == Unit_Harvester) {
-                            dynamic_cast<Harvester*>(pNewUnit)->setAmountOfSpice(containedHarvesterSpice);
-                        }
-
-                        if(pNewStructure->getItemID() == Structure_Refinery) {
-                            Refinery* pRefinery = dynamic_cast<Refinery*>(pNewStructure);
-                            pRefinery->book();
-                            pRefinery->assignHarvester(dynamic_cast<Harvester*>(pNewUnit));
-                        } else if(pNewStructure->getItemID() == Structure_RepairYard) {
-                            RepairYard* pRepairYard = dynamic_cast<RepairYard*>(pNewStructure);
-                            pRepairYard->book();
-                            pRepairYard->assignUnit(pNewUnit);
-                        }
-                    }
-
-                    // steal credits
-                    pOwner->takeCredits(capturedSpice);
-                    owner->addCredits(capturedSpice, false);
-                    owner->updateBuildLists();
-
-                } else {
-                    int damage = lround(std::min(pCapturedStructure->getHealth()/2, getHealth()*2));
-                    pCapturedStructure->handleDamage(damage, NONE_ID, getOwner());
+            if(pCapturedStructure->getItemID() == Structure_Silo) {
+                capturedSpice = currentGame->objectData.data[Structure_Silo][originalHouseID].capacity * (pOwner->getStoredCredits() / pOwner->getCapacity());
+            } else if(pCapturedStructure->getItemID() == Structure_Refinery) {
+                capturedSpice = currentGame->objectData.data[Structure_Silo][originalHouseID].capacity * (pOwner->getStoredCredits() / pOwner->getCapacity());
+                Refinery* pRefinery = dynamic_cast<Refinery*>(pCapturedStructure);
+                if(pRefinery->isFree() == false) {
+                    pContainedUnit = pRefinery->getHarvester();
                 }
-                // destroy unit indirectly
-                setTarget(nullptr);
-                setHealth(0);
-                return;
+            } else if(pCapturedStructure->getItemID() == Structure_RepairYard) {
+                RepairYard* pRepairYard = dynamic_cast<RepairYard*>(pCapturedStructure);
+                if(pRepairYard->isFree() == false) {
+                    pContainedUnit = pRepairYard->getRepairUnit();
+                }
             }
-        } else if(target.getObjPointer() != nullptr && target.getObjPointer()->isAStructure())  {
-            Coord   closestPoint;
-            closestPoint = target.getObjPointer()->getClosestPoint(location);
 
-            if(blockDistance(location, closestPoint) <= FixPt(0,5)) {
-                // destroy unit indirectly
-                setTarget(nullptr);
-                setHealth(0);
-                return;
+            Uint32 containedUnitID = NONE_ID;
+            FixPoint containedUnitHealth = 0;
+            FixPoint containedHarvesterSpice = 0;
+            if(pContainedUnit != nullptr) {
+                containedUnitID = pContainedUnit->getItemID();
+                containedUnitHealth = pContainedUnit->getHealth();
+                if(containedUnitID == Unit_Harvester) {
+                    containedHarvesterSpice = dynamic_cast<Harvester*>(pContainedUnit)->getAmountOfSpice();
+                }
+
+                // will be destroyed by the captured structure
+                pContainedUnit = nullptr;
             }
+
+            // remove all other infantry units capturing this building
+            const auto capturedStructureLocation = pCapturedStructure->getLocation();
+            for(auto i = capturedStructureLocation.x; i < capturedStructureLocation.x + pCapturedStructure->getStructureSizeX(); i++) {
+                for(auto j = capturedStructureLocation.y; j < capturedStructureLocation.y + pCapturedStructure->getStructureSizeY(); j++) {
+
+                    // make a copy of infantry list to avoid problems of modifying the list during iteration (!)
+                    auto infantry_copy = currentGameMap->getTile(i,j)->getInfantryList();
+                    for(const auto infantryID : infantry_copy) {
+                        if(infantryID != getObjectID()) {
+                            const auto pObject = currentGame->getObjectManager().getObject(infantryID);
+                            if(pObject->getLocation() == Coord(i,j)) {
+                                pObject->destroy();
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            // destroy captured structure ...
+            pCapturedStructure->setHealth(0);
+            delete pCapturedStructure;
+
+            // ... and create a new one
+            StructureBase* pNewStructure = owner->placeStructure(NONE_ID, targetID, posX, posY, true);
+
+            pNewStructure->setOriginalHouseID(origHouse);
+            pNewStructure->setHealth(oldHealth);
+            if(isSelected == true) {
+                pNewStructure->setSelected(true);
+                currentGame->getSelectedList().insert(pNewStructure->getObjectID());
+                currentGame->selectionChanged();
+            }
+
+            if(isSelectedByOtherPlayer == true) {
+                pNewStructure->setSelectedByOtherPlayer(true);
+                currentGame->getSelectedByOtherPlayerList().insert(pNewStructure->getObjectID());
+            }
+
+            if(containedUnitID != NONE_ID) {
+                UnitBase* pNewUnit = owner->createUnit(containedUnitID);
+
+                pNewUnit->setRespondable(false);
+                pNewUnit->setActive(false);
+                pNewUnit->setVisible(VIS_ALL, false);
+                pNewUnit->setHealth(containedUnitHealth);
+
+                if(pNewUnit->getItemID() == Unit_Harvester) {
+                    dynamic_cast<Harvester*>(pNewUnit)->setAmountOfSpice(containedHarvesterSpice);
+                }
+
+                if(pNewStructure->getItemID() == Structure_Refinery) {
+                    Refinery* pRefinery = dynamic_cast<Refinery*>(pNewStructure);
+                    pRefinery->book();
+                    pRefinery->assignHarvester(dynamic_cast<Harvester*>(pNewUnit));
+                } else if(pNewStructure->getItemID() == Structure_RepairYard) {
+                    RepairYard* pRepairYard = dynamic_cast<RepairYard*>(pNewStructure);
+                    pRepairYard->book();
+                    pRepairYard->assignUnit(pNewUnit);
+                }
+            }
+
+            // steal credits
+            pOwner->takeCredits(capturedSpice);
+            owner->addCredits(capturedSpice, false);
+            owner->updateBuildLists();
+
+        } else {
+            int damage = lround(std::min(pCapturedStructure->getHealth()/2, getHealth()*2));
+            pCapturedStructure->handleDamage(damage, NONE_ID, getOwner());
         }
+        // destroy unit indirectly
+        setTarget(nullptr);
+        setHealth(0);
+        return;
     }
 }
 
 void InfantryBase::destroy() {
     if(currentGameMap->tileExists(location) && isVisible()) {
-        Tile* pTile = currentGameMap->getTile(location);
+        auto pTile = currentGameMap->getTile(location);
 
-        if(pTile->hasANonInfantryGroundObject() == true) {
+        if(pTile->hasANonInfantryGroundObject()) {
             if(pTile->getNonInfantryGroundObject()->isAUnit()) {
                 // squashed
                 pTile->assignDeadUnit( currentGame->randomGen.randBool() ? DeadUnit_Infantry_Squashed1 : DeadUnit_Infantry_Squashed2,
@@ -345,12 +346,15 @@ void InfantryBase::destroy() {
 
         } else if(getItemID() != Unit_Saboteur) {
             // "normal" dead
-            pTile->assignDeadUnit( DeadUnit_Infantry,
+            pTile->assignDeadUnit(DeadUnit_Infantry,
                                         owner->getHouseID(),
                                         Coord(lround(realX), lround(realY)));
 
             if(isVisible(getOwner()->getTeam())) {
-                soundPlayer->playSoundAt((Sound_enum) getRandomOf(6,Sound_Scream1,Sound_Scream2,Sound_Scream3,Sound_Scream4,Sound_Scream5,Sound_Trumpet),location);
+                const auto sound_id = static_cast<Sound_enum>(getRandomOf(6, Sound_Scream1, Sound_Scream2, Sound_Scream3, Sound_Scream4, Sound_Scream5,
+                                                                    Sound_Trumpet));
+
+                soundPlayer->playSoundAt(sound_id, location);
             }
         }
     }

@@ -171,7 +171,7 @@ void House::save(OutputStream& stream) const {
     choam.save(stream);
 
     stream.writeUint32(players.size());
-    for(const std::shared_ptr<Player>& pPlayer : players) {
+    for(const auto& pPlayer : players) {
         stream.writeString(pPlayer->getPlayerclass());
         pPlayer->save(stream);
     }
@@ -180,7 +180,7 @@ void House::save(OutputStream& stream) const {
 
 
 
-void House::addPlayer(std::shared_ptr<Player> newPlayer) {
+void House::addPlayer(const std::shared_ptr<Player>& newPlayer) {
     if(dynamic_cast<HumanPlayer*>(newPlayer.get()) != nullptr && players.empty()) {
         ai = false;
     } else {
@@ -189,7 +189,7 @@ void House::addPlayer(std::shared_ptr<Player> newPlayer) {
 
     players.push_back(newPlayer);
 
-    Uint8 newPlayerID = static_cast<Uint8>((houseID << 4) | players.size());
+    const auto newPlayerID = static_cast<Uint8>((houseID << 4) | players.size());
     newPlayer->playerID = newPlayerID;
 
     currentGame->registerPlayer(newPlayer.get());
@@ -202,17 +202,17 @@ void House::setProducedPower(int newPower) {
 
 
 void House::addCredits(FixPoint newCredits, bool wasRefined) {
-    if(newCredits > 0) {
-        if(wasRefined == true) {
-            harvestedSpice += newCredits;
-        }
+    if(newCredits <= 0) return;
+    
+    if(wasRefined == true) {
+        harvestedSpice += newCredits;
+    }
 
-        storedCredits += newCredits;
-        if(this == pLocalHouse) {
-            if(((currentGame->winFlags & WINLOSEFLAGS_QUOTA) != 0) && (quota != 0)) {
-                if(storedCredits >= quota) {
-                    win();
-                }
+    storedCredits += newCredits;
+    if(this == pLocalHouse) {
+        if(((currentGame->winFlags & WINLOSEFLAGS_QUOTA) != 0) && (quota != 0)) {
+            if(storedCredits >= quota) {
+                win();
             }
         }
     }
@@ -223,7 +223,7 @@ void House::addCredits(FixPoint newCredits, bool wasRefined) {
 
 void House::returnCredits(FixPoint newCredits) {
     if(newCredits > 0) {
-        FixPoint leftCapacity = capacity - storedCredits;
+        const auto leftCapacity = capacity - storedCredits;
         if(newCredits <= leftCapacity) {
             addCredits(newCredits, false);
         } else {
@@ -289,9 +289,10 @@ void House::printStat() const {
 
 
 void House::updateBuildLists() {
-    for(StructureBase* pStructure : structureList) {
+    for(auto pStructure : structureList) {
         if(pStructure->isABuilder() && (pStructure->getOwner() == this)) {
-            static_cast<BuilderBase*>(pStructure)->updateBuildList();
+            assert(nullptr != dynamic_cast<BuilderBase*>(pStructure));
+            static_cast<BuilderBase*>(pStructure)->updateBuildList();  // NOLINT
         }
     }
 }
@@ -326,7 +327,7 @@ void House::update() {
 
     choam.update();
 
-    for(std::shared_ptr<Player>& pPlayer : players) {
+    for(const auto& pPlayer : players) {
         pPlayer->update();
     }
 }
@@ -362,7 +363,7 @@ void House::decrementUnits(int itemID) {
         numItem[itemID]--;
     }
 
-    for(std::shared_ptr<Player>& pPlayer : players) {
+    for(const auto& pPlayer : players) {
         pPlayer->onDecrementUnits(itemID);
     }
 
@@ -403,7 +404,7 @@ void House::incrementStructures(int itemID) {
         updateBuildLists();
     }
 
-    for(std::shared_ptr<Player>& pPlayer : players) {
+    for(const auto& pPlayer : players) {
         pPlayer->onIncrementStructures(itemID);
     }
 }
@@ -433,7 +434,7 @@ void House::decrementStructures(int itemID, const Coord& location) {
     if (!isAlive())
         lose();
 
-    for(std::shared_ptr<Player>& pPlayer : players) {
+    for(const auto& pPlayer : players) {
         pPlayer->onDecrementStructures(itemID, location);
     }
 }
@@ -442,7 +443,7 @@ void House::decrementStructures(int itemID, const Coord& location) {
 
 
 void House::noteDamageLocation(ObjectBase* pObject, int damage, Uint32 damagerID) {
-    for(std::shared_ptr<Player>& pPlayer : players) {
+    for(const auto& pPlayer : players) {
         pPlayer->onDamage(pObject, damage, damagerID);
     }
 }
@@ -493,7 +494,7 @@ void House::informHasKilled(Uint32 itemID) {
     numItemKills[itemID]++;
 
 
-    for(std::shared_ptr<Player>& pPlayer : players) {
+    for(const auto& pPlayer : players) {
         pPlayer->onIncrementUnitKills(itemID);
     }
 }

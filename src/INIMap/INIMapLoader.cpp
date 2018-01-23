@@ -27,7 +27,7 @@
 #include <sand.h>
 #include <globals.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <algorithm>
 
 INIMapLoader::INIMapLoader(Game* pGame, const std::string& mapname, const std::string& mapdata)
@@ -36,8 +36,7 @@ INIMapLoader::INIMapLoader(Game* pGame, const std::string& mapname, const std::s
     load();
 }
 
-INIMapLoader::~INIMapLoader() {
-}
+INIMapLoader::~INIMapLoader() = default;
 
 
 /**
@@ -68,10 +67,11 @@ void INIMapLoader::loadMap() {
         pGame->techLevel = inifile->getIntValue("BASIC","TechLevel",8);
     }
 
-    int timeout = inifile->getIntValue("BASIC","TIMEOUT",0);
+    const auto timeout = inifile->getIntValue("BASIC","TIMEOUT",0);
 
     if((timeout != 0) && ((pGame->winFlags & WINLOSEFLAGS_TIMEOUT) != 0)) {
-        std::shared_ptr<Trigger> newTrigger = std::shared_ptr<Trigger>(new TimeoutTrigger(MILLI2CYCLES(timeout * 60 * 1000)));
+        const auto newTrigger = std::static_pointer_cast<Trigger>(
+            std::make_shared<TimeoutTrigger>(MILLI2CYCLES(timeout * 60 * 1000)));
         pGame->getTriggerManager().addTrigger(newTrigger);
     }
 
@@ -168,64 +168,64 @@ void INIMapLoader::loadMap() {
 
         currentGameMap->createSandRegions();
 
-        std::string BloomString = inifile->getStringValue("MAP","Bloom");
-        if(BloomString != "") {
-            std::vector<std::string> BloomPositions  = splitString(BloomString);
+        const auto BloomString = inifile->getStringValue("MAP","Bloom");
+        if(!BloomString.empty()) {
+            std::vector<std::string> BloomPositions = splitString(BloomString);
 
-            for(unsigned int i=0; i < BloomPositions.size();i++) {
+            for(const auto& BloomPosition : BloomPositions) {
                 // set bloom
                 int BloomPos;
-                if(parseString(BloomPositions[i], BloomPos)) {
+                if(parseString(BloomPosition, BloomPos)) {
                     int xpos = getXPos(BloomPos);
                     int ypos = getYPos(BloomPos);
                     if(currentGameMap->tileExists(xpos, ypos)) {
                         currentGameMap->getTile(xpos,ypos)->setType(Terrain_SpiceBloom);
                     } else {
-                        logWarning(inifile->getKey("MAP", "Bloom")->getLineNumber(), "Spice bloom position '" + BloomPositions[i] + "' outside map!");
+                        logWarning(inifile->getKey("MAP", "Bloom")->getLineNumber(), "Spice bloom position '" + BloomPosition + "' outside map!");
                     }
                 } else {
-                    logWarning(inifile->getKey("MAP", "Bloom")->getLineNumber(), "Invalid spice bloom position: '" + BloomPositions[i] + "'");
+                    logWarning(inifile->getKey("MAP", "Bloom")->getLineNumber(), "Invalid spice bloom position: '" + BloomPosition + "'");
                 }
             }
 
         }
 
-        std::string SpecialString = inifile->getStringValue("MAP","Special");
-        if(SpecialString != "") {
-            std::vector<std::string> SpecialPositions  = splitString(SpecialString);
+        const auto SpecialString = inifile->getStringValue("MAP","Special");
+        if(!SpecialString.empty()) {
+            const auto SpecialPositions  = splitString(SpecialString);
 
-            for(unsigned int i=0; i < SpecialPositions.size();i++) {
+            for(const auto& SpecialPosition : SpecialPositions) {
                 // set special
                 int SpecialPos;
-                if(parseString(SpecialPositions[i], SpecialPos)) {
+                if(parseString(SpecialPosition, SpecialPos)) {
                     int xpos = getXPos(SpecialPos);
                     int ypos = getYPos(SpecialPos);
                     if(currentGameMap->tileExists(xpos, ypos)) {
                         currentGameMap->getTile(xpos,ypos)->setType(Terrain_SpecialBloom);
                     } else {
-                        logWarning(inifile->getKey("MAP", "Special")->getLineNumber(), "Special bloom position '" + SpecialPositions[i] + "' outside map!");
+                        logWarning(inifile->getKey("MAP", "Special")->getLineNumber(), "Special bloom position '" + SpecialPosition + "' outside map!");
                     }
                 } else {
-                    logWarning(inifile->getKey("MAP", "Special")->getLineNumber(), "Invalid special bloom position: '" + SpecialPositions[i] + "'");
+                    logWarning(inifile->getKey("MAP", "Special")->getLineNumber(), "Invalid special bloom position: '" + SpecialPosition + "'");
                 }
             }
 
         }
 
-        std::string FieldString = inifile->getStringValue("MAP","Field");
-        if(FieldString != "") {
-            std::vector<std::string> FieldPositions  = splitString(FieldString);
+        const auto FieldString = inifile->getStringValue("MAP","Field");
+        if(!FieldString.empty()) {
+            const auto FieldPositions  = splitString(FieldString);
 
-            for(unsigned int i=0; i < FieldPositions.size();i++) {
+            for(const auto& FieldPosition : FieldPositions) {
                 // set bloom
                 int FieldPos;
-                if(parseString(FieldPositions[i], FieldPos)) {
+                if(parseString(FieldPosition, FieldPos)) {
                     int xpos = getXPos(FieldPos);
                     int ypos = getYPos(FieldPos);
 
                     currentGameMap->createSpiceField(Coord(xpos, ypos), 5, true);
                 } else {
-                    logWarning(inifile->getKey("MAP", "Field")->getLineNumber(), "Invalid spice field position: '" + FieldPositions[i] + "'");
+                    logWarning(inifile->getKey("MAP", "Field")->getLineNumber(), "Invalid spice field position: '" + FieldPosition + "'");
                 }
             }
 
@@ -344,8 +344,8 @@ void INIMapLoader::loadHouses()
 
     // find "player?" sections
     std::vector<std::string> playerSectionsOnMap;
-    for(int i=1;i<=NUM_HOUSES;i++) {
-        std::string sectionname = "player" + stringify(i);
+    for(auto i=1;i<=NUM_HOUSES;i++) {
+        const auto sectionname = "player" + stringify(i);
         if(inifile->hasSection(sectionname)) {
             playerSectionsOnMap.push_back(sectionname);
         }
@@ -356,22 +356,22 @@ void INIMapLoader::loadHouses()
 
     for(int h=0;h<NUM_HOUSES;h++) {
         bool bFound = false;
-        for(const GameInitSettings::HouseInfo& houseInfo : houseInfoList) {
-            if(houseInfo.houseID == (HOUSETYPE) h) {
+        for(const auto& houseInfo : houseInfoList) {
+            if(houseInfo.houseID == static_cast<HOUSETYPE>(h)) {
                 bFound = true;
                 break;
             }
         }
 
-        std::string houseName = getHouseNameByNumber((HOUSETYPE) h);
+        const auto houseName = getHouseNameByNumber(static_cast<HOUSETYPE>(h));
         if((bFound == false) && (inifile->hasSection(houseName) || (playerSectionsOnMap.empty() == false))) {
-            unboundedHouses.push_back((HOUSETYPE) h);
+            unboundedHouses.push_back(static_cast<HOUSETYPE>(h));
         }
     }
 
     // init housename2house mapping with every house section marked as unused
     for(int i=0;i<NUM_HOUSES;i++) {
-        std::string houseName = getHouseNameByNumber((HOUSETYPE) i);
+        std::string houseName = getHouseNameByNumber(static_cast<HOUSETYPE>(i));
         convertToLower(houseName);
 
         if(inifile->hasSection(houseName)) {
@@ -439,8 +439,8 @@ void INIMapLoader::loadHouses()
         pGame->house[houseID] = pNewHouse;
 
         // add players
-        for(const GameInitSettings::PlayerInfo& playerInfo : houseInfo.playerInfoList) {
-            const PlayerFactory::PlayerData* pPlayerData = PlayerFactory::getByPlayerClass(playerInfo.playerClass);
+        for(const auto& playerInfo : houseInfo.playerInfoList) {
+            auto pPlayerData = PlayerFactory::getByPlayerClass(playerInfo.playerClass);
             if(pPlayerData == nullptr) {
                 logWarning("Cannot load '" + playerInfo.playerClass + "', using default AI player!");
                 pPlayerData = PlayerFactory::getByPlayerClass(DEFAULTAIPLAYERCLASS);
@@ -450,13 +450,13 @@ void INIMapLoader::loadHouses()
                 }
             }
 
-            Player* pPlayer = pPlayerData->create(pNewHouse, playerInfo.playerName);
+            std::shared_ptr<Player> pPlayer = pPlayerData->create(pNewHouse, playerInfo.playerName);
 
-            pNewHouse->addPlayer(std::shared_ptr<Player>(pPlayer));
-            if( ((pGame->getGameInitSettings().getGameType() != GameType::CustomMultiplayer) && (dynamic_cast<HumanPlayer*>(pPlayer) != nullptr))
+            pNewHouse->addPlayer(pPlayer);
+            if( ((pGame->getGameInitSettings().getGameType() != GameType::CustomMultiplayer) && (dynamic_cast<HumanPlayer*>(pPlayer.get()) != nullptr))
                 || (playerInfo.playerName == pGame->getLocalPlayerName())) {
                 pLocalHouse = pNewHouse;
-                pLocalPlayer = dynamic_cast<HumanPlayer*>(pPlayer);
+                pLocalPlayer = dynamic_cast<HumanPlayer*>(pPlayer.get());
             }
         }
     }
@@ -733,7 +733,7 @@ void INIMapLoader::loadReinforcements()
         return;
     }
 
-    for(const INIFile::Key& key : inifile->getSection("REINFORCEMENTS")) {
+    for(const auto& key : inifile->getSection("REINFORCEMENTS")) {
         std::string strHouseName;
         std::string strUnitName;
         std::string strDropLocation;
@@ -747,7 +747,7 @@ void INIMapLoader::loadReinforcements()
             }
         }
 
-        int houseID = getHouseID(strHouseName);
+        const auto houseID = getHouseID(strHouseName);
         if(houseID == HOUSE_UNUSED) {
             // skip reinforcement for unused house
             continue;
@@ -756,8 +756,8 @@ void INIMapLoader::loadReinforcements()
             continue;
         }
 
-        int Num2Drop = 1;
-        Uint32 itemID = getItemIDByName(strUnitName);
+        auto Num2Drop = 1;
+        auto itemID = getItemIDByName(strUnitName);
         if((itemID == ItemID_Invalid) || !isUnit(itemID)) {
             logWarning(key.getLineNumber(), "Invalid unit string: '" + strUnitName + "'!");
             continue;
@@ -777,7 +777,7 @@ void INIMapLoader::loadReinforcements()
             Num2Drop = 3;
         }
 
-        DropLocation dropLocation = getDropLocationByName(strDropLocation);
+        auto dropLocation = getDropLocationByName(strDropLocation);
         if(dropLocation == Drop_Invalid) {
             logWarning(key.getLineNumber(), "Invalid drop location string: '" + strDropLocation + "'!");
             dropLocation = Drop_Homebase;
@@ -788,16 +788,16 @@ void INIMapLoader::loadReinforcements()
             logWarning(key.getLineNumber(), "Invalid drop time string: '" + strTime + "'!");
             continue;
         }
-        Uint32 dropCycle = MILLI2CYCLES(droptime * 60 * 1000);
+        const auto dropCycle = MILLI2CYCLES(droptime * 60 * 1000);
 
-        bool bRepeat = (strTime.rfind('+') == (strTime.length() - 1)) || (strPlus == "+");
+        const auto bRepeat = (strTime.rfind('+') == (strTime.length() - 1)) || (strPlus == "+");
 
-        for(int i=0;i<Num2Drop;i++) {
+        for(auto i=0;i<Num2Drop;i++) {
             // check if there is a similar trigger at the same time
 
-            bool bInserted = false;
-            for(const std::shared_ptr<Trigger>& pTrigger : pGame->getTriggerManager().getTriggers()) {
-                ReinforcementTrigger* pReinforcementTrigger = dynamic_cast<ReinforcementTrigger*>(pTrigger.get());
+            auto bInserted = false;
+            for(const auto& pTrigger : pGame->getTriggerManager().getTriggers()) {
+                auto pReinforcementTrigger = dynamic_cast<ReinforcementTrigger*>(pTrigger.get());
 
                 if(pReinforcementTrigger != nullptr
                     && pReinforcementTrigger->getCycleNumber() == dropCycle
@@ -814,7 +814,8 @@ void INIMapLoader::loadReinforcements()
 
             if(bInserted == false) {
                 getOrCreateHouse(houseID);  // create house if not yet available
-                std::shared_ptr<Trigger> newTrigger = std::shared_ptr<Trigger>(new ReinforcementTrigger(houseID, itemID, dropLocation, bRepeat, dropCycle));
+                const auto newTrigger = std::static_pointer_cast<Trigger>(
+                    std::make_shared<ReinforcementTrigger>(houseID, itemID, dropLocation, bRepeat, dropCycle));
                 pGame->getTriggerManager().addTrigger(newTrigger);
             }
         }
@@ -827,8 +828,8 @@ void INIMapLoader::loadReinforcements()
 void INIMapLoader::loadView()
 {
     if(inifile->hasKey("BASIC", "TacticalPos")) {
-        int tacticalPosInt = inifile->getIntValue("BASIC","TacticalPos",-10000) + 64*5 + 7;
-        Coord tacticalPos(getXPos(tacticalPosInt), getYPos(tacticalPosInt));
+        const auto tacticalPosInt = inifile->getIntValue("BASIC","TacticalPos",-10000) + 64*5 + 7;
+        const Coord tacticalPos(getXPos(tacticalPosInt), getYPos(tacticalPosInt));
 
         if(tacticalPos.x < 0 || tacticalPos.x >= sizeX || tacticalPos.y < 0 || tacticalPos.y >= sizeY) {
             logWarning(inifile->getKey("BASIC", "TacticalPos")->getLineNumber(), "Invalid TacticalPos: '" + stringify(tacticalPosInt) + "'!");
@@ -847,51 +848,52 @@ void INIMapLoader::loadView()
     \return the house specified by house
 */
 House* INIMapLoader::getOrCreateHouse(int houseID) {
-    House* pNewHouse = pGame->house[houseID];
+    auto pNewHouse = pGame->house[houseID];
 
-    if(pNewHouse == nullptr) {
-        Uint8 team = 0;
-        if(pGame->gameType == GameType::Campaign || pGame->gameType == GameType::Skirmish) {
-            // in campaign all "other" units are in the same team as the AI
-            team = 2;
-        }
+    if(pNewHouse != nullptr) return pNewHouse;
 
-        int maxUnits = 0;
-        if(currentGame->getGameInitSettings().getGameOptions().maximumNumberOfUnitsOverride >= 0) {
-            maxUnits = currentGame->getGameInitSettings().getGameOptions().maximumNumberOfUnitsOverride;
-        } else {
-            maxUnits = std::max(25, 25*(currentGameMap->getSizeX()*currentGameMap->getSizeY())/(64*64));
-        }
-        pNewHouse = new House(houseID, 0, maxUnits, team, 0);
+    Uint8 team = 0;
+    if(pGame->gameType == GameType::Campaign || pGame->gameType == GameType::Skirmish) {
+        // in campaign all "other" units are in the same team as the AI
+        team = 2;
+    }
 
-        const GameInitSettings::HouseInfoList& houseInfoList = pGame->getGameInitSettings().getHouseInfoList();
+    int maxUnits = 0;
+    if(currentGame->getGameInitSettings().getGameOptions().maximumNumberOfUnitsOverride >= 0) {
+        maxUnits = currentGame->getGameInitSettings().getGameOptions().maximumNumberOfUnitsOverride;
+    } else {
+        maxUnits = std::max(25, 25*(currentGameMap->getSizeX()*currentGameMap->getSizeY())/(64*64));
+    }
+    pNewHouse = new House(houseID, 0, maxUnits, team, 0);
 
-        for(const GameInitSettings::HouseInfo& houseInfo : houseInfoList) {
-            if(houseInfo.houseID == houseID) {
-                for(const GameInitSettings::PlayerInfo& playerInfo : houseInfo.playerInfoList) {
-                    const PlayerFactory::PlayerData* pPlayerData = PlayerFactory::getByPlayerClass(playerInfo.playerClass);
-                    if(pPlayerData == nullptr) {
-                        logWarning("Cannot load '" + playerInfo.playerClass + "', using default AI player!");
-                        pPlayerData = PlayerFactory::getByPlayerClass(DEFAULTAIPLAYERCLASS);
-                        if(pPlayerData == nullptr) {
-                            logWarning("Cannot load default AI player!");
-                            continue;
-                        }
-                    }
+    const GameInitSettings::HouseInfoList& houseInfoList = pGame->getGameInitSettings().getHouseInfoList();
 
-                    Player* pPlayer = pPlayerData->create(pNewHouse, playerInfo.playerName);
+    for(const auto& houseInfo : houseInfoList) {
+        if(houseInfo.houseID != houseID) continue;
 
-                    pNewHouse->addPlayer(std::shared_ptr<Player>(pPlayer));
-                    if(playerInfo.playerName == pGame->getLocalPlayerName()) {
-                        pLocalHouse = pNewHouse;
-                        pLocalPlayer = dynamic_cast<HumanPlayer*>(pPlayer);
-                    }
+        for(const auto& playerInfo : houseInfo.playerInfoList) {
+            auto pPlayerData = PlayerFactory::getByPlayerClass(playerInfo.playerClass);
+            if(pPlayerData == nullptr) {
+                logWarning("Cannot load '" + playerInfo.playerClass + "', using default AI player!");
+                pPlayerData = PlayerFactory::getByPlayerClass(DEFAULTAIPLAYERCLASS);
+                if(pPlayerData == nullptr) {
+                    logWarning("Cannot load default AI player!");
+                    continue;
                 }
-                break;
+            }
+
+            std::shared_ptr<Player> pPlayer = pPlayerData->create(pNewHouse, playerInfo.playerName);
+
+            pNewHouse->addPlayer(pPlayer);
+            if(playerInfo.playerName == pGame->getLocalPlayerName()) {
+                pLocalHouse = pNewHouse;
+                pLocalPlayer = dynamic_cast<HumanPlayer*>(pPlayer.get());
             }
         }
+        break;
+    }
 
-        /*
+    /*
         // probably not a good idea to treat any "anonymous" house as an AI player
         if(pNewHouse->getPlayerList().empty()) {
             const PlayerFactory::PlayerData* pPlayerData = PlayerFactory::getByPlayerClass(DEFAULTAIPLAYERCLASS);
@@ -900,14 +902,13 @@ House* INIMapLoader::getOrCreateHouse(int houseID) {
         }
         */
 
-        pGame->house[houseID] = pNewHouse;
-    }
+    pGame->house[houseID] = pNewHouse;
 
     return pNewHouse;
 }
 
 HOUSETYPE INIMapLoader::getHouseID(const std::string& name) {
-    std::string lowerName = strToLower(name);
+    const auto lowerName = strToLower(name);
 
     if(housename2house.count(lowerName) > 0) {
         return housename2house[lowerName];

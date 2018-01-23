@@ -46,25 +46,25 @@ public:
         logging the complete game and enable a replay afterwards.
         \param  pStream     pointer to a stream all new commands will be written to (the stream must be created with new). nullptr for disabling. pStream is deleted with delete if this command manager is destroyed.
     */
-    void setStream(OutputStream* pStream) { this->pStream = pStream; }
+    void setStream(OutputStream* pStream) noexcept { this->pStream = pStream; }
 
     /**
         Get the stream used for recording new commands (see setStream).
         \return the set stream or nullptr if none is set
     */
-    OutputStream* getStream() const { return pStream; }
+    OutputStream* getStream() const noexcept { return pStream; }
 
     /**
         If bReadOnly == true it is impossible to add new commands to this command manager. This is useful for replays.
         \param  bReadOnly   true = addCommand() is a NO-OP, false = addCommand() has normal behaviour
     */
-    void setReadOnly(bool bReadOnly) { this->bReadOnly = bReadOnly; }
+    void setReadOnly(bool bReadOnly) noexcept { this->bReadOnly = bReadOnly; }
 
     /**
         Get the current read-only status.
         \return true = addCommand() is a NO-OP, false = addCommand() has normal behaviour
     */
-    bool getReadOnly() const { return bReadOnly; }
+    bool getReadOnly() const noexcept { return bReadOnly; }
 
     /**
         Save all commands to stream. The read-only status is not saved.
@@ -79,10 +79,10 @@ public:
     void load(InputStream& stream);
 
 
-    Uint32 getNetworkCycleBuffer() const { return networkCycleBuffer; }
+    Uint32 getNetworkCycleBuffer() const noexcept { return networkCycleBuffer; }
 
 
-    void setNetworkCycleBuffer(Uint32 newNetworkCycleBuffer) { networkCycleBuffer = newNetworkCycleBuffer; };
+    void setNetworkCycleBuffer(Uint32 newNetworkCycleBuffer) noexcept { networkCycleBuffer = newNetworkCycleBuffer; };
 
     /**
         Updates the command manager and sends commands to other peers
