@@ -24,6 +24,7 @@
 #include <SDL2/SDL.h>
 #include <string>
 
+#include <unordered_set>
 
 class Coord {
 public:
@@ -294,5 +295,11 @@ typedef enum {
     TeamType_Slither,
     TeamType_Harvester
 } TeamType;
+
+
+namespace Dune {
+    typedef Uint32 object_id_type;
+    typedef std::unordered_set<object_id_type> selected_set_type;
+}
 
 #endif //DATATYPES_H
