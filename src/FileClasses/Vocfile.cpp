@@ -21,12 +21,13 @@
 
 
 #include <FileClasses/Vocfile.h>
+#include <misc/sdl_support.h>
 
 #include <string>
 #include <SDL2/SDL_mixer.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory.h>
-#include <stdio.h>
+#include <cstdio>
 #include <cmath>
 #include <cerrno>
 
@@ -81,7 +82,7 @@ static Uint32 getSampleRateFromVOCRate(Uint8 vocSR) {
     \param  rate    The sampling rate of the voc-file
     \return A pointer to a memory block that contains the data. (Free it with SDL_free() when no longer needed)
 */
-static Uint8 *LoadVOC_RW(SDL_RWops* rwop, Uint32 &size, Uint32 &rate) {
+static sdl2::sdl_ptr<Uint8[]> LoadVOC_RW(SDL_RWops* rwop, Uint32 &size, Uint32 &rate) {
     Uint8 description[20];
     Uint16 offset;
     Uint16 version;
@@ -137,7 +138,7 @@ static Uint8 *LoadVOC_RW(SDL_RWops* rwop, Uint32 &size, Uint32 &rate) {
         return nullptr;
     }
 
-    Uint8 *ret_sound = nullptr;
+    sdl2::sdl_ptr<Uint8[]> ret_sound;
     size = 0;
 
     Uint8 code;
@@ -170,7 +171,7 @@ static Uint8 *LoadVOC_RW(SDL_RWops* rwop, Uint32 &size, Uint32 &rate) {
                     return ret_sound;
                 }
                 len -= 2;
-                Uint32 tmp_rate = getSampleRateFromVOCRate(time_constant);
+                const auto tmp_rate = getSampleRateFromVOCRate(time_constant);
                 if((rate != 0) && (rate != tmp_rate)) {
                     SDL_Log("This voc-file contains data blocks with different sampling rates: old rate: %d, new rate: %d",rate,tmp_rate);
                 }
@@ -180,22 +181,24 @@ static Uint8 *LoadVOC_RW(SDL_RWops* rwop, Uint32 &size, Uint32 &rate) {
 
                 if (packing == 0) {
                     if (size) {
-                        Uint8* tmp = (Uint8 *)SDL_realloc(ret_sound, size + len);
-                        if(tmp == nullptr) {
+                        sdl2::sdl_ptr<Uint8[]> tmp_ret{ static_cast<Uint8 *>(SDL_realloc(ret_sound.get(), size + len)) };
+                        if(tmp_ret == nullptr) {
                             SDL_Log("loadVOCFromStream: %s", strerror(errno));
-                            SDL_free(ret_sound);
                             return nullptr;
                         } else {
-                            ret_sound = tmp;
+                            ret_sound.release();
+                            ret_sound = std::move(tmp_ret);
                         }
                     } else {
-                        if((ret_sound = (Uint8 *)SDL_malloc(len)) == nullptr) {
+                        ret_sound = sdl2::sdl_ptr<Uint8[]>{ static_cast<Uint8 *>(SDL_malloc(len)) };
+
+                        if(ret_sound == nullptr) {
                             SDL_Log("loadVOCFromStream: %s", strerror(errno));
                             return nullptr;
                         }
                     }
 
-                    if(SDL_RWread(rwop,ret_sound + size,1,len) != len) {
+                    if(SDL_RWread(rwop,ret_sound.get() + size,1,len) != len) {
                         SDL_Log("loadVOCFromStream: Cannot read data!");
                         return ret_sound;
                     }
@@ -232,22 +235,23 @@ static Uint8 *LoadVOC_RW(SDL_RWops* rwop, Uint32 &size, Uint32 &rate) {
                 }
 
                 if (size) {
-                    Uint8* tmp = (Uint8 *)SDL_realloc(ret_sound, size + length);
-                    if(tmp == nullptr) {
+                    sdl2::sdl_ptr<Uint8[]> tmp_ret{ static_cast<Uint8 *>(SDL_realloc(ret_sound.get(), size + length)) };
+                    if(tmp_ret == nullptr) {
                         SDL_Log("loadVOCFromStream: %s", strerror(errno));
-                        SDL_free(ret_sound);
                         return nullptr;
                     } else {
-                        ret_sound = tmp;
+                        ret_sound.release();
+                        ret_sound = std::move(tmp_ret);
                     }
                 } else {
-                    if((ret_sound = (Uint8 *)SDL_malloc(length)) == nullptr) {
+                    ret_sound = sdl2::sdl_ptr<Uint8[]>{ static_cast<Uint8 *>(SDL_malloc(length)) };
+                    if(ret_sound == nullptr) {
                         SDL_Log("loadVOCFromStream: %s", strerror(errno));
                         return nullptr;
                     }
                 }
 
-                memset(ret_sound + size,0x80,length);
+                memset(ret_sound.get() + size,0x80,length);
 
                 size += length;
 
@@ -313,7 +317,6 @@ inline Sint16 Float2Sint16(float x) {
 }
 
 Mix_Chunk* LoadVOC_RW(SDL_RWops* rwop, int freesrc) {
-
     if(rwop == nullptr) {
         return nullptr;
     }
@@ -421,8 +424,8 @@ Mix_Chunk* LoadVOC_RW(SDL_RWops* rwop, int freesrc) {
     const auto ThreeQuaterSilenceLength = static_cast<int>((NUM_SAMPLES_OF_SILENCE * ConversionRatio) * (3.0f / 4.0f));
     TargetData_Samples -= 2*ThreeQuaterSilenceLength;
 
-    Mix_Chunk* myChunk;
-    if((myChunk = (Mix_Chunk*) SDL_calloc(sizeof(Mix_Chunk),1)) == nullptr) {
+    sdl2::sdl_ptr<Mix_Chunk> myChunk{ static_cast<Mix_Chunk*>(SDL_calloc(sizeof(Mix_Chunk), 1)) };
+    if(myChunk == nullptr) {
         return nullptr;
     }
 
@@ -432,185 +435,146 @@ Mix_Chunk* LoadVOC_RW(SDL_RWops* rwop, int freesrc) {
     switch(TargetFormat) {
         case AUDIO_U8:
         {
-            Uint8* TargetData;
-            int SizeOfTargetSample = sizeof(Uint8) * channels;
-            if((TargetData = (Uint8*) SDL_malloc(TargetData_Samples * SizeOfTargetSample)) == nullptr) {
-                SDL_free(TargetDataFloat);
-                SDL_free(myChunk);
-                if(freesrc) {
-                    SDL_RWclose(rwop);
-                }
+            const auto SizeOfTargetSample = sizeof(Uint8) * channels;
+            sdl2::sdl_ptr<Uint8[]> TargetData{ static_cast<Uint8*>(SDL_malloc(TargetData_Samples * SizeOfTargetSample)) };
+            if(TargetData == nullptr) {
                 return nullptr;
             }
 
             for(Uint32 i=0; i < TargetData_Samples*channels; i+=channels) {
-                TargetData[i] = Float2Uint8(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]);
-                for(int j = 1; j < channels; j++) {
-                    TargetData[i+j] = TargetData[i];
+                const auto v = Float2Uint8(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]);
+                for(auto j = 0; j < channels; j++) {
+                    TargetData[i+j] = v;
                 }
 
             }
 
-            SDL_free(TargetDataFloat);
+            TargetDataFloat.reset();
 
-            myChunk->abuf = (Uint8*) TargetData;
+            myChunk->abuf = TargetData.release();
             myChunk->alen = TargetData_Samples * SizeOfTargetSample;
 
         } break;
 
         case AUDIO_S8:
         {
-            Sint8* TargetData;
-            int SizeOfTargetSample = sizeof(Sint8) * channels;
-            if((TargetData = (Sint8*) SDL_malloc(TargetData_Samples * SizeOfTargetSample)) == nullptr) {
-                SDL_free(TargetDataFloat);
-                SDL_free(myChunk);
-                if(freesrc) {
-                    SDL_RWclose(rwop);
-                }
+            const auto SizeOfTargetSample = sizeof(Sint8) * channels;
+            sdl2::sdl_ptr<Sint8[]> TargetData{ static_cast<Sint8*>(SDL_malloc(TargetData_Samples * SizeOfTargetSample)) };
+            if(TargetData == nullptr) {
                 return nullptr;
             }
 
             for(Uint32 i=0; i < TargetData_Samples*channels; i+=channels) {
-                TargetData[i] = Float2Sint8(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]);
-                for(int j = 1; j < channels; j++) {
-                    TargetData[i+j] = TargetData[i];
+                const auto v = Float2Sint8(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]);
+                for(auto j = 0; j < channels; j++) {
+                    TargetData[i + j] = v;
                 }
-
             }
 
-            SDL_free(TargetDataFloat);
+            TargetDataFloat.reset();
 
-            myChunk->abuf = (Uint8*) TargetData;
+            myChunk->abuf = reinterpret_cast<Uint8*>(TargetData.release());
             myChunk->alen = TargetData_Samples * SizeOfTargetSample;
 
         } break;
 
         case AUDIO_U16LSB:
         {
-            Uint16* TargetData;
-            int SizeOfTargetSample = sizeof(Uint16) * channels;
-            if((TargetData = (Uint16*) SDL_malloc(TargetData_Samples * SizeOfTargetSample)) == nullptr) {
-                SDL_free(TargetDataFloat);
-                SDL_free(myChunk);
-                if(freesrc) {
-                    SDL_RWclose(rwop);
-                }
+            const auto SizeOfTargetSample = sizeof(Uint16) * channels;
+            sdl2::sdl_ptr<Uint16[]> TargetData{ static_cast<Uint16*>(SDL_malloc(TargetData_Samples * SizeOfTargetSample)) };
+            if(TargetData == nullptr) {
                 return nullptr;
             }
 
             for(Uint32 i=0; i < TargetData_Samples*channels; i+=channels) {
-                TargetData[i] = SDL_SwapLE16(Float2Uint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
-                for(int j = 1; j < channels; j++) {
-                    TargetData[i+j] = TargetData[i];
+                const auto v = SDL_SwapLE16(Float2Uint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
+                for(auto j = 0; j < channels; j++) {
+                    TargetData[i+j] = v;
                 }
 
             }
 
-            SDL_free(TargetDataFloat);
+            TargetDataFloat.reset();
 
-            myChunk->abuf = (Uint8*) TargetData;
+            myChunk->abuf = reinterpret_cast<Uint8*>(TargetData.release());
             myChunk->alen = TargetData_Samples * SizeOfTargetSample;
 
         } break;
 
         case AUDIO_S16LSB:
         {
-            Sint16* TargetData;
-            int SizeOfTargetSample = sizeof(Sint16) * channels;
-            if((TargetData = (Sint16*) SDL_malloc(TargetData_Samples * SizeOfTargetSample)) == nullptr) {
-                SDL_free(TargetDataFloat);
-                SDL_free(myChunk);
-                if(freesrc) {
-                    SDL_RWclose(rwop);
-                }
+            const auto SizeOfTargetSample = sizeof(Sint16) * channels;
+            sdl2::sdl_ptr<Sint16[]> TargetData{ static_cast<Sint16*>(SDL_malloc(TargetData_Samples * SizeOfTargetSample)) };
+            if(TargetData == nullptr) {
                 return nullptr;
             }
 
             for(Uint32 i=0; i < TargetData_Samples*channels; i+=channels) {
-                TargetData[i] = SDL_SwapLE16(Float2Sint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
-                for(int j = 1; j < channels; j++) {
-                    TargetData[i+j] = TargetData[i];
+                const auto v = SDL_SwapLE16(Float2Sint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
+                for(int j = 0; j < channels; j++) {
+                    TargetData[i+j] = v;
                 }
 
             }
 
-            SDL_free(TargetDataFloat);
+            TargetDataFloat.reset();
 
-            myChunk->abuf = (Uint8*) TargetData;
+            myChunk->abuf = reinterpret_cast<Uint8*>(TargetData.release());
             myChunk->alen = TargetData_Samples * SizeOfTargetSample;
 
         } break;
 
         case AUDIO_U16MSB:
         {
-            Uint16* TargetData;
-            int SizeOfTargetSample = sizeof(Uint16) * channels;
-            if((TargetData = (Uint16*) SDL_malloc(TargetData_Samples * SizeOfTargetSample)) == nullptr) {
-                SDL_free(TargetDataFloat);
-                SDL_free(myChunk);
-                if(freesrc) {
-                    SDL_RWclose(rwop);
-                }
+            const auto SizeOfTargetSample = sizeof(Uint16) * channels;
+            sdl2::sdl_ptr<Uint16[]> TargetData{ static_cast<Uint16*>(SDL_malloc(TargetData_Samples * SizeOfTargetSample)) };
+            if(TargetData == nullptr) {
                 return nullptr;
             }
 
             for(Uint32 i=0; i < TargetData_Samples*channels; i+=channels) {
-                TargetData[i] = SDL_SwapBE16(Float2Uint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
-                for(int j = 1; j < channels; j++) {
-                    TargetData[i+j] = TargetData[i];
+                const auto v = SDL_SwapBE16(Float2Uint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
+                for(int j = 0; j < channels; j++) {
+                    TargetData[i+j] = v;
                 }
 
             }
 
-            SDL_free(TargetDataFloat);
+            TargetDataFloat.reset();
 
-            myChunk->abuf = (Uint8*) TargetData;
+            myChunk->abuf = reinterpret_cast<Uint8*>(TargetData.release());
             myChunk->alen = TargetData_Samples * SizeOfTargetSample;
 
         } break;
 
         case AUDIO_S16MSB:
         {
-            Sint16* TargetData;
-            int SizeOfTargetSample = sizeof(Sint16) * channels;
-            if((TargetData = (Sint16*) SDL_malloc(TargetData_Samples * SizeOfTargetSample)) == nullptr) {
-                SDL_free(TargetDataFloat);
-                SDL_free(myChunk);
-                if(freesrc) {
-                    SDL_RWclose(rwop);
-                }
+            const auto SizeOfTargetSample = sizeof(Sint16) * channels;
+            sdl2::sdl_ptr<Sint16[]> TargetData{ static_cast<Sint16*>(SDL_malloc(TargetData_Samples * SizeOfTargetSample)) };
+            if(TargetData == nullptr) {
                 return nullptr;
             }
 
             for(Uint32 i=0; i < TargetData_Samples*channels; i+=channels) {
-                TargetData[i] = SDL_SwapBE16(Float2Sint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
-                for(int j = 1; j < channels; j++) {
-                    TargetData[i+j] = TargetData[i];
+                const auto v = SDL_SwapBE16(Float2Sint16(TargetDataFloat[(i/channels)+ThreeQuaterSilenceLength]));
+                for(int j = 0; j < channels; j++) {
+                    TargetData[i+j] = v;
                 }
 
             }
 
-            SDL_free(TargetDataFloat);
+            TargetDataFloat.reset();
 
-            myChunk->abuf = (Uint8*) TargetData;
+            myChunk->abuf = reinterpret_cast<Uint8*>(TargetData.release());
             myChunk->alen = TargetData_Samples * SizeOfTargetSample;
 
         } break;
 
         default:
         {
-            SDL_free(TargetDataFloat);
-            SDL_free(myChunk);
-            if(freesrc) {
-                SDL_RWclose(rwop);
-            }
             return nullptr;
         } break;
     }
 
-    if(freesrc) {
-        SDL_RWclose(rwop);
-    }
-    return myChunk;
+    return myChunk.release();
 }
