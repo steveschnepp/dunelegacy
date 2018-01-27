@@ -684,7 +684,8 @@ void Map::viewMap(const int playerTeam, const Coord& location, const int maxView
 
     for (coord.x = startX; coord.x <= endX; coord.x++) {
         for(coord.y = startY; coord.y <= endY; coord.y++) {
-            if(maxViewRange <= 1 ? blockDistanceApprox(location, coord) <= maxViewRange : maximumDistance(location, coord) <= maxViewRange)
+            const auto distance = maxViewRange <= 1 ? maximumDistance(location, coord) : blockDistanceApprox(location, coord);
+            if(distance > maxViewRange)
                 continue;
 
             const auto tile = getTile_internal(coord.x, coord.y);
