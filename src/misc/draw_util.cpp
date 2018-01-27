@@ -17,6 +17,7 @@
 
 #include <misc/draw_util.h>
 #include <misc/exceptions.h>
+#include <misc/sdl_support.h>
 
 #include <globals.h>
 
@@ -119,119 +120,105 @@ void drawVLineNoLock(SDL_Surface *surface, int x, int y1, int y2, Uint32 color) 
 
 
 void drawHLine(SDL_Surface *surface, int x1, int y, int x2, Uint32 color) {
-    if(!SDL_MUSTLOCK(surface) || (SDL_LockSurface(surface) == 0)) {
-        drawHLineNoLock(surface, x1, y, x2, color);
+    sdl2::surface_lock lock{ surface };
 
-        if(SDL_MUSTLOCK(surface)) {
-            SDL_UnlockSurface(surface);
-        }
-    }
+    drawHLineNoLock(surface, x1, y, x2, color);
 }
 
 
 void drawVLine(SDL_Surface *surface, int x, int y1, int y2, Uint32 color) {
-    if(!SDL_MUSTLOCK(surface) || (SDL_LockSurface(surface) == 0)) {
-        drawVLineNoLock(surface, x, y1, y2, color);
+    sdl2::surface_lock lock{ surface };
 
-        if (SDL_MUSTLOCK(surface)) {
-            SDL_UnlockSurface(surface);
-        }
-    }
+    drawVLineNoLock(surface, x, y1, y2, color);
 }
 
 
-void drawRect(SDL_Surface *surface, int x1, int y1, int x2, int y2, Uint32 color) {
-    if(!SDL_MUSTLOCK(surface) || (SDL_LockSurface(surface) == 0)) {
-        int min = x1;
-        int max = x2;
+void drawRectNoLock(SDL_Surface *surface, int x1, int y1, int x2, int y2, Uint32 color) {
+    int min = x1;
+    int max = x2;
 
-        if(min > max) {
-            int temp = max;
-            max = min;
-            min = temp;
-        }
-
-        for(int i = min; i <= max; i++) {
-            putPixel(surface, i, y1, color);
-            putPixel(surface, i, y2, color);
-        }
-
-        min = y1+1;
-        max = y2;
-        if(min > max) {
-            int temp = max;
-            max = min;
-            min = temp;
-        }
-
-        for(int j = min; j < max; j++) {
-            putPixel(surface, x1, j, color);
-            putPixel(surface, x2, j, color);
-        }
-
-        if(SDL_MUSTLOCK(surface)) {
-            SDL_UnlockSurface(surface);
-        }
+    if(min > max) {
+        std::swap(min, max);
     }
+
+    for(auto i = min; i <= max; i++) {
+        putPixel(surface, i, y1, color);
+        putPixel(surface, i, y2, color);
+    }
+
+    min = y1+1;
+    max = y2;
+    if(min > max) {
+        std::swap(min, max);
+    }
+
+    for(auto j = min; j < max; j++) {
+        putPixel(surface, x1, j, color);
+        putPixel(surface, x2, j, color);
+    }
+}
+
+void drawRect(SDL_Surface *surface, int x1, int y1, int x2, int y2, Uint32 color) {
+    sdl2::surface_lock lock{ surface };
+
+    drawRectNoLock(surface, x1, y1, x2, y2, color);
 }
 
 SDL_Surface* renderReadSurface(SDL_Renderer* renderer) {
-    SDL_Rect rendererSize = getRendererSize();
-    SDL_Surface* pScreen = SDL_CreateRGBSurface(0, rendererSize.w, rendererSize.h, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK);
+    const auto rendererSize = getRendererSize();
+    sdl2::surface_ptr pScreen{ SDL_CreateRGBSurface(0, rendererSize.w, rendererSize.h, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
     if((pScreen == nullptr) || (SDL_RenderReadPixels(renderer, nullptr, SCREEN_FORMAT, pScreen->pixels, pScreen->pitch) != 0)) {
         SDL_Log("Warning: renderReadSurface() failed: %s", SDL_GetError());
-        SDL_FreeSurface(pScreen);
         return nullptr;
     }
 
-    SDL_version version;
-    SDL_GetVersion(&version);
+    static bool need_workaround;
+    static std::once_flag  flag;
+    std::call_once(flag,
+        [&]() {
+            need_workaround = false;
 
-    if((version.major <= 2) && (version.minor <= 0) && (version.patch <= 4)) {
-        // Fix bug in SDL2 OpenGL Backend (SDL bug #2740 and #3350) in SDL version <= 2.0.4
-        SDL_RendererInfo rendererInfo;
-        SDL_GetRendererInfo(renderer, &rendererInfo);
-        if(strcmp(rendererInfo.name, "opengl") == 0) {
-            if(SDL_GetRenderTarget(renderer) != nullptr) {
-                pScreen = flipHSurface(pScreen, true);
-            }
-        }
+            SDL_version version;
+            SDL_GetVersion(&version);
+
+            if (version.major > 2 || version.minor > 0 || version.patch > 4)
+                return;
+
+            // Fix bug in SDL2 OpenGL Backend (SDL bug #2740 and #3350) in SDL version <= 2.0.4
+            SDL_RendererInfo rendererInfo;
+            SDL_GetRendererInfo(renderer, &rendererInfo);
+            need_workaround = 0 == strcmp(rendererInfo.name, "opengl");
+        });
+
+    if(need_workaround) {
+        if(SDL_GetRenderTarget(renderer) != nullptr)
+            return flipHSurface(pScreen.release(), true);
     }
 
-    return pScreen;
+    return pScreen.release();
 }
 
 void replaceColor(SDL_Surface *surface, Uint32 oldColor, Uint32 newColor) {
-    if(!SDL_MUSTLOCK(surface) || (SDL_LockSurface(surface) == 0)) {
-        for(int y = 0; y < surface->h; y++) {
-            Uint8 *p = (Uint8 *)surface->pixels + (y * surface->pitch);
+    sdl2::surface_lock lock{ surface };
 
-            for(int x = 0; x < surface->w; x++, ++p) {
-                Uint32 color = getPixel(surface, x, y);
-                if(color == oldColor) {
-                    putPixel(surface, x, y, newColor);
-                }
+    for(auto y = 0; y < surface->h; y++) {
+        for(auto x = 0; x < surface->w; ++x) {
+            const auto color = getPixel(surface, x, y);
+            if(color == oldColor) {
+                putPixel(surface, x, y, newColor);
             }
-        }
-
-        if(SDL_MUSTLOCK(surface)) {
-            SDL_UnlockSurface(surface);
         }
     }
 }
 
 void mapColor(SDL_Surface *surface, Uint8 colorMap[256]) {
-    if(!SDL_MUSTLOCK(surface) || (SDL_LockSurface(surface) == 0)) {
-        for(int y = 0; y < surface->h; y++) {
-            Uint8 *p = (Uint8 *)surface->pixels + (y * surface->pitch);
+    sdl2::surface_lock lock{ surface };
 
-            for(int x = 0; x < surface->w; x++, ++p) {
-                *p = colorMap[*p];
-            }
-        }
+    for(auto y = 0; y < surface->h; y++) {
+        Uint8* RESTRICT p = static_cast<Uint8 *>(surface->pixels) + (y * surface->pitch);
 
-        if(SDL_MUSTLOCK(surface)) {
-            SDL_UnlockSurface(surface);
+        for(auto x = 0; x < surface->w; ++x, ++p) {
+            *p = colorMap[*p];
         }
     }
 }
@@ -253,17 +240,14 @@ SDL_Surface* copySurface(SDL_Surface* inSurface) {
 
 
 SDL_Surface* convertSurfaceToDisplayFormat(SDL_Surface* inSurface, bool freeSrcSurface) {
-    SDL_Surface* pSurface;
-    if( (pSurface = SDL_ConvertSurfaceFormat(inSurface, SCREEN_FORMAT, 0)) == nullptr) {
-        if(freeSrcSurface) {
-            SDL_FreeSurface(inSurface);
-        }
+    sdl2::surface_ptr surface_handle{ freeSrcSurface ? inSurface : nullptr };
+
+    sdl2::surface_ptr pSurface{ SDL_ConvertSurfaceFormat(inSurface, SCREEN_FORMAT, 0) };
+    if(pSurface == nullptr) {
         THROW(std::invalid_argument, std::string("convertSurfaceToDisplayFormat(): SDL_ConvertSurfaceFormat() failed: ") + std::string(SDL_GetError()));
     }
-    if(freeSrcSurface) {
-        SDL_FreeSurface(inSurface);
-    }
-    return pSurface;
+
+    return pSurface.release();
 }
 
 
@@ -272,10 +256,9 @@ SDL_Texture* convertSurfaceToTexture(SDL_Surface* inSurface, bool freeSrcSurface
         return nullptr;
     }
 
+    sdl2::surface_ptr surface_handle{ freeSrcSurface ? inSurface : nullptr };
+
     if(inSurface->w <= 0 || inSurface->h <= 0) {
-        if(freeSrcSurface) {
-            SDL_FreeSurface(inSurface);
-        }
         return nullptr;
     }
 
@@ -283,57 +266,44 @@ SDL_Texture* convertSurfaceToTexture(SDL_Surface* inSurface, bool freeSrcSurface
         SDL_Log("Warning: Size of texture created in convertSurfaceToTexture is %dx%d; may exceed hardware limits on older GPUs!", inSurface->w, inSurface->h);
     }
 
-    SDL_Texture* pTexture;
-    if( (pTexture = SDL_CreateTextureFromSurface(renderer, inSurface)) == nullptr) {
-        if(freeSrcSurface) {
-            SDL_FreeSurface(inSurface);
-        }
+    sdl2::texture_ptr pTexture{ SDL_CreateTextureFromSurface(renderer, inSurface) };
+
+    if( pTexture == nullptr) {
         THROW(std::invalid_argument, std::string("convertSurfaceToTexture(): SDL_CreateTextureFromSurface() failed: ") + std::string(SDL_GetError()));
     }
-    if(freeSrcSurface) {
-        SDL_FreeSurface(inSurface);
-    }
-    return pTexture;
+
+    return pTexture.release();
 }
 
 
 SDL_Surface* scaleSurface(SDL_Surface *surf, double ratio, bool freeSrcSurface) {
-    SDL_Surface *scaled = SDL_CreateRGBSurface(0, (int) (surf->w * ratio),(int) (surf->h * ratio),8,0,0,0,0);
-    if(scaled == nullptr) {
-        if(freeSrcSurface) {
-            SDL_FreeSurface(surf);
-        }
+    sdl2::surface_ptr surface_handle{ freeSrcSurface ? surf : nullptr };
 
+    sdl2::surface_ptr scaled{ SDL_CreateRGBSurface(0, static_cast<int>(surf->w * ratio),static_cast<int>(surf->h * ratio),8,0,0,0,0) };
+    if(scaled == nullptr) {
         return nullptr;
     }
     SDL_SetPaletteColors(scaled->format->palette, surf->format->palette->colors, 0, surf->format->palette->ncolors);
     Uint32 ckey;
-    bool has_ckey = !SDL_GetColorKey(surf, &ckey);
+    const auto has_ckey = !SDL_GetColorKey(surf, &ckey);
     if (has_ckey) {
-        SDL_SetColorKey(scaled, SDL_TRUE, ckey);
+        SDL_SetColorKey(scaled.get(), SDL_TRUE, ckey);
     }
     if (surf->flags & SDL_RLEACCEL) {
-        SDL_SetSurfaceRLE(scaled, SDL_TRUE);
+        SDL_SetSurfaceRLE(scaled.get(), SDL_TRUE);
     }
 
-    SDL_LockSurface(scaled);
-    SDL_LockSurface(surf);
+    sdl2::surface_lock lock_scaled{ scaled.get() };
+    sdl2::surface_lock lock_surf{ surf };
 
-    int X2 = (int)(surf->w * ratio);
-    int Y2 = (int)(surf->h * ratio);
+    int X2 = static_cast<int>(surf->w * ratio);
+    int Y2 = static_cast<int>(surf->h * ratio);
 
     for(int x = 0;x < X2;++x)
         for(int y = 0;y < Y2;++y)
-            putPixel(scaled,x,y,getPixel(surf,(int) (x/ratio), (int) (y/ratio)));
+            putPixel(scaled.get(),x,y,getPixel(surf,static_cast<int>(x / ratio), static_cast<int>(y / ratio)));
 
-    SDL_UnlockSurface(scaled);
-    SDL_UnlockSurface(surf);
-
-    if(freeSrcSurface) {
-        SDL_FreeSurface(surf);
-    }
-
-    return scaled;
+    return scaled.release();
 }
 
 
@@ -382,27 +352,22 @@ SDL_Surface* getSubFrame(SDL_Surface* pic, int i, int j, int numX, int numY) {
 }
 
 SDL_Surface* combinePictures(SDL_Surface* basePicture, SDL_Surface* topPicture, int x, int y, bool bFreeBasePicture, bool bFreeTopPicture) {
+    sdl2::surface_ptr base_handle{ bFreeBasePicture ? basePicture : nullptr };
+    sdl2::surface_ptr top_handle{ bFreeTopPicture ? topPicture : nullptr };
 
     if((basePicture == nullptr) || (topPicture == nullptr)) {
-        if(bFreeBasePicture) SDL_FreeSurface(basePicture);
-        if(bFreeTopPicture) SDL_FreeSurface(topPicture);
         return nullptr;
     }
 
-    SDL_Surface* dest = copySurface(basePicture);
+    sdl2::surface_ptr dest{ copySurface(basePicture) };
     if(dest == nullptr) {
-        if(bFreeBasePicture) SDL_FreeSurface(basePicture);
-        if(bFreeTopPicture) SDL_FreeSurface(topPicture);
         return nullptr;
     }
 
     SDL_Rect destRect = calcDrawingRect(topPicture, x, y);
-    SDL_BlitSurface(topPicture, nullptr, dest, &destRect);
+    SDL_BlitSurface(topPicture, nullptr, dest.get(), &destRect);
 
-    if(bFreeBasePicture) SDL_FreeSurface(basePicture);
-    if(bFreeTopPicture) SDL_FreeSurface(topPicture);
-
-    return dest;
+    return dest.release();
 }
 
 
@@ -589,63 +554,53 @@ SDL_Surface* createShadowSurface(SDL_Surface* source) {
         THROW(std::invalid_argument, "createShadowSurface(): source == nullptr!");
     }
 
-    SDL_Surface *retPic;
+    sdl2::surface_ptr retPic{ SDL_ConvertSurface(source, source->format, source->flags) };
 
-    if((retPic = SDL_ConvertSurface(source,source->format,source->flags)) == nullptr) {
+    if(retPic == nullptr) {
         THROW(std::runtime_error, "createShadowSurface(): Cannot copy image!");
     }
 
     if(retPic->format->BytesPerPixel == 1) {
-        SDL_SetSurfaceBlendMode(retPic, SDL_BLENDMODE_NONE);
+        SDL_SetSurfaceBlendMode(retPic.get(), SDL_BLENDMODE_NONE);
     }
 
-    if(SDL_LockSurface(retPic) != 0) {
-        SDL_FreeSurface(retPic);
-        THROW(std::runtime_error, "createShadowSurface(): Cannot lock image!");
-    }
+    sdl2::surface_lock lock{ retPic.get() };
 
-    for(int i = 0; i < retPic->w; i++) {
-        for(int j = 0; j < retPic->h; j++) {
-            Uint8* pixel = &((Uint8*)retPic->pixels)[j * retPic->pitch + i];
+    for(auto i = 0; i < retPic->w; i++) {
+        for(auto j = 0; j < retPic->h; j++) {
+            const auto pixel = &static_cast<Uint8*>(retPic->pixels)[j * retPic->pitch + i];
             if(*pixel != PALCOLOR_TRANSPARENT) {
                 *pixel = PALCOLOR_BLACK;
             }
         }
     }
-    SDL_UnlockSurface(retPic);
 
-    return retPic;
+    return retPic.release();
 }
 
 
 SDL_Surface* mapSurfaceColorRange(SDL_Surface* source, int srcColor, int destColor, bool bFreeSource) {
-    SDL_Surface *retPic;
+    if (!source)
+        THROW(std::runtime_error, "mapSurfaceColorRange(): Null source!");
 
-    if(bFreeSource) {
-        retPic = source;
-    } else {
-        if((retPic = SDL_ConvertSurface(source,source->format,source->flags)) == nullptr) {
-            THROW(std::runtime_error, "mapSurfaceColorRange(): Cannot copy image!");
-        }
-    }
+    sdl2::surface_ptr retPic{ bFreeSource ? source : SDL_ConvertSurface(source,source->format,source->flags) };
+
+    if (!source)
+        THROW(std::runtime_error, "mapSurfaceColorRange(): Cannot copy image!");
 
     if (retPic->format->BytesPerPixel == 1) {
-        SDL_SetSurfaceBlendMode(retPic, SDL_BLENDMODE_NONE);
+        SDL_SetSurfaceBlendMode(retPic.get(), SDL_BLENDMODE_NONE);
     }
 
-    if(SDL_LockSurface(retPic) != 0) {
-        SDL_FreeSurface(retPic);
-        THROW(std::runtime_error, "mapSurfaceColorRange(): Cannot lock image!");
-    }
+    sdl2::surface_lock lock{ retPic.get() };
 
-    for(int y = 0; y < retPic->h; ++y) {
-        Uint8* p = (Uint8*) retPic->pixels + y * retPic->pitch;
-        for(int x = 0; x < retPic->w; ++x, ++p) {
+    for(auto y = 0; y < retPic->h; ++y) {
+        Uint8* RESTRICT p = static_cast<Uint8*>(retPic->pixels) + y * retPic->pitch;
+        for(auto x = 0; x < retPic->w; ++x, ++p) {
             if ((*p >= srcColor) && (*p < srcColor + 7))
                 *p = *p - srcColor + destColor;
         }
     }
-    SDL_UnlockSurface(retPic);
 
-    return retPic;
+    return retPic.release();
 }
