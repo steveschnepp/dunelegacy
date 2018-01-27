@@ -665,12 +665,10 @@ void Map::viewMap(const int playerTeam, const Coord& location, const int maxView
 
     std::vector<int> houses;
 
-    for (auto i = 0; i < NUM_HOUSES; i++) {
-        const auto pHouse = currentGame->getHouse(i);
-        if ((pHouse != nullptr) && (pHouse->getTeam() == playerTeam)) {
-            houses.push_back(i);
-        }
-    }
+    currentGame->forAllHouses([&](House *h) {
+        if (h->getTeam() == playerTeam)
+            houses.push_back(h->getHouseID());
+        });
 
     if (houses.empty())
         return;

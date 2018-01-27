@@ -435,8 +435,9 @@ void INIMapLoader::loadHouses()
 
         int quota = inifile->getIntValue(houseName,"Quota",0);
 
-        House* pNewHouse = new House(houseID, startingCredits, maxUnits, houseInfo.team, quota);
-        pGame->house[houseID] = pNewHouse;
+        auto& pNewHouse = pGame->house[houseID];
+
+        pNewHouse = std::make_unique<House>(houseID, startingCredits, maxUnits, houseInfo.team, quota);
 
         // add players
         for(const auto& playerInfo : houseInfo.playerInfoList) {
@@ -450,14 +451,15 @@ void INIMapLoader::loadHouses()
                 }
             }
 
-            std::shared_ptr<Player> pPlayer = pPlayerData->create(pNewHouse, playerInfo.playerName);
+            auto pPlayer = pPlayerData->create(pNewHouse.get(), playerInfo.playerName);
 
-            pNewHouse->addPlayer(pPlayer);
             if( ((pGame->getGameInitSettings().getGameType() != GameType::CustomMultiplayer) && (dynamic_cast<HumanPlayer*>(pPlayer.get()) != nullptr))
                 || (playerInfo.playerName == pGame->getLocalPlayerName())) {
-                pLocalHouse = pNewHouse;
+                pLocalHouse = pNewHouse.get();
                 pLocalPlayer = dynamic_cast<HumanPlayer*>(pPlayer.get());
             }
+
+            pNewHouse->addPlayer(std::move(pPlayer));
         }
     }
 }
@@ -848,9 +850,9 @@ void INIMapLoader::loadView()
     \return the house specified by house
 */
 House* INIMapLoader::getOrCreateHouse(int houseID) {
-    auto pNewHouse = pGame->house[houseID];
+    auto& pNewHouse = pGame->house[houseID];
 
-    if(pNewHouse != nullptr) return pNewHouse;
+    if(pNewHouse != nullptr) return pNewHouse.get();
 
     Uint8 team = 0;
     if(pGame->gameType == GameType::Campaign || pGame->gameType == GameType::Skirmish) {
@@ -864,7 +866,7 @@ House* INIMapLoader::getOrCreateHouse(int houseID) {
     } else {
         maxUnits = std::max(25, 25*(currentGameMap->getSizeX()*currentGameMap->getSizeY())/(64*64));
     }
-    pNewHouse = new House(houseID, 0, maxUnits, team, 0);
+    pNewHouse = std::make_unique<House>(houseID, 0, maxUnits, team, 0);
 
     const GameInitSettings::HouseInfoList& houseInfoList = pGame->getGameInitSettings().getHouseInfoList();
 
@@ -882,13 +884,14 @@ House* INIMapLoader::getOrCreateHouse(int houseID) {
                 }
             }
 
-            std::shared_ptr<Player> pPlayer = pPlayerData->create(pNewHouse, playerInfo.playerName);
+            auto pPlayer = pPlayerData->create(pNewHouse.get(), playerInfo.playerName);
 
-            pNewHouse->addPlayer(pPlayer);
             if(playerInfo.playerName == pGame->getLocalPlayerName()) {
-                pLocalHouse = pNewHouse;
+                pLocalHouse = pNewHouse.get();
                 pLocalPlayer = dynamic_cast<HumanPlayer*>(pPlayer.get());
             }
+
+            pNewHouse->addPlayer(std::move(pPlayer));
         }
         break;
     }
@@ -902,9 +905,7 @@ House* INIMapLoader::getOrCreateHouse(int houseID) {
         }
         */
 
-    pGame->house[houseID] = pNewHouse;
-
-    return pNewHouse;
+    return pNewHouse.get();
 }
 
 HOUSETYPE INIMapLoader::getHouseID(const std::string& name) {

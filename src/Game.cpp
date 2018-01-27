@@ -1078,13 +1078,7 @@ void Game::runMainLoop() {
     bShowTime = winFlags & WINLOSEFLAGS_TIMEOUT;
 
     // Check if a player has lost
-    for(int j = 0; j < NUM_HOUSES; j++) {
-        if(house[j] != nullptr) {
-            if(!house[j]->isAlive()) {
-                house[j]->lose(true);
-            }
-        }
-    }
+    std::for_each(house.begin(), house.end(), [](std::unique_ptr<House>& h) { if (h && !h->isAlive()) h->lose(true); });
 
     if(bReplay) {
         cmdManager.setReadOnly(true);
@@ -1262,11 +1256,7 @@ void Game::runMainLoop() {
                 }
 #endif
 
-                for (int i = 0; i < NUM_HOUSES; i++) {
-                    if (house[i] != nullptr) {
-                        house[i]->update();
-                    }
-                }
+                std::for_each(house.begin(), house.end(), [](std::unique_ptr<House>& h) { if (h) h->update(); });
 
                 screenborder->update();
 
@@ -1525,7 +1515,7 @@ bool Game::loadSaveGame(InputStream& stream) {
     for(auto i=0; i<NUM_HOUSES; i++) {
         if (stream.readBool() == true) {
             //house in game
-            house[i] = new House(stream);
+            house[i] = std::make_unique<House>(stream);
         }
     }
 
@@ -1552,7 +1542,7 @@ bool Game::loadSaveGame(InputStream& stream) {
                                     registerPlayer(humanPlayer.get());
 
                                     if(playerInfo.playerName == getLocalPlayerName()) {
-                                        pLocalHouse = house[i];
+                                        pLocalHouse = house[i].get();
                                         pLocalPlayer = humanPlayer.get();
                                     }
 
@@ -1571,7 +1561,7 @@ bool Game::loadSaveGame(InputStream& stream) {
         // it is stored in the savegame, so set it up
         const auto localPlayerID = stream.readUint8();
         pLocalPlayer = dynamic_cast<HumanPlayer*>(getPlayerByID(localPlayerID));
-        pLocalHouse = house[pLocalPlayer->getHouse()->getHouseID()];
+        pLocalHouse = house[pLocalPlayer->getHouse()->getHouseID()].get();
     }
 
     debug = stream.readBool();

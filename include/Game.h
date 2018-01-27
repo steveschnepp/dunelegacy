@@ -154,7 +154,14 @@ public:
         \return the house with id houseID
     */
     House* getHouse(int houseID) {
-        return house[houseID];
+        return house[houseID].get();
+    }
+
+    template<typename F>
+    void forAllHouses(F&& f) const {
+        for(auto& h : house) {
+            if (h) f(h.get());
+        }
     }
 
     /**
@@ -605,15 +612,15 @@ private:
     Uint32                  startWaitingForOtherPlayersTime = 0;    ///< The time in milliseconds when we started waiting for other players
 
     bool    bSelectionChanged = false;                      ///< Has the selected list changed (and must be retransmitted to other plays in multiplayer games)
-    Dune::selected_set_type selectedList;                      ///< A set of all selected units/structures
-    Dune::selected_set_type selectedByOtherPlayerList;         ///< This is only used in multiplayer games where two players control one house
-
-    std::vector<House*> house;                          ///< All the houses of this game, index by their houseID; has the size NUM_HOUSES; unused houses are nullptr
+    Dune::selected_set_type selectedList;                   ///< A set of all selected units/structures
+    Dune::selected_set_type selectedByOtherPlayerList;      ///< This is only used in multiplayer games where two players control one house
     std::vector<std::unique_ptr<Explosion>> explosionList;                   ///< A list containing all the explosions that must be drawn
 
     std::string localPlayerName;                            ///< the name of the local player
-    std::multimap<std::string, Player*> playerName2Player;  ///< mapping player names to players (one entry per player)
-    std::map<Uint8, Player*> playerID2Player;               ///< mapping player ids to players (one entry per player)
+    std::unordered_multimap<std::string, Player*> playerName2Player;  ///< mapping player names to players (one entry per player)
+    std::unordered_map<Uint8, Player*> playerID2Player;               ///< mapping player ids to players (one entry per player)
+
+    std::array<std::unique_ptr<House>, NUM_HOUSES> house;   ///< All the houses of this game, index by their houseID; has the size NUM_HOUSES; unused houses are nullptr
 };
 
 #endif // GAME_H
