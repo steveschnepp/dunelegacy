@@ -248,8 +248,6 @@ void Game::drawScreen()
     BottomRightTile.x = std::min(currentGameMap->getSizeX() - 1, BottomRightTile.x + 1);
     BottomRightTile.y = std::min(currentGameMap->getSizeY() - 1, BottomRightTile.y + 1);
 
-    Coord currentTile;
-
     const auto tiles = currentGameMap;
 
     const auto x1 = TopLeftTile.x;
@@ -285,17 +283,6 @@ void Game::drawScreen()
             t.blitDeadUnits(screenborder->world2screenX(t.getLocation().x*TILESIZE),
                 screenborder->world2screenY(t.getLocation().y*TILESIZE));
         });
-
-    for (currentTile.y = TopLeftTile.y; currentTile.y <= BottomRightTile.y; currentTile.y++) {
-        for (currentTile.x = TopLeftTile.x; currentTile.x <= BottomRightTile.x; currentTile.x++) {
-
-            if (currentGameMap->tileExists(currentTile)) {
-                Tile* pTile = currentGameMap->getTile(currentTile);
-                pTile->blitDeadUnits(screenborder->world2screenX(currentTile.x*TILESIZE),
-                    screenborder->world2screenY(currentTile.y*TILESIZE));
-            }
-        }
-    }
 
     /* draw infantry */
     tiles->for_each(x1, y1, x2, y2,
