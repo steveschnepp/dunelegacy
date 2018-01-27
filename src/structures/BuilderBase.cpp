@@ -45,14 +45,6 @@ const int BuilderBase::itemOrder[] = {    Structure_Slab4, Structure_Slab1, Stru
 BuilderBase::BuilderBase(House* newOwner) : StructureBase(newOwner) {
     BuilderBase::init();
 
-    curUpgradeLev = 0;
-    upgradeProgress = 0;
-    upgrading = false;
-
-    currentProducedItem = ItemID_Invalid;
-    bCurrentItemOnHold = false;
-    productionProgress = 0;
-    deployTimer = 0;
 }
 
 BuilderBase::BuilderBase(InputStream& stream) : StructureBase(stream) {
@@ -102,12 +94,12 @@ void BuilderBase::save(OutputStream& stream) const {
     stream.writeUint32(deployTimer);
 
     stream.writeUint32(currentProductionQueue.size());
-    for(const ProductionQueueItem& queueItem : currentProductionQueue) {
+    for(const auto& queueItem : currentProductionQueue) {
         queueItem.save(stream);
     }
 
     stream.writeUint32(buildList.size());
-    for(const BuildItem& buildItem : buildList) {
+    for(const auto& buildItem : buildList) {
         buildItem.save(stream);
     }
 }
@@ -179,7 +171,7 @@ bool BuilderBase::isWaitingToPlace() const {
         return false;
     }
 
-    const BuildItem* tmp = getBuildItem(currentProducedItem);
+    const auto tmp = getBuildItem(currentProducedItem);
     if(tmp == nullptr) {
         return false;
     } else {
@@ -203,28 +195,29 @@ bool BuilderBase::isUnitLimitReached(Uint32 itemID) const {
 
 
 void BuilderBase::updateProductionProgress() {
-    if(currentProducedItem != ItemID_Invalid) {
-        BuildItem* tmp = getBuildItem(currentProducedItem);
+    if(currentProducedItem == ItemID_Invalid) return;
 
-        if((productionProgress < tmp->price) && (isOnHold() == false) && (isUnitLimitReached(currentProducedItem) == false) && (owner->getCredits() > 0)) {
+    const auto tmp = getBuildItem(currentProducedItem);
 
-            FixPoint oldProgress = productionProgress;
+    if((productionProgress < tmp->price) && (isOnHold() == false) && (isUnitLimitReached(currentProducedItem) == false) && (owner->getCredits() > 0)) {
 
-            if(currentGame->getGameInitSettings().getGameOptions().instantBuild == true) {
-                FixPoint totalBuildCosts = currentGame->objectData.data[currentProducedItem][originalHouseID].price;
-                FixPoint buildCosts = totalBuildCosts - productionProgress;
+        const FixPoint oldProgress = productionProgress;
 
-                productionProgress += owner->takeCredits(buildCosts);
-            } else {
+        if(currentGame->getGameInitSettings().getGameOptions().instantBuild == true) {
+            const FixPoint totalBuildCosts = currentGame->objectData.data[currentProducedItem][originalHouseID].price;
+            const auto buildCosts = totalBuildCosts - productionProgress;
 
-                FixPoint buildSpeed = getHealth() / getMaxHealth();
-                FixPoint totalBuildCosts = currentGame->objectData.data[currentProducedItem][originalHouseID].price;
-                FixPoint totalBuildGameTicks = currentGame->objectData.data[currentProducedItem][originalHouseID].buildtime*15;
-                FixPoint buildCosts = totalBuildCosts / totalBuildGameTicks;
+            productionProgress += owner->takeCredits(buildCosts);
+        } else {
 
-                productionProgress += owner->takeCredits(buildCosts*buildSpeed);
+            const auto buildSpeed = getHealth() / getMaxHealth();
+            const FixPoint totalBuildCosts = currentGame->objectData.data[currentProducedItem][originalHouseID].price;
+            const FixPoint totalBuildGameTicks = currentGame->objectData.data[currentProducedItem][originalHouseID].buildtime*15;
+            const auto buildCosts = totalBuildCosts / totalBuildGameTicks;
 
-                /* That was wrong. Build speed does not depend on power production
+            productionProgress += owner->takeCredits(buildCosts*buildSpeed);
+
+            /* That was wrong. Build speed does not depend on power production
                 if (getOwner()->hasPower() || (((currentGame->gameType == GameType::Campaign) || (currentGame->gameType == GameType::Skirmish)) && getOwner()->isAI())) {
                     //if not enough power, production is halved
                     ProductionProgress += owner->takeCredits(FixPt(0,25));
@@ -232,24 +225,23 @@ void BuilderBase::updateProductionProgress() {
                     ProductionProgress += owner->takeCredits(FixPt(0,125));
                 }*/
 
-            }
+        }
 
-            if ((oldProgress == productionProgress) && (owner == pLocalHouse)) {
-                currentGame->addToNewsTicker(_("Not enough money"));
-            }
+        if ((oldProgress == productionProgress) && (owner == pLocalHouse)) {
+            currentGame->addToNewsTicker(_("Not enough money"));
+        }
 
-            if(productionProgress >= tmp->price) {
-                setWaitingToPlace();
-            }
+        if(productionProgress >= tmp->price) {
+            setWaitingToPlace();
         }
     }
 }
 
 void BuilderBase::doBuildRandom() {
-    if(!buildList.empty()) {
-        int item2Produce = std::next(buildList.begin(), currentGame->randomGen.rand(0, static_cast<Sint32>(buildList.size())-1))->itemID;
-        doProduceItem(item2Produce);
-    }
+    if(buildList.empty()) return;
+
+    const auto item2Produce = std::next(buildList.begin(), currentGame->randomGen.rand(0, static_cast<Sint32>(buildList.size())-1))->itemID;
+    doProduceItem(item2Produce);
 }
 
 void BuilderBase::produceNextAvailableItem() {
@@ -264,13 +256,13 @@ void BuilderBase::produceNextAvailableItem() {
 }
 
 int BuilderBase::getMaxUpgradeLevel() const {
-    int upgradeLevel = 0;
+    auto upgradeLevel = 0;
 
-    for(int i = ItemID_FirstID; i <= ItemID_LastID; i++) {
-        const ObjectData::ObjectDataStruct& objData = currentGame->objectData.data[i][originalHouseID];
+    for(int i = ItemID_FirstID; i <= ItemID_LastID; ++i) {
+        const auto& objData = currentGame->objectData.data[i][originalHouseID];
 
-        if(objData.enabled && (objData.builder == (int) itemID) && (objData.techLevel <= currentGame->techLevel)) {
-            upgradeLevel = std::max(upgradeLevel, (int) objData.upgradeLevel);
+        if(objData.enabled && (objData.builder == static_cast<int>(itemID)) && (objData.techLevel <= currentGame->techLevel)) {
+            upgradeLevel = std::max(upgradeLevel, static_cast<int>(objData.upgradeLevel));
         }
     }
 
@@ -283,17 +275,17 @@ void BuilderBase::updateBuildList()
 
     for(int i = 0; itemOrder[i] != ItemID_Invalid; i++) {
 
-        int itemID2Add = itemOrder[i];
+        const auto itemID2Add = itemOrder[i];
 
-        const ObjectData::ObjectDataStruct& objData = currentGame->objectData.data[itemID2Add][originalHouseID];
+        const auto& objData = currentGame->objectData.data[itemID2Add][originalHouseID];
 
-        if(!objData.enabled || (objData.builder != (int) itemID) || (objData.upgradeLevel > curUpgradeLev) || (objData.techLevel > currentGame->techLevel)) {
+        if(!objData.enabled || (objData.builder != static_cast<int>(itemID)) || (objData.upgradeLevel > curUpgradeLev) || (objData.techLevel > currentGame->techLevel)) {
             // first simple checks have rejected this item as being available for built in this builder
             removeItem(buildList, iter, itemID2Add);
         } else {
 
             // check if prerequisites are met
-            bool bPrerequisitesMet = true;
+            auto bPrerequisitesMet = true;
             for(int itemID2Test = Structure_FirstID; itemID2Test <= Structure_LastID; itemID2Test++) {
                 if(objData.prerequisiteStructuresSet[itemID2Test] && (owner->getNumItems(itemID2Test) <= 0)) {
                     bPrerequisitesMet = false;
@@ -371,7 +363,7 @@ bool BuilderBase::update() {
             }
 
             for(int i = 0; i < num2Place; i++) {
-                UnitBase* newUnit = getOwner()->createUnit(finishedItemID);
+                auto newUnit = getOwner()->createUnit(finishedItemID);
 
                 if(newUnit != nullptr) {
                     Coord unitDestination;
@@ -385,7 +377,7 @@ bool BuilderBase::update() {
                         unitDestination = destination;
                     }
 
-                    Coord spot = newUnit->isAFlyingUnit() ? location + Coord(1,1) : currentGameMap->findDeploySpot(newUnit, location, currentGame->randomGen, unitDestination, structureSize);
+                    const auto spot = newUnit->isAFlyingUnit() ? location + Coord(1,1) : currentGameMap->findDeploySpot(newUnit, location, currentGame->randomGen, unitDestination, structureSize);
                     newUnit->deploy(spot);
 
                     if(unitDestination.isValid()) {
@@ -402,13 +394,13 @@ bool BuilderBase::update() {
     }
 
     if(upgrading == true) {
-        FixPoint totalUpgradePrice = getUpgradeCost();
+        const FixPoint totalUpgradePrice = getUpgradeCost();
 
         if(currentGame->getGameInitSettings().getGameOptions().instantBuild == true) {
-            FixPoint upgradePriceLeft = totalUpgradePrice - upgradeProgress;
+            const FixPoint upgradePriceLeft = totalUpgradePrice - upgradeProgress;
             upgradeProgress += owner->takeCredits(upgradePriceLeft);
         } else {
-            FixPoint totalUpgradeGameTicks = 30 * 100 / 5;
+            const FixPoint totalUpgradeGameTicks = 30 * 100 / 5;
             upgradeProgress += owner->takeCredits(totalUpgradePrice / totalUpgradeGameTicks);
         }
 
@@ -429,7 +421,7 @@ bool BuilderBase::update() {
 void BuilderBase::removeBuiltItemFromProductionQueue() {
     productionProgress = 0;
 
-    auto currentBuildItemIter = std::find_if(   buildList.begin(),
+    const auto currentBuildItemIter = std::find_if(   buildList.begin(),
                                                 buildList.end(),
                                                 [&](BuildItem& buildItem) {
                                                     return ((buildItem.itemID == currentProducedItem) && (buildItem.num > 0));
@@ -513,15 +505,15 @@ void BuilderBase::doProduceItem(Uint32 itemID, bool multipleMode) {
 }
 
 void BuilderBase::doCancelItem(Uint32 itemID, bool multipleMode) {
-    for(BuildItem& buildItem : buildList) {
+    for(auto& buildItem : buildList) {
         if(buildItem.itemID == itemID) {
-            for(int i = 0; i < (multipleMode ? 5 : 1); i++) {
+            for(auto i = 0; i < (multipleMode ? 5 : 1); i++) {
                 if(buildItem.num > 0) {
                     buildItem.num--;
 
                     bool bCancelCurrentItem = (itemID == currentProducedItem);
 
-                    auto queueItemIter = std::find_if(  currentProductionQueue.rbegin(),
+                    const auto queueItemIter = std::find_if(  currentProductionQueue.rbegin(),
                                                         currentProductionQueue.rend(),
                                                         [&](ProductionQueueItem& queueItem) {
                                                             return (queueItem.itemID == itemID);

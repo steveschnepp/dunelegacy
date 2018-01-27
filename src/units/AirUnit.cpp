@@ -48,7 +48,6 @@ AirUnit::AirUnit(InputStream& stream) : UnitBase(stream)
 
 void AirUnit::init()
 {
-    shadowGraphic = nullptr;
     aFlyingUnit = true;
 }
 
@@ -95,11 +94,11 @@ void AirUnit::checkPos()
 void AirUnit::blitToScreen()
 {
     if(shadowGraphic != nullptr) {
-        int x = screenborder->world2screenX(realX + 4);
-        int y = screenborder->world2screenY(realY + 12);
+        const auto x = screenborder->world2screenX(realX + 4);
+        const auto y = screenborder->world2screenY(realY + 12);
 
-        SDL_Rect source = calcSpriteSourceRect(shadowGraphic[currentZoomlevel], drawnAngle, numImagesX, drawnFrame, numImagesY);
-        SDL_Rect dest = calcSpriteDrawingRect(shadowGraphic[currentZoomlevel], x, y, numImagesX, numImagesY, HAlign::Center, VAlign::Center);
+        auto source = calcSpriteSourceRect(shadowGraphic[currentZoomlevel], drawnAngle, numImagesX, drawnFrame, numImagesY);
+        auto dest = calcSpriteDrawingRect(shadowGraphic[currentZoomlevel], x, y, numImagesX, numImagesY, HAlign::Center, VAlign::Center);
 
         SDL_RenderCopy(renderer, shadowGraphic[currentZoomlevel], &source, &dest);
     }

@@ -85,7 +85,7 @@ private:
 
     // drawing information
     SDL_Texture** graphic;               ///< The graphic of the bullet
-    int           numFrames;             ///< Number of frames of the bullet
+    int           numFrames = 1;         ///< Number of frames of the bullet
 };
 
 #endif // BULLET_H

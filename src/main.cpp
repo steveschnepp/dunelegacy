@@ -592,7 +592,7 @@ int main(int argc, char *argv[]) {
                 SDL_DisplayMode displayMode;
                 SDL_GetDesktopDisplayMode(currentDisplayIndex, &displayMode);
 
-                int factor = getLogicalToPhysicalResolutionFactor(displayMode.w, displayMode.h);
+                const auto factor = getLogicalToPhysicalResolutionFactor(displayMode.w, displayMode.h);
                 settings.video.physicalWidth = displayMode.w;
                 settings.video.physicalHeight = displayMode.h;
                 settings.video.width = displayMode.w / factor;
@@ -676,9 +676,8 @@ int main(int argc, char *argv[]) {
             // Playing intro
             if(((bFirstGamestart == true) || (settings.general.playIntro == true)) && (bFirstInit==true)) {
                 SDL_Log("Playing intro...");
-                Intro* pIntro = new Intro();
-                pIntro->run();
-                delete pIntro;
+                Intro intro;
+                intro.run();
             }
 
             bFirstInit = false;

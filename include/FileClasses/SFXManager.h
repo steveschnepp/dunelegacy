@@ -89,10 +89,15 @@ typedef enum {
 } Sound_enum;
 
 
-class SFXManager {
+class SFXManager final {
 public:
     SFXManager();
     ~SFXManager();
+
+    SFXManager(const SFXManager &) = delete;
+    SFXManager(SFXManager &&) = delete;
+    SFXManager& operator=(const SFXManager &) = delete;
+    SFXManager& operator=(SFXManager &&) = delete;
 
     Mix_Chunk*      getVoice(Voice_enum id, int house);
     Mix_Chunk*      getSound(Sound_enum id);
@@ -104,11 +109,10 @@ private:
     Mix_Chunk*      getEnglishVoice(Voice_enum id, int house);
 
     void            loadNonEnglishVoice(const std::string& languagePrefix);
-    Mix_Chunk*      getNonEnglishVoice(Voice_enum id, int house);
+    Mix_Chunk*      getNonEnglishVoice(Voice_enum id, int house) const;
 
-    Mix_Chunk**     lngVoice;
-    int             numLngVoice;
-    Mix_Chunk*      soundChunk[NUM_SOUNDCHUNK];
+    std::vector<sdl2::mix_chunk_ptr> lngVoice;
+    std::array<sdl2::mix_chunk_ptr, NUM_SOUNDCHUNK> soundChunk;
 };
 
 #endif // SFXMANAGER_H

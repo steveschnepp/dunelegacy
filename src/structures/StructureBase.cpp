@@ -460,7 +460,7 @@ void StructureBase::destroy() {
     if(itemID != Structure_Wall) {
         for(int j = 0; j < structureSize.y; j++) {
             for(int i = 0; i < structureSize.x; i++) {
-                Tile* pTile = currentGameMap->getTile(location.x + i, location.y + j);
+                auto pTile = currentGameMap->getTile(location.x + i, location.y + j);
                 pTile->setDestroyedStructureTile(pDestroyedStructureTiles[DestroyedStructureTilesSizeY*j + i]);
 
                 const Coord position((location.x+i)*TILESIZE + TILESIZE/2, (location.y+j)*TILESIZE + TILESIZE/2);
@@ -468,7 +468,7 @@ void StructureBase::destroy() {
                 currentGame->addExplosion(explosionID, position, owner->getHouseID());
 
                 if(currentGame->randomGen.rand(1,100) <= getInfSpawnProp()) {
-                    UnitBase* pNewUnit = owner->createUnit(Unit_Soldier);
+                    auto pNewUnit = owner->createUnit(Unit_Soldier);
                     pNewUnit->setHealth(pNewUnit->getMaxHealth()/2);
                     pNewUnit->deploy(location + Coord(i,j));
                 }

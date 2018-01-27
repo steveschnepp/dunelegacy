@@ -39,7 +39,7 @@ Bullet::Bullet(Uint32 shooterID, Coord* newRealLocation, Coord* newRealDestinati
 
     this->shooterID = shooterID;
 
-    ObjectBase* pShooter = currentGame->getObjectManager().getObject(shooterID);
+    auto pShooter = currentGame->getObjectManager().getObject(shooterID);
     if(pShooter == nullptr) {
         owner = nullptr;
     } else {
@@ -55,25 +55,25 @@ Bullet::Bullet(Uint32 shooterID, Coord* newRealLocation, Coord* newRealDestinati
     destination = *newRealDestination;
 
     if(bulletID == Bullet_Sonic) {
-        int diffX = destination.x - newRealLocation->x;
-        int diffY = destination.y - newRealLocation->y;
+        const auto diffX = destination.x - newRealLocation->x;
+        auto diffY = destination.y - newRealLocation->y;
 
-        int weaponrange = currentGame->objectData.data[Unit_SonicTank][(owner == nullptr) ? HOUSE_ATREIDES : owner->getHouseID()].weaponrange;
+        const auto weaponrange = currentGame->objectData.data[Unit_SonicTank][(owner == nullptr) ? HOUSE_ATREIDES : owner->getHouseID()].weaponrange;
 
         if((diffX == 0) && (diffY == 0)) {
             diffY = weaponrange*TILESIZE;
         }
 
-        FixPoint square_root = FixPoint::sqrt(diffX*diffX + diffY*diffY);
-        FixPoint ratio = (weaponrange*TILESIZE)/square_root;
+        const auto square_root = FixPoint::sqrt(diffX*diffX + diffY*diffY);
+        const auto ratio = (weaponrange*TILESIZE)/square_root;
         destination.x = newRealLocation->x + floor(diffX*ratio);
         destination.y = newRealLocation->y + floor(diffY*ratio);
     } else if(bulletID == Bullet_Rocket || bulletID == Bullet_DRocket) {
-        FixPoint distance = distanceFrom(*newRealLocation, *newRealDestination);
+        const auto distance = distanceFrom(*newRealLocation, *newRealDestination);
 
 
-        FixPoint randAngle = 2 * FixPt_PI * currentGame->randomGen.randFixPoint();
-        int radius = currentGame->randomGen.rand(0,lround(TILESIZE/2 + (distance/TILESIZE)));
+        const auto randAngle = 2 * FixPt_PI * currentGame->randomGen.randFixPoint();
+        const auto radius = currentGame->randomGen.rand(0,lround(TILESIZE/2 + (distance/TILESIZE)));
 
         destination.x += lround(FixPoint::cos(randAngle) * radius);
         destination.y -= lround(FixPoint::sin(randAngle) * radius);
@@ -87,7 +87,7 @@ Bullet::Bullet(Uint32 shooterID, Coord* newRealLocation, Coord* newRealDestinati
     location.x = newRealLocation->x/TILESIZE;
     location.y = newRealLocation->y/TILESIZE;
 
-    FixPoint angleRad =  destinationAngleRad(*newRealLocation, *newRealDestination);
+    const auto angleRad =  destinationAngleRad(*newRealLocation, *newRealDestination);
     angle = RadToDeg256(angleRad);
     drawnAngle = lround(numFrames*angle/256) % numFrames;
 
@@ -134,7 +134,7 @@ void Bullet::init()
 {
     explodesAtGroundObjects = false;
 
-    int houseID = (owner == nullptr) ? HOUSE_HARKONNEN : owner->getHouseID();
+    const auto houseID = (owner == nullptr) ? HOUSE_HARKONNEN : owner->getHouseID();
 
     switch(bulletID) {
         case Bullet_DRocket: {
@@ -270,23 +270,24 @@ void Bullet::save(OutputStream& stream) const
 
 void Bullet::blitToScreen() const
 {
-    int imageW = getWidth(graphic[currentZoomlevel])/numFrames;
-    int imageH = getHeight(graphic[currentZoomlevel]);
+    const auto imageW = getWidth(graphic[currentZoomlevel])/numFrames;
+    const auto imageH = getHeight(graphic[currentZoomlevel]);
 
     if(screenborder->isInsideScreen( Coord(lround(realX), lround(realY)), Coord(imageW, imageH)) == false) {
         return;
     }
 
-    SDL_Rect dest = calcSpriteDrawingRect(graphic[currentZoomlevel], screenborder->world2screenX(realX), screenborder->world2screenY(realY), numFrames, 1, HAlign::Center, VAlign::Center);
+    auto dest = calcSpriteDrawingRect(graphic[currentZoomlevel], screenborder->world2screenX(realX), screenborder->world2screenY(realY),
+        numFrames, 1, HAlign::Center, VAlign::Center);
 
     if(bulletID == Bullet_Sonic) {
         static const int shimmerOffset[]  = { 1, 3, 2, 5, 4, 3, 2, 1 };
 
-        SDL_Texture* shimmerTex = pGFXManager->getObjPic(ObjPic_Bullet_SonicTemp,HOUSE_HARKONNEN)[currentZoomlevel];
-        SDL_Texture* shimmerMaskTex = pGFXManager->getObjPic(ObjPic_Bullet_Sonic,HOUSE_HARKONNEN)[currentZoomlevel];
+        const auto shimmerTex = pGFXManager->getObjPic(ObjPic_Bullet_SonicTemp,HOUSE_HARKONNEN)[currentZoomlevel];
+        const auto shimmerMaskTex = pGFXManager->getObjPic(ObjPic_Bullet_Sonic,HOUSE_HARKONNEN)[currentZoomlevel];
 
         // switch to texture 'shimmerTex' for rendering
-        SDL_Texture* oldRenderTarget = SDL_GetRenderTarget(renderer);
+        const auto oldRenderTarget = SDL_GetRenderTarget(renderer);
         SDL_SetRenderTarget(renderer, shimmerTex);
 
         // copy complete mask
@@ -298,8 +299,8 @@ void Bullet::blitToScreen() const
 
         // now copy r,g,b colors from screen but don't change alpha values in mask
         SDL_SetTextureBlendMode(screenTexture, SDL_BLENDMODE_ADD);
-        SDL_Rect source = dest;
-        int shimmerOffsetIndex = ((currentGame->getGameCycleCount() + getBulletID()) % 24)/3;
+        auto source = dest;
+        const auto shimmerOffsetIndex = ((currentGame->getGameCycleCount() + getBulletID()) % 24)/3;
         source.x += shimmerOffset[shimmerOffsetIndex%8]*2;
         SDL_RenderCopy(renderer, screenTexture, &source, nullptr);
         SDL_SetTextureBlendMode(screenTexture, SDL_BLENDMODE_NONE);
@@ -311,7 +312,7 @@ void Bullet::blitToScreen() const
         SDL_SetTextureBlendMode(shimmerTex, SDL_BLENDMODE_BLEND);
         SDL_RenderCopy(renderer, shimmerTex, nullptr, &dest);
     } else {
-        SDL_Rect source = calcSpriteSourceRect(graphic[currentZoomlevel], (numFrames > 1) ? drawnAngle: 0, numFrames);
+        const auto source = calcSpriteSourceRect(graphic[currentZoomlevel], (numFrames > 1) ? drawnAngle: 0, numFrames);
         SDL_RenderCopy(renderer, graphic[currentZoomlevel], &source, &dest);
     }
 }
@@ -320,18 +321,17 @@ void Bullet::blitToScreen() const
 void Bullet::update()
 {
     if(bulletID == Bullet_Rocket || bulletID == Bullet_DRocket) {
+        const auto angleToDestinationRad = destinationAngleRad(Coord(lround(realX), lround(realY)), destination);
+        const auto angleToDestination = RadToDeg256(angleToDestinationRad);
 
-        FixPoint angleToDestinationRad = destinationAngleRad(Coord(lround(realX), lround(realY)), destination);
-        FixPoint angleToDestination = RadToDeg256(angleToDestinationRad);
-
-        FixPoint angleDiff = angleToDestination - angle;
+        auto angleDiff = angleToDestination - angle;
         if(angleDiff > 128) {
             angleDiff -= 256;
         } else if(angleDiff < -128) {
             angleDiff += 256;
         }
 
-        static const FixPoint turnSpeed = FixPt(4,5);
+        static const auto turnSpeed = FixPt(4,5);
 
         if(angleDiff >= turnSpeed) {
             angleDiff = turnSpeed;
@@ -354,7 +354,7 @@ void Bullet::update()
     }
 
 
-    FixPoint oldDistanceToDestination = distanceFrom(realX, realY, destination.x, destination.y);
+    const auto oldDistanceToDestination = distanceFrom(realX, realY, destination.x, destination.y);
 
     realX += xSpeed;  //keep the bullet moving by its current speeds
     realY += ySpeed;
@@ -367,7 +367,7 @@ void Bullet::update()
         delete this;
         return;
     } else {
-        FixPoint newDistanceToDestination = distanceFrom(realX, realY, destination.x, destination.y);
+        const auto newDistanceToDestination = distanceFrom(realX, realY, destination.x, destination.y);
 
         if(detonationTimer > 0) {
             detonationTimer--;
@@ -380,17 +380,17 @@ void Bullet::update()
                 return;
             }
 
-            FixPoint weaponDamage = currentGame->objectData.data[Unit_SonicTank][(owner == nullptr) ? HOUSE_ATREIDES : owner->getHouseID()].weapondamage;
+            const FixPoint weaponDamage = currentGame->objectData.data[Unit_SonicTank][(owner == nullptr) ? HOUSE_ATREIDES : owner->getHouseID()].weapondamage;
 
-            FixPoint startDamage = (weaponDamage / 4 + 1) / FixPt(4,5);
-            FixPoint endDamage = ((weaponDamage-9) / 4 + 1) / FixPt(4,5);
+            const auto startDamage = (weaponDamage / 4 + 1) / FixPt(4,5);
+            const auto endDamage = ((weaponDamage-9) / 4 + 1) / FixPt(4,5);
 
-            FixPoint damageDecrease = - (startDamage-endDamage)/(45 * 2 * speed);
-            FixPoint dist = distanceFrom(source.x, source.y, realX, realY);
+            const auto damageDecrease = - (startDamage-endDamage)/(45 * 2 * speed);
+            const auto dist = distanceFrom(source.x, source.y, realX, realY);
 
-            FixPoint currentDamage = dist*damageDecrease + startDamage;
+            const auto currentDamage = dist*damageDecrease + startDamage;
 
-            Coord realPos = Coord(lround(realX), lround(realY));
+            auto realPos = Coord(lround(realX), lround(realY));
             currentGameMap->damage(shooterID, owner, realPos, bulletID, currentDamage/2, damageRadius, false);
 
             realX += xSpeed;  //keep the bullet moving by its current speeds
@@ -425,9 +425,9 @@ void Bullet::update()
 
 void Bullet::destroy()
 {
-    Coord position = Coord(lround(realX), lround(realY));
+    auto position = Coord(lround(realX), lround(realY));
 
-    int houseID = (owner == nullptr) ? HOUSE_HARKONNEN : owner->getHouseID();
+    const auto houseID = (owner == nullptr) ? HOUSE_HARKONNEN : owner->getHouseID();
 
     switch(bulletID) {
         case Bullet_DRocket: {
@@ -439,8 +439,8 @@ void Bullet::destroy()
         case Bullet_LargeRocket: {
             soundPlayer->playSoundAt(Sound_ExplosionLarge, position);
 
-            for(int i = 0; i < 5; i++) {
-                for(int j = 0; j < 5; j++) {
+            for(auto i = 0; i < 5; i++) {
+                for(auto j = 0; j < 5; j++) {
                     if (((i != 0) && (i != 4)) || ((j != 0) && (j != 4))) {
                         position.x = lround(realX) + (i - 2)*TILESIZE;
                         position.y = lround(realY) + (j - 2)*TILESIZE;

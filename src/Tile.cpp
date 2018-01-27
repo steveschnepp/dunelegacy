@@ -234,10 +234,10 @@ void Tile::assignNonInfantryGroundObject(Uint32 newObjectID) {
 }
 
 int Tile::assignInfantry(Uint32 newObjectID, Sint8 currentPosition) {
-    Sint8 newPosition = currentPosition;
+    auto newPosition = currentPosition;
 
     if (currentPosition < 0) {
-        bool used[NUM_INFANTRY_PER_TILE]{ false };
+        std::array<bool, NUM_INFANTRY_PER_TILE> used{};
 
         for (auto objectID : assignedInfantryList) {
             const auto pInfantry = dynamic_cast<InfantryBase*>(currentGame->getObjectManager().getObject(objectID));
@@ -959,7 +959,7 @@ void Tile::triggerSpecialBloom(House* pTrigger) {
             break;
         }
 
-        int candidate = currentGame->randomGen.rand(0, numCandidates - 1);
+        auto candidate = currentGame->randomGen.rand(0, numCandidates - 1);
 
         House* pEnemyHouse = nullptr;
         for (int i = 0; i < NUM_HOUSES; i++) {

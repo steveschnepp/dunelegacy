@@ -47,8 +47,8 @@ public:
     FontManager& operator=(FontManager &&) = delete;
 
     void drawTextOnSurface(SDL_Surface* pSurface, const std::string& text, Uint32 color, unsigned int fontNum);
-    int getTextWidth(const std::string& text, unsigned int fontNum);
-    int getTextHeight(unsigned int fontNum);
+    int getTextWidth(const std::string& text, unsigned int fontNum) const;
+    int getTextHeight(unsigned int fontNum) const;
     SDL_Surface* createSurfaceWithText(const std::string& text, Uint32 color, unsigned int fontNum);
     SDL_Texture* createTextureWithText(const std::string& text, Uint32 color, unsigned int fontNum);
     SDL_Surface* createSurfaceWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered = false);

@@ -531,14 +531,14 @@ public:
     Animation*      getAnimation(unsigned int id);
 
 private:
-    Animation*      loadAnimationFromWsa(const std::string& filename);
-    SDL_Surface*    generateWindtrapAnimationFrames(SDL_Surface* windtrapPic);
-    SDL_Surface*    generateMapChoiceArrowFrames(SDL_Surface* arrowPic, int house=HOUSE_HARKONNEN);
+    Animation*      loadAnimationFromWsa(const std::string& filename) const;
+    SDL_Surface*    generateWindtrapAnimationFrames(SDL_Surface* windtrapPic) const;
+    SDL_Surface*    generateMapChoiceArrowFrames(SDL_Surface* arrowPic, int house=HOUSE_HARKONNEN) const;
 
-    std::shared_ptr<Shpfile>  loadShpfile(const std::string& filename);
-    std::shared_ptr<Wsafile>  loadWsafile(const std::string& filename);
+    std::shared_ptr<Shpfile>  loadShpfile(const std::string& filename) const;
+    std::shared_ptr<Wsafile>  loadWsafile(const std::string& filename) const;
 
-    SDL_Texture*    extractSmallDetailPic(const std::string& filename);
+    SDL_Texture*    extractSmallDetailPic(const std::string& filename) const;
 
     SDL_Surface*    generateDoubledObjPic(unsigned int id, int h);
     SDL_Surface*    generateTripledObjPic(unsigned int id, int h);
@@ -553,11 +553,11 @@ private:
     SDL_Surface*    pBackgroundSurface;
 
     // Textures
-    SDL_Texture*    objPicTex[NUM_OBJPICS][(int) NUM_HOUSES][NUM_ZOOMLEVEL];
-    SDL_Texture*    smallDetailPicTex[NUM_SMALLDETAILPICS];
-    SDL_Texture*    tinyPictureTex[NUM_TINYPICTURE];
-    SDL_Texture*    uiGraphicTex[NUM_UIGRAPHICS][(int) NUM_HOUSES];
-    SDL_Texture*    mapChoicePiecesTex[NUM_MAPCHOICEPIECES][(int) NUM_HOUSES];
+    std::array<std::array<std::array<SDL_Texture *, NUM_ZOOMLEVEL>, NUM_HOUSES>, NUM_OBJPICS> objPicTex;
+    std::array<SDL_Texture *, NUM_SMALLDETAILPICS> smallDetailPicTex;
+    std::array<SDL_Texture *, NUM_TINYPICTURE> tinyPictureTex;
+    std::array<std::array<SDL_Texture *, NUM_HOUSES>, NUM_UIGRAPHICS> uiGraphicTex;
+    std::array<std::array<SDL_Texture *, NUM_HOUSES>, NUM_MAPCHOICEPIECES> mapChoicePiecesTex;
 };
 
 #endif // GFXMANAGER_H

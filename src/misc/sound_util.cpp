@@ -7,7 +7,7 @@
 #include <misc/exceptions.h>
 
 #include <SDL2/SDL_mixer.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory.h>
 
 extern FileManager* pFileManager;

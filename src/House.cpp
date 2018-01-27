@@ -520,17 +520,17 @@ void House::win() {
 
 
 
-void House::lose(bool bSilent) {
+void House::lose(bool bSilent) const {
     if(!bSilent) {
-        currentGame->addToNewsTicker(fmt::sprintf(_("House '%s' has been defeated."), getHouseNameByNumber( (HOUSETYPE) getHouseID())));
+        currentGame->addToNewsTicker(fmt::sprintf(_("House '%s' has been defeated."), getHouseNameByNumber( static_cast<HOUSETYPE>(getHouseID()))));
     }
 
     if((getTeam() == pLocalHouse->getTeam()) && ((currentGame->winFlags & WINLOSEFLAGS_HUMAN_HAS_BUILDINGS) != 0)) {
 
         bool finished = true;
 
-        for(int i=0; i < NUM_HOUSES; i++) {
-            House* pHouse = currentGame->getHouse(i);
+        for(auto i=0; i < NUM_HOUSES; i++) {
+            const auto pHouse = currentGame->getHouse(i);
             if(pHouse != nullptr && pHouse->isAlive() && pHouse->getTeam() == pLocalHouse->getTeam()) {
                 finished = false;
             }
@@ -549,10 +549,10 @@ void House::lose(bool bSilent) {
 
     } else if((currentGame->winFlags & WINLOSEFLAGS_AI_NO_BUILDINGS) != 0) {
         //if the only players left are on the thisPlayers team, pLocalHouse has won
-        bool finished = true;
+        auto finished = true;
 
-        for(int i=0; i < NUM_HOUSES; i++) {
-            House* pHouse = currentGame->getHouse(i);
+        for(auto i=0; i < NUM_HOUSES; i++) {
+            const auto pHouse = currentGame->getHouse(i);
             if(pHouse != nullptr && pHouse->isAlive() && pHouse->getTeam() != 0 && pHouse->getTeam() != pLocalHouse->getTeam()) {
                 finished = false;
             }
@@ -575,34 +575,37 @@ void House::lose(bool bSilent) {
 
 
 void House::freeHarvester(int xPos, int yPos) {
-    if(currentGameMap->tileExists(xPos, yPos)
-        && currentGameMap->getTile(xPos, yPos)->hasAGroundObject()
-        && (currentGameMap->getTile(xPos, yPos)->getGroundObject()->getItemID() == Structure_Refinery))
-    {
-        Refinery* refinery = static_cast<Refinery*>(currentGameMap->getTile(xPos, yPos)->getGroundObject());
-        Coord closestPos = currentGameMap->findClosestEdgePoint(refinery->getLocation() + Coord(2,0), Coord(1,1));
+    if(!currentGameMap->tileExists(xPos, yPos))
+        return;
 
-        Carryall* carryall = static_cast<Carryall*>(createUnit(Unit_Carryall));
-        Harvester* harvester = static_cast<Harvester*>(createUnit(Unit_Harvester));
-        harvester->setAmountOfSpice(5);
-        carryall->setOwned(false);
-        carryall->giveCargo(harvester);
-        carryall->deploy(closestPos);
-        carryall->setDropOfferer(true);
+    const auto tile = currentGameMap->getTile(xPos, yPos);
 
-        if (closestPos.x == 0)
-            carryall->setAngle(RIGHT);
-        else if (closestPos.x == currentGameMap->getSizeX()-1)
-            carryall->setAngle(LEFT);
-        else if (closestPos.y == 0)
-            carryall->setAngle(DOWN);
-        else if (closestPos.y == currentGameMap->getSizeY()-1)
-            carryall->setAngle(UP);
+    if(!tile->hasAGroundObject() || tile->getGroundObject()->getItemID() != Structure_Refinery)
+        return;
 
-        harvester->setTarget(refinery);
-        harvester->setActive(false);
-        carryall->setTarget(refinery);
-    }
+    const auto refinery = static_cast<Refinery*>(tile->getGroundObject());
+    const Coord closestPos = currentGameMap->findClosestEdgePoint(refinery->getLocation() + Coord(2,0), Coord(1,1));
+
+    auto carryall = static_cast<Carryall*>(createUnit(Unit_Carryall));
+    auto harvester = static_cast<Harvester*>(createUnit(Unit_Harvester));
+    harvester->setAmountOfSpice(5);
+    carryall->setOwned(false);
+    carryall->giveCargo(harvester);
+    carryall->deploy(closestPos);
+    carryall->setDropOfferer(true);
+
+    if (closestPos.x == 0)
+        carryall->setAngle(RIGHT);
+    else if (closestPos.x == currentGameMap->getSizeX()-1)
+        carryall->setAngle(LEFT);
+    else if (closestPos.y == 0)
+        carryall->setAngle(DOWN);
+    else if (closestPos.y == currentGameMap->getSizeY()-1)
+        carryall->setAngle(UP);
+
+    harvester->setTarget(refinery);
+    harvester->setActive(false);
+    carryall->setTarget(refinery);
 }
 
 
@@ -613,7 +616,7 @@ StructureBase* House::placeStructure(Uint32 builderID, int itemID, int xPos, int
         return nullptr;
     }
 
-    BuilderBase* pBuilder = (builderID == NONE_ID) ? nullptr : dynamic_cast<BuilderBase*>(currentGame->getObjectManager().getObject(builderID));
+    auto pBuilder = (builderID == NONE_ID) ? nullptr : dynamic_cast<BuilderBase*>(currentGame->getObjectManager().getObject(builderID));
 
     if(currentGame->getGameInitSettings().getGameOptions().onlyOnePalace && pBuilder != nullptr && itemID == Structure_Palace && getNumItems(Structure_Palace) > 0) {
         if(this == pLocalHouse && pBuilder->isSelected()) {
@@ -624,9 +627,11 @@ StructureBase* House::placeStructure(Uint32 builderID, int itemID, int xPos, int
 
     switch (itemID) {
         case (Structure_Slab1): {
+            const auto tile = currentGameMap->getTile(xPos, yPos);
+
             // Slabs are no normal buildings
-            currentGameMap->getTile(xPos, yPos)->setType(Terrain_Slab);
-            currentGameMap->getTile(xPos, yPos)->setOwner(getHouseID());
+            tile->setType(Terrain_Slab);
+            tile->setOwner(getHouseID());
             currentGameMap->viewMap(getTeam(), xPos, yPos, currentGame->objectData.data[Structure_Slab1][houseID].viewrange);
     //      currentGameMap->getTile(xPos, yPos)->clearTerrain();
 
@@ -681,8 +686,8 @@ StructureBase* House::placeStructure(Uint32 builderID, int itemID, int xPos, int
         } break;
 
         default: {
-            ObjectBase* newObject = ObjectBase::createObject(itemID,this);
-            StructureBase* newStructure = dynamic_cast<StructureBase*>(newObject);
+            auto newObject = ObjectBase::createObject(itemID,this);
+            auto newStructure = dynamic_cast<StructureBase*>(newObject);
             if(newStructure == nullptr) {
                 delete newStructure;
                 THROW(std::runtime_error, "Cannot create structure with itemID %d!", itemID);

@@ -25,8 +25,12 @@ class AirUnit : public UnitBase
 public:
     explicit AirUnit(House* newOwner);
     explicit AirUnit(InputStream& stream);
-    void init();
-    virtual ~AirUnit();
+    virtual ~AirUnit() = 0;
+
+    AirUnit(const AirUnit &) = delete;
+    AirUnit(AirUnit &&) = delete;
+    AirUnit& operator=(const AirUnit &) = delete;
+    AirUnit& operator=(AirUnit &&) = delete;
 
     void save(OutputStream& stream) const override;
 
@@ -52,7 +56,10 @@ protected:
 
     FixPoint currentMaxSpeed;               ///< The current maximum allowed speed
 
-    SDL_Texture**   shadowGraphic;          ///< The graphic for the shadow of this air unit
+    SDL_Texture**   shadowGraphic{};          ///< The graphic for the shadow of this air unit
+
+private:
+    void init();
 };
 
 #endif // AIRUNIT_H

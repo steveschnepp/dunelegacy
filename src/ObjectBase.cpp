@@ -72,7 +72,6 @@
 #include <array>
 
 ObjectBase::ObjectBase(House* newOwner) : originalHouseID(newOwner->getHouseID()), owner(newOwner) {
-    ObjectBase::init();
 
     objectID = NONE_ID;
 
@@ -104,8 +103,6 @@ ObjectBase::ObjectBase(House* newOwner) : originalHouseID(newOwner->getHouseID()
 ObjectBase::ObjectBase(InputStream& stream) {
     originalHouseID = stream.readUint32();
     owner = currentGame->getHouse(stream.readUint32());
-
-    ObjectBase::init();
 
     health = stream.readFixPoint();
     badlyDamaged = stream.readBool();
@@ -144,27 +141,6 @@ ObjectBase::ObjectBase(InputStream& stream) {
 
     for (decltype(visible.count()) i = 0; i < visible.count(); ++i)
         visible[i] = b[i];
-}
-
-void ObjectBase::init() {
-    itemID = ItemID_Invalid;
-
-    aFlyingUnit = false;
-    aGroundUnit = false;
-    aStructure = false;
-    aUnit = false;
-    infantry = false;
-    aBuilder = false;
-
-    canAttackStuff = false;
-
-    radius = TILESIZE/2;
-
-    graphicID = -1;
-    graphic = nullptr;
-    numImagesX = 0;
-    numImagesY = 0;
-
 }
 
 ObjectBase::~ObjectBase() = default;

@@ -130,8 +130,8 @@ GFXManager::GFXManager() {
     }
 
     // init whole smallDetailPicTex array
-    for(int i = 0; i < NUM_SMALLDETAILPICS; i++) {
-        smallDetailPicTex[i] = nullptr;
+    for(auto & pic : smallDetailPicTex) {
+        pic = nullptr;
     }
 
     // init whole tinyPictureTex array
@@ -872,7 +872,7 @@ GFXManager::GFXManager() {
 
 GFXManager::~GFXManager() {
     for(int i = 0; i < NUM_OBJPICS; i++) {
-        for(int j = 0; j < (int) NUM_HOUSES; j++) {
+        for(int j = 0; j < static_cast<int>(NUM_HOUSES); j++) {
             for(int z = 0; z < NUM_ZOOMLEVEL; z++) {
                 if(objPic[i][j][z] != nullptr) {
                     SDL_FreeSurface(objPic[i][j][z]);
@@ -886,22 +886,22 @@ GFXManager::~GFXManager() {
         }
     }
 
-    for(int i = 0; i < NUM_SMALLDETAILPICS; i++) {
-        if(smallDetailPicTex[i] != nullptr) {
-            SDL_DestroyTexture(smallDetailPicTex[i]);
-            smallDetailPicTex[i] = nullptr;
+    for(auto & pic : smallDetailPicTex) {
+        if(pic != nullptr) {
+            SDL_DestroyTexture(pic);
+            pic = nullptr;
         }
     }
 
-    for(int i = 0; i < NUM_TINYPICTURE; i++) {
-        if(tinyPictureTex[i] != nullptr) {
-            SDL_DestroyTexture(tinyPictureTex[i]);
-            tinyPictureTex[i] = nullptr;
+    for(auto& pic : tinyPictureTex) {
+        if(pic != nullptr) {
+            SDL_DestroyTexture(pic);
+            pic = nullptr;
         }
     }
 
     for(int i = 0; i < NUM_UIGRAPHICS; i++) {
-        for(int j = 0; j < (int) NUM_HOUSES; j++) {
+        for(int j = 0; j < static_cast<int>(NUM_HOUSES); j++) {
             if(uiGraphic[i][j] != nullptr) {
                 SDL_FreeSurface(uiGraphic[i][j]);
                 uiGraphic[i][j] = nullptr;
@@ -914,7 +914,7 @@ GFXManager::~GFXManager() {
     }
 
     for(int i = 0; i < NUM_MAPCHOICEPIECES; i++) {
-        for(int j = 0; j < (int) NUM_HOUSES; j++) {
+        for(int j = 0; j < static_cast<int>(NUM_HOUSES); j++) {
             if(mapChoicePieces[i][j] != nullptr) {
                 SDL_FreeSurface(mapChoicePieces[i][j]);
                 mapChoicePieces[i][j] = nullptr;
@@ -926,10 +926,10 @@ GFXManager::~GFXManager() {
         }
     }
 
-    for(int i = 0; i < NUM_ANIMATION; i++) {
-        if(animation[i] != nullptr) {
-            delete animation[i];
-            animation[i] = nullptr;
+    for(auto & a : animation) {
+        if(a != nullptr) {
+            delete a;
+            a = nullptr;
         }
     }
 
@@ -957,19 +957,19 @@ SDL_Texture** GFXManager::getObjPic(unsigned int id, int house) {
                 // Windtrap uses palette animation on PALCOLOR_WINDTRAP_COLORCYCLE; fake this
                 objPicTex[id][house][z] = convertSurfaceToTexture(generateWindtrapAnimationFrames(objPic[id][house][z]), true);
             } else if(id == ObjPic_Terrain_HiddenFog) {
-                SDL_Surface* pHiddenFog = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
+                const auto pHiddenFog = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
                 replaceColor(pHiddenFog, COLOR_BLACK, COLOR_FOG_TRANSPARENT);
                 objPicTex[id][house][z] = convertSurfaceToTexture(pHiddenFog, true);
             } else if(id == ObjPic_CarryallShadow) {
-                SDL_Surface* pShadow = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
+                const auto pShadow = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
                 replaceColor(pShadow, COLOR_BLACK, COLOR_SHADOW_TRANSPARENT);
                 objPicTex[id][house][z] = convertSurfaceToTexture(pShadow, true);
             } else if(id == ObjPic_FrigateShadow) {
-                SDL_Surface* pShadow = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
+                const auto pShadow = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
                 replaceColor(pShadow, COLOR_BLACK, COLOR_SHADOW_TRANSPARENT);
                 objPicTex[id][house][z] = convertSurfaceToTexture(pShadow, true);
             } else if(id == ObjPic_OrnithopterShadow) {
-                SDL_Surface* pShadow = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
+                const auto pShadow = convertSurfaceToDisplayFormat(objPic[id][house][z], false);
                 replaceColor(pShadow, COLOR_BLACK, COLOR_SHADOW_TRANSPARENT);
                 objPicTex[id][house][z] = convertSurfaceToTexture(pShadow, true);
             } else if(id == ObjPic_Bullet_SonicTemp) {
@@ -982,7 +982,7 @@ SDL_Texture** GFXManager::getObjPic(unsigned int id, int house) {
         }
     }
 
-    return objPicTex[id][house];
+    return &objPicTex[id][house][0];
 }
 
 
@@ -1025,12 +1025,12 @@ SDL_Texture* GFXManager::getUIGraphic(unsigned int id, int house) {
     }
 
     if(uiGraphicTex[id][house] == nullptr) {
-        SDL_Surface* pSurface = getUIGraphicSurface(id, house);
+        const auto pSurface = getUIGraphicSurface(id, house);
 
         if(id >= UI_MapChoiceArrow_None && id <= UI_MapChoiceArrow_Left) {
             uiGraphicTex[id][house] = convertSurfaceToTexture(generateMapChoiceArrowFrames(pSurface, house), true);
         } else if(id == UI_Indicator) {
-            SDL_Surface* pIndicator = convertSurfaceToDisplayFormat(pSurface, false);
+            const auto pIndicator = convertSurfaceToDisplayFormat(pSurface, false);
             replaceColor(pIndicator, COLOR_WHITE, COLOR_INDICATOR_TRANSPARENT);
             uiGraphicTex[UI_Indicator][house] = convertSurfaceToTexture(pIndicator, true);
         } else {
@@ -1173,7 +1173,7 @@ Animation* GFXManager::getAnimation(unsigned int id) {
     return animation[id];
 }
 
-shared_ptr<Shpfile> GFXManager::loadShpfile(const std::string& filename) {
+shared_ptr<Shpfile> GFXManager::loadShpfile(const std::string& filename) const {
     try {
         return std::make_shared<Shpfile>(pFileManager->openFile(filename), true);
     } catch (std::exception &e) {
@@ -1181,103 +1181,94 @@ shared_ptr<Shpfile> GFXManager::loadShpfile(const std::string& filename) {
     }
 }
 
-shared_ptr<Wsafile> GFXManager::loadWsafile(const std::string& filename) {
-    SDL_RWops* file_wsa = nullptr;
-    std::shared_ptr<Wsafile> wsafile;
+shared_ptr<Wsafile> GFXManager::loadWsafile(const std::string& filename) const {
     try {
-        file_wsa = pFileManager->openFile(filename);
-        wsafile = std::make_shared<Wsafile>(file_wsa);
-        SDL_RWclose(file_wsa);
+        sdl2::RWop_ptr file_wsa{ pFileManager->openFile(filename) };
+        auto wsafile = std::make_shared<Wsafile>(file_wsa.get());
         return wsafile;
     } catch (std::exception &e) {
-        if(file_wsa != nullptr) {
-            SDL_RWclose(file_wsa);
-        }
         THROW(std::runtime_error, std::string("Error in file \"" + filename + "\":") + e.what());
     }
 }
 
-SDL_Texture* GFXManager::extractSmallDetailPic(const std::string& filename) {
-    SDL_RWops* myFile = pFileManager->openFile(filename);
-
-    Wsafile* myWsafile = new Wsafile(myFile);
-
-    SDL_Surface* tmp;
-    if((tmp = myWsafile->getPicture(0)) == nullptr) {
-        THROW(std::runtime_error, "Cannot decode first frame in file '%s'!", filename);
-    }
-
-    if((tmp->w != 184) || (tmp->h != 112)) {
-        THROW(std::runtime_error, "Picture '%s' is not of size 184x112!", filename);
-    }
-
-    SDL_Surface* pSurface;
+SDL_Texture* GFXManager::extractSmallDetailPic(const std::string& filename) const
+{
+    sdl2::surface_ptr pSurface{ SDL_CreateRGBSurface(0, 91, 55, 8, 0, 0, 0, 0) };
 
     // create new picture surface
-    if((pSurface = SDL_CreateRGBSurface(0, 91, 55, 8, 0, 0, 0, 0)) == nullptr) {
+    if (pSurface == nullptr) {
         THROW(sdl_error, "Cannot create new surface: %s!", SDL_GetError());
     }
 
-    palette.applyToSurface(pSurface);
-    SDL_LockSurface(pSurface);
-    SDL_LockSurface(tmp);
+    { // Scope
+        sdl2::RWop_ptr myFile{ pFileManager->openFile(filename) };
 
-    //Now we can copy pixel by pixel
-    for(int y = 0; y < 55;y++) {
-        for(int x = 0; x < 91; x++) {
-            *( ((char*) (pSurface->pixels)) + y*pSurface->pitch + x)
-                = *( ((char*) (tmp->pixels)) + ((y*2)+1)*tmp->pitch + (x*2)+1);
+        auto myWsafile = std::make_unique<Wsafile>(myFile.get());
+
+        sdl2::surface_ptr tmp{ myWsafile->getPicture(0) };
+        if(tmp == nullptr) {
+            THROW(std::runtime_error, "Cannot decode first frame in file '%s'!", filename);
+        }
+
+        if((tmp->w != 184) || (tmp->h != 112)) {
+            THROW(std::runtime_error, "Picture '%s' is not of size 184x112!", filename);
+        }
+
+        palette.applyToSurface(pSurface.get());
+
+        sdl2::surface_lock lock_out{ pSurface.get() };
+        sdl2::surface_lock lock_in{ tmp.get() };
+
+        char * RESTRICT const out = static_cast<char*>(lock_out.pixels());
+        const char * RESTRICT const in = static_cast<const char*>(lock_in.pixels());
+
+        //Now we can copy pixel by pixel
+        for (auto y = 0; y < 55; y++) {
+            for (auto x = 0; x < 91; x++) {
+                out[y*pSurface->pitch + x] = in[((y * 2) + 1)*tmp->pitch + (x * 2) + 1];
+            }
         }
     }
 
-    SDL_UnlockSurface(tmp);
-    SDL_UnlockSurface(pSurface);
-
-    SDL_FreeSurface(tmp);
-    delete myWsafile;
-    SDL_RWclose(myFile);
-
-    return convertSurfaceToTexture(pSurface, true);
+    return convertSurfaceToTexture(pSurface.get(), false);
 }
 
-Animation* GFXManager::loadAnimationFromWsa(const std::string& filename) {
-    SDL_RWops* file = pFileManager->openFile(filename);
-    Wsafile* wsafile = new Wsafile(file);
-    Animation* ret = wsafile->getAnimation(0,wsafile->getNumFrames() - 1,true,false);
-    delete wsafile;
-    SDL_RWclose(file);
+Animation* GFXManager::loadAnimationFromWsa(const std::string& filename) const {
+    sdl2::RWop_ptr file{ pFileManager->openFile(filename) };
+    auto wsafile = std::make_unique<Wsafile>(file.get());
+    const auto ret = wsafile->getAnimation(0,wsafile->getNumFrames() - 1,true,false);
     return ret;
 }
 
-SDL_Surface* GFXManager::generateWindtrapAnimationFrames(SDL_Surface* windtrapPic) {
-    int windtrapColorQuantizizer = 255/((NUM_WINDTRAP_ANIMATIONS/2)-2);
-    int windtrapSize = windtrapPic->h;
-    int sizeX = NUM_WINDTRAP_ANIMATIONS_PER_ROW*windtrapSize;
-    int sizeY = ((2+NUM_WINDTRAP_ANIMATIONS+NUM_WINDTRAP_ANIMATIONS_PER_ROW-1)/NUM_WINDTRAP_ANIMATIONS_PER_ROW)*windtrapSize;
-    SDL_Surface* returnPic = SDL_CreateRGBSurface(0, sizeX, sizeY, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK);
-    SDL_SetSurfaceBlendMode(returnPic, SDL_BLENDMODE_NONE);
+SDL_Surface* GFXManager::generateWindtrapAnimationFrames(SDL_Surface* windtrapPic) const {
+    const auto windtrapColorQuantizizer = 255/((NUM_WINDTRAP_ANIMATIONS/2)-2);
+    const auto windtrapSize = windtrapPic->h;
+    const auto sizeX = NUM_WINDTRAP_ANIMATIONS_PER_ROW*windtrapSize;
+    const auto sizeY = ((2+NUM_WINDTRAP_ANIMATIONS+NUM_WINDTRAP_ANIMATIONS_PER_ROW-1)/NUM_WINDTRAP_ANIMATIONS_PER_ROW)*windtrapSize;
+    sdl2::surface_ptr returnPic{ SDL_CreateRGBSurface(0, sizeX, sizeY, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
+    SDL_SetSurfaceBlendMode(returnPic.get(), SDL_BLENDMODE_NONE);
 
     // copy building phase
     SDL_Rect src = { 0, 0, 2*windtrapSize, windtrapSize};
     SDL_Rect dest = src;
-    SDL_BlitSurface(windtrapPic, &src, returnPic, &dest);
+    SDL_BlitSurface(windtrapPic, &src, returnPic.get(), &dest);
 
     src.w = windtrapSize;
     dest.x += dest.w;
     dest.w = windtrapSize;
 
-    for(int i = 0; i < NUM_WINDTRAP_ANIMATIONS; i++) {
+    for(auto i = 0; i < NUM_WINDTRAP_ANIMATIONS; i++) {
         src.x = ((i/3) % 2 == 0) ? 2*windtrapSize : 3*windtrapSize;
 
         SDL_Color windtrapColor;
         if(i < NUM_WINDTRAP_ANIMATIONS/2) {
-            int val = i*windtrapColorQuantizizer;
+            const auto val = i*windtrapColorQuantizizer;
             windtrapColor.r = static_cast<Uint8>(std::min(80, val));
             windtrapColor.g = static_cast<Uint8>(std::min(80, val));
             windtrapColor.b = static_cast<Uint8>(std::min(255, val));
             windtrapColor.a = 255;
         } else {
-            int val = (i-NUM_WINDTRAP_ANIMATIONS/2)*windtrapColorQuantizizer;
+            const auto val = (i-NUM_WINDTRAP_ANIMATIONS/2)*windtrapColorQuantizizer;
             windtrapColor.r = static_cast<Uint8>(std::max(0, 80-val));
             windtrapColor.g = static_cast<Uint8>(std::max(0, 80-val));
             windtrapColor.b = static_cast<Uint8>(std::max(0, 255-val));
@@ -1285,7 +1276,7 @@ SDL_Surface* GFXManager::generateWindtrapAnimationFrames(SDL_Surface* windtrapPi
         }
         SDL_SetPaletteColors(windtrapPic->format->palette, &windtrapColor, PALCOLOR_WINDTRAP_COLORCYCLE, 1);
 
-        SDL_BlitSurface(windtrapPic, &src, returnPic, &dest);
+        SDL_BlitSurface(windtrapPic, &src, returnPic.get(), &dest);
 
         dest.x += dest.w;
         dest.y = dest.y + dest.h * (dest.x / sizeX);
@@ -1296,12 +1287,12 @@ SDL_Surface* GFXManager::generateWindtrapAnimationFrames(SDL_Surface* windtrapPi
         SDL_Log("Warning: Size of sprite sheet for windtrap is %dx%d; may exceed hardware limits on older GPUs!", returnPic->w, returnPic->h);
     }
 
-    return returnPic;
+    return returnPic.release();
 }
 
 
-SDL_Surface* GFXManager::generateMapChoiceArrowFrames(SDL_Surface* arrowPic, int house) {
-    SDL_Surface* returnPic = SDL_CreateRGBSurface(0, arrowPic->w*4, arrowPic->h, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK);
+SDL_Surface* GFXManager::generateMapChoiceArrowFrames(SDL_Surface* arrowPic, int house) const {
+    sdl2::surface_ptr returnPic{ SDL_CreateRGBSurface(0, arrowPic->w * 4, arrowPic->h, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
 
     SDL_Rect dest = {0, 0, arrowPic->w, arrowPic->h};
 
@@ -1310,70 +1301,66 @@ SDL_Surface* GFXManager::generateMapChoiceArrowFrames(SDL_Surface* arrowPic, int
             SDL_SetPaletteColors(arrowPic->format->palette, &palette[houseToPaletteIndex[house]+((i+k)%4)], 251+k, 1);
         }
 
-        SDL_BlitSurface(arrowPic, nullptr, returnPic, &dest);
+        SDL_BlitSurface(arrowPic, nullptr, returnPic.get(), &dest);
         dest.x += dest.w;
     }
 
-    return returnPic;
+    return returnPic.release();
 }
 
 SDL_Surface* GFXManager::generateDoubledObjPic(unsigned int id, int h) {
-    SDL_Surface* pSurface = nullptr;
-    std::string filename = std::string("Mask_2x_") + ObjPicNames.at(id) + std::string(".png");
+    sdl2::surface_ptr pSurface;
+    const auto filename = "Mask_2x_" + ObjPicNames.at(id) + ".png";
     if(settings.video.scaler == "ScaleHD") {
         if(pFileManager->exists(filename)) {
-            pSurface = Scaler::doubleTiledSurfaceNN(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false);
+            pSurface = sdl2::surface_ptr{ Scaler::doubleTiledSurfaceNN(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false) };
 
-            SDL_Surface* pOverlay = LoadPNG_RW(pFileManager->openFile(filename), true);
-            SDL_SetColorKey(pOverlay, SDL_TRUE, PALCOLOR_UI_COLORCYCLE);
+            sdl2::surface_ptr pOverlay{ LoadPNG_RW(pFileManager->openFile(filename), true) };
+            SDL_SetColorKey(pOverlay.get(), SDL_TRUE, PALCOLOR_UI_COLORCYCLE);
 
             // SDL_BlitSurface will silently map PALCOLOR_BLACK to PALCOLOR_TRANSPARENT as both are RGB(0,0,0,255), so make them temporarily different
             pOverlay->format->palette->colors[PALCOLOR_BLACK].g = 1;
             pSurface->format->palette->colors[PALCOLOR_BLACK].g = 1;
-            SDL_BlitSurface(pOverlay, NULL, pSurface, NULL);
+            SDL_BlitSurface(pOverlay.get(), nullptr, pSurface.get(), nullptr);
             pOverlay->format->palette->colors[PALCOLOR_BLACK].g = 0;
             pSurface->format->palette->colors[PALCOLOR_BLACK].g = 0;
-
-            SDL_FreeSurface(pOverlay);
         } else {
             SDL_Log("Warning: No HD sprite sheet for '%s' in zoom level 1!", ObjPicNames.at(id).c_str());
-            pSurface = Scaler::defaultDoubleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false);
+            pSurface = sdl2::surface_ptr{ Scaler::defaultDoubleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false) };
         }
     } else {
-        pSurface = Scaler::defaultDoubleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false);
+        pSurface = sdl2::surface_ptr{ Scaler::defaultDoubleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false) };
     }
 
     if((pSurface->w > 2048) || (pSurface->h > 2048)) {
         SDL_Log("Warning: Size of sprite sheet for '%s' in zoom level 1 is %dx%d; may exceed hardware limits on older GPUs!", ObjPicNames.at(id).c_str(), pSurface->w, pSurface->h);
     }
 
-    return pSurface;
+    return pSurface.release();
 }
 
 SDL_Surface* GFXManager::generateTripledObjPic(unsigned int id, int h) {
-    SDL_Surface* pSurface = nullptr;
-    std::string filename = std::string("Mask_3x_") + ObjPicNames.at(id) + std::string(".png");
+    sdl2::surface_ptr pSurface;
+    const std::string filename = "Mask_3x_" + ObjPicNames.at(id) + ".png";
     if(settings.video.scaler == "ScaleHD") {
         if(pFileManager->exists(filename)) {
-            pSurface = Scaler::tripleTiledSurfaceNN(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false);
+            pSurface = sdl2::surface_ptr{ Scaler::tripleTiledSurfaceNN(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false) };
 
-            SDL_Surface* pOverlay = LoadPNG_RW(pFileManager->openFile(filename), true);
-            SDL_SetColorKey(pOverlay, SDL_TRUE, PALCOLOR_UI_COLORCYCLE);
+            sdl2::surface_ptr pOverlay{ LoadPNG_RW(pFileManager->openFile(filename), true) };
+            SDL_SetColorKey(pOverlay.get(), SDL_TRUE, PALCOLOR_UI_COLORCYCLE);
 
             // SDL_BlitSurface will silently map PALCOLOR_BLACK to PALCOLOR_TRANSPARENT as both are RGB(0,0,0,255), so make them temporarily different
             pOverlay->format->palette->colors[PALCOLOR_BLACK].g = 1;
             pSurface->format->palette->colors[PALCOLOR_BLACK].g = 1;
-            SDL_BlitSurface(pOverlay, NULL, pSurface, NULL);
+            SDL_BlitSurface(pOverlay.get(), nullptr, pSurface.get(), nullptr);
             pOverlay->format->palette->colors[PALCOLOR_BLACK].g = 0;
             pSurface->format->palette->colors[PALCOLOR_BLACK].g = 0;
-
-            SDL_FreeSurface(pOverlay);
         } else {
             SDL_Log("Warning: No HD sprite sheet for '%s' in zoom level 2!", ObjPicNames.at(id).c_str());
-            pSurface = Scaler::defaultTripleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false);
+            pSurface = sdl2::surface_ptr{ Scaler::defaultTripleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false) };
         }
     } else {
-        pSurface = Scaler::defaultTripleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false);
+        pSurface = sdl2::surface_ptr{ Scaler::defaultTripleTiledSurface(objPic[id][h][0], objPicTiles[id].x, objPicTiles[id].y, false) };
     }
 
 
@@ -1381,5 +1368,5 @@ SDL_Surface* GFXManager::generateTripledObjPic(unsigned int id, int h) {
         SDL_Log("Warning: Size of sprite sheet for '%s' in zoom level 2 is %dx%d; may exceed hardware limits on older GPUs!", ObjPicNames.at(id).c_str(), pSurface->w, pSurface->h);
     }
 
-    return pSurface;
+    return pSurface.release();
 }
