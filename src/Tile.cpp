@@ -483,6 +483,25 @@ void Tile::blitSelectionRects(int xPos, int yPos) const {
     if (isFogged(pLocalHouse->getHouseID()))
         return;
 
+    forEachUnit([](Uint32 objectID) {
+        auto pObject = currentGame->getObjectManager().getObject(objectID);
+        if (pObject == nullptr) {
+            return;
+        }
+
+        // possibly draw selection rectangle multiple times, e.g. for structures
+        if (pObject->isVisible(pLocalHouse->getTeam())) {
+            if (pObject->isSelected()) {
+                pObject->drawSelectionBox();
+            }
+
+            if (pObject->isSelectedByOtherPlayer()) {
+                pObject->drawOtherPlayerSelectionBox();
+            }
+        }
+        });
+
+#if 0
 #if __cpp_coroutines
     // draw underground selection rectangles
 
@@ -543,6 +562,7 @@ void Tile::blitSelectionRects(int xPos, int yPos) const {
     std::for_each(assignedAirUnitList.begin(),
         assignedAirUnitList.end(),
         blitObjectSelectionRect);
+#endif
 #endif
 }
 
@@ -1203,7 +1223,7 @@ int Tile::getFogTile(int houseID) const {
 
 #include "misc/generator.h"
 
-generator<Uint32> Tile::all_assigned() const noexcept
+inline generator<Uint32> Tile::all_assigned() const noexcept
 {
     for (auto i : assignedInfantryList)
         co_yield i;
@@ -1253,7 +1273,45 @@ void Tile::selectFilter(int houseID, ObjectBase** lastCheckedObject, ObjectBase*
     if (last_selected)
         *lastSelectedObject = last_selected;
 }
+
 #else
+template<typename Pred>
+void Tile::selectFilter(int houseID, ObjectBase** lastCheckedObject, ObjectBase** lastSelectedObject, Pred&& predicate)
+{
+    auto changed = false;
+    ObjectBase* obj = nullptr;
+    ObjectBase* last_selected = nullptr;
+
+    forEachUnit([&, houseID](Dune::object_id_type object_id) {
+        obj = currentGame->getObjectManager().getObject(object_id);
+
+        assert(object_id == obj->getObjectID());
+
+        if (obj->isSelected() || houseID != obj->getOwner()->getHouseID())
+            return;
+
+        if (!predicate(obj))
+            return;
+
+        obj->setSelected(true);
+
+        if (currentGame->getSelectedList().insert(object_id).second)
+            changed = true;
+
+        last_selected = obj;
+        });
+
+    if (changed)
+        currentGame->selectionChanged();
+
+    if (obj)
+        *lastCheckedObject = obj;
+
+    if (last_selected)
+        *lastSelectedObject = last_selected;
+}
+
+#if 0
 template<typename Pred>
 void Tile::selectFilter(int houseID, ObjectBase** lastCheckedObject, ObjectBase** lastSelectedObject, Pred&& predicate)
 {
@@ -1293,4 +1351,22 @@ void Tile::selectFilter(int houseID, ObjectBase** lastCheckedObject, ObjectBase*
     if (last_selected)
         *lastSelectedObject = last_selected;
 }
-#endif
+#endif // 0
+#endif // __cpp_coroutines
+
+
+template<typename Visitor>
+void Tile::forEachUnit(Visitor&& visitor) const
+{
+    for (auto i : assignedInfantryList)
+        visitor(i);
+
+    for (auto i : assignedNonInfantryGroundObjectList)
+        visitor(i);
+
+    for (auto i : assignedUndergroundUnitList)
+        visitor(i);
+
+    for (auto i : assignedAirUnitList)
+        visitor(i);
+}

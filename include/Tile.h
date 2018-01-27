@@ -498,6 +498,9 @@ private:
     template<typename Pred>
     void selectFilter(int houseID, ObjectBase** lastCheckedObject, ObjectBase** lastSelectedObject, Pred&& predicate);
 
+    template<typename Visitor>
+    void forEachUnit(Visitor&& visitor) const;
+
 #ifdef __cpp_coroutines
     generator<Uint32> all_assigned() const noexcept;
 #endif
