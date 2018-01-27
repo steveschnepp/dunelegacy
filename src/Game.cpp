@@ -236,8 +236,11 @@ void Game::processObjects()
 
 void Game::drawScreen()
 {
-    auto TopLeftTile = screenborder->getTopLeftTile();
-    auto BottomRightTile = screenborder->getBottomRightTile();
+    const auto top_left = screenborder->getTopLeftTile();
+    const auto bottom_right = screenborder->getBottomRightTile();
+
+    auto TopLeftTile = top_left;
+    auto BottomRightTile = bottom_right;
 
     // extend the view a little bit to avoid graphical glitches
     TopLeftTile.x = std::max(0, TopLeftTile.x - 1);
@@ -353,15 +356,15 @@ void Game::drawScreen()
         const auto fogOfWar = gameInitSettings.getGameOptions().fogOfWar;
         const auto zoomedTileSize = world2zoomedWorld(TILESIZE);
 
-        tiles->for_each(x1, y1, x2, y2,
+        tiles->for_each(top_left.x - 1, top_left.y - 1, bottom_right.x + 2, bottom_right.y + 1,
             [=](Tile& t) {
                 const auto x = t.getLocation().x;
                 const auto y = t.getLocation().y;
 
                 const auto pTile = &t;
 
-                if (pTile->isExplored(pLocalHouse->getHouseID())) {
-                    int hideTile = pTile->getHideTile(pLocalHouse->getHouseID());
+                if (t.isExplored(pLocalHouse->getHouseID())) {
+                    auto hideTile = t.getHideTile(pLocalHouse->getHouseID());
 
                     if (hideTile != 0) {
                         const SDL_Rect source = { hideTile*zoomedTileSize, 0, zoomedTileSize, zoomedTileSize };
@@ -438,6 +441,7 @@ void Game::drawScreen()
                     for (int j = yPos; j < (yPos + structuresize.y); j++) {
                         if (currentGameMap->isWithinBuildRange(i, j, builder->getOwner())) {
                             withinRange = true;         //find out if the structure is close enough to other buildings
+                            break;
                         }
                     }
                 }
@@ -536,29 +540,27 @@ void Game::drawScreen()
 
     // draw chat message currently typed
     if(chatMode) {
-        SDL_Texture* pChatTexture = pFontManager->createTextureWithText("Chat: " + typingChatMessage + (((SDL_GetTicks() / 150) % 2 == 0) ? "_" : ""), COLOR_WHITE, FONT_STD12);
-        SDL_RenderCopy(renderer, pChatTexture, nullptr, &drawLocation);
-        SDL_DestroyTexture(pChatTexture);
+        sdl2::texture_ptr pChatTexture{ pFontManager->createTextureWithText("Chat: " + typingChatMessage + (((SDL_GetTicks() / 150) % 2 == 0) ? "_" : ""), COLOR_WHITE, FONT_STD12) };
+        auto drawLocation = calcDrawingRect(pChatTexture.get(), 20, getRendererHeight() - 40);
+        SDL_RenderCopy(renderer, pChatTexture.get(), nullptr, &drawLocation);
     }
 
     if(bShowFPS) {
         const auto strFPS = fmt::sprintf("fps: %.1f ", 1000.0f/averageFrameTime);
 
-        SDL_Texture* pFPSTexture = pFontManager->createTextureWithText(strFPS, COLOR_WHITE, FONT_STD12);
-        SDL_Rect drawLocation = calcDrawingRect(pFPSTexture,sideBarPos.x - strFPS.length()*8, 60);
-        SDL_RenderCopy(renderer, pFPSTexture, nullptr, &drawLocation);
-        SDL_DestroyTexture(pFPSTexture);
+        sdl2::texture_ptr pFPSTexture{ pFontManager->createTextureWithText(strFPS, COLOR_WHITE, FONT_STD12) };
+        auto drawLocation = calcDrawingRect(pFPSTexture.get(), sideBarPos.x - strFPS.length()*8, 60);
+        SDL_RenderCopy(renderer, pFPSTexture.get(), nullptr, &drawLocation);
     }
 
     if(bShowTime) {
         const int seconds = getGameTime() / 1000;
         const auto strTime = fmt::sprintf(" %.2d:%.2d:%.2d", seconds / 3600, (seconds % 3600)/60, (seconds % 60) );
 
-        SDL_Texture* pTimeTexture = pFontManager->createTextureWithText(strTime, COLOR_WHITE, FONT_STD12);
-        SDL_Rect drawLocation = calcAlignedDrawingRect(pTimeTexture, HAlign::Left, VAlign::Bottom);
+        sdl2::texture_ptr pTimeTexture{ pFontManager->createTextureWithText(strTime, COLOR_WHITE, FONT_STD12) };
+        auto drawLocation = calcAlignedDrawingRect(pTimeTexture.get(), HAlign::Left, VAlign::Bottom);
         drawLocation.y++;
-        SDL_RenderCopy(renderer, pTimeTexture, nullptr, &drawLocation);
-        SDL_DestroyTexture(pTimeTexture);
+        SDL_RenderCopy(renderer, pTimeTexture.get(), nullptr, &drawLocation);
     }
 
     if(finished) {
@@ -570,10 +572,9 @@ void Game::drawScreen()
             message = _("You Have Failed Your Mission.");
         }
 
-        SDL_Texture* pFinishMessageTexture = pFontManager->createTextureWithText(message.c_str(), COLOR_WHITE, FONT_STD24);
-        SDL_Rect drawLocation = calcDrawingRect(pFinishMessageTexture, sideBarPos.x/2, topBarPos.h + (getRendererHeight()-topBarPos.h)/2, HAlign::Center, VAlign::Center);
-        SDL_RenderCopy(renderer, pFinishMessageTexture, nullptr, &drawLocation);
-        SDL_DestroyTexture(pFinishMessageTexture);
+        sdl2::texture_ptr pFinishMessageTexture{ pFontManager->createTextureWithText(message, COLOR_WHITE, FONT_STD24) };
+        SDL_Rect drawLocation = calcDrawingRect(pFinishMessageTexture.get(), sideBarPos.x/2, topBarPos.h + (getRendererHeight()-topBarPos.h)/2, HAlign::Center, VAlign::Center);
+        SDL_RenderCopy(renderer, pFinishMessageTexture.get(), nullptr, &drawLocation);
     }
 
     if(pWaitingForOtherPlayers != nullptr) {
