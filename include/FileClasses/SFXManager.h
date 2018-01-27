@@ -20,6 +20,7 @@
 
 #include <SDL2/SDL_mixer.h>
 #include <DataTypes.h>
+#include <misc/sound_util.h>
 
 #include <string>
 
@@ -103,7 +104,7 @@ public:
     Mix_Chunk*      getSound(Sound_enum id);
 
 private:
-    Mix_Chunk*      loadMixFromADL(const std::string& adlFile, int index, int volume = MIX_MAX_VOLUME/2);
+    sdl2::mix_chunk_ptr loadMixFromADL(const std::string& adlFile, int index, int volume = MIX_MAX_VOLUME/2) const;
 
     void            loadEnglishVoice();
     Mix_Chunk*      getEnglishVoice(Voice_enum id, int house);
