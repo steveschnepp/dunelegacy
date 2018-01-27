@@ -41,7 +41,7 @@ public:
 
     void blitToScreen() const;
 
-    void update();
+    bool update();
 
 private:
     Uint32 explosionID;

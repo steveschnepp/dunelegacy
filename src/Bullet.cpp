@@ -433,7 +433,7 @@ void Bullet::destroy()
         case Bullet_DRocket: {
             currentGameMap->damage(shooterID, owner, position, bulletID, damage, damageRadius, airAttack);
             soundPlayer->playSoundAt(Sound_ExplosionGas, position);
-            currentGame->getExplosionList().push_back(new Explosion(Explosion_Gas,position,houseID));
+            currentGame->addExplosion(Explosion_Gas, position, houseID);
         } break;
 
         case Bullet_LargeRocket: {
@@ -448,7 +448,7 @@ void Bullet::destroy()
                         currentGameMap->damage(shooterID, owner, position, bulletID, damage, damageRadius, airAttack);
 
                         Uint32 explosionID = currentGame->randomGen.getRandOf(2,Explosion_Large1,Explosion_Large2);
-                        currentGame->getExplosionList().push_back(new Explosion(explosionID,position,houseID));
+                        currentGame->addExplosion(explosionID,position,houseID);
                         screenborder->shakeScreen(22);
                     }
                 }
@@ -459,27 +459,27 @@ void Bullet::destroy()
         case Bullet_TurretRocket:
         case Bullet_SmallRocket: {
             currentGameMap->damage(shooterID, owner, position, bulletID, damage, damageRadius, airAttack);
-            currentGame->getExplosionList().push_back(new Explosion(Explosion_Small,position,houseID));
+            currentGame->addExplosion(Explosion_Small,position,houseID);
         } break;
 
         case Bullet_ShellSmall: {
             currentGameMap->damage(shooterID, owner, position, bulletID, damage, damageRadius, airAttack);
-            currentGame->getExplosionList().push_back(new Explosion(Explosion_ShellSmall,position,houseID));
+            currentGame->addExplosion(Explosion_ShellSmall,position,houseID);
         } break;
 
         case Bullet_ShellMedium: {
             currentGameMap->damage(shooterID, owner, position, bulletID, damage, damageRadius, airAttack);
-            currentGame->getExplosionList().push_back(new Explosion(Explosion_ShellMedium,position,houseID));
+            currentGame->addExplosion(Explosion_ShellMedium,position,houseID);
         } break;
 
         case Bullet_ShellLarge: {
             currentGameMap->damage(shooterID, owner, position, bulletID, damage, damageRadius, airAttack);
-            currentGame->getExplosionList().push_back(new Explosion(Explosion_ShellLarge,position,houseID));
+            currentGame->addExplosion(Explosion_ShellLarge,position,houseID);
         } break;
 
         case Bullet_ShellTurret: {
             currentGameMap->damage(shooterID, owner, position, bulletID, damage, damageRadius, airAttack);
-            currentGame->getExplosionList().push_back(new Explosion(Explosion_ShellMedium,position,houseID));
+            currentGame->addExplosion(Explosion_ShellMedium,position,houseID);
         } break;
 
         case Bullet_Sonic:
