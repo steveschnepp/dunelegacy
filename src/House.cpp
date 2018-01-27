@@ -533,6 +533,7 @@ void House::lose(bool bSilent) const {
             const auto pHouse = currentGame->getHouse(i);
             if(pHouse != nullptr && pHouse->isAlive() && pHouse->getTeam() == pLocalHouse->getTeam()) {
                 finished = false;
+                break;
             }
         }
 
@@ -555,6 +556,7 @@ void House::lose(bool bSilent) const {
             const auto pHouse = currentGame->getHouse(i);
             if(pHouse != nullptr && pHouse->isAlive() && pHouse->getTeam() != 0 && pHouse->getTeam() != pLocalHouse->getTeam()) {
                 finished = false;
+                break;
             }
         }
 
