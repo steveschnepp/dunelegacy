@@ -363,7 +363,7 @@ void Game::drawScreen()
                     if (fogOfWar) {
                         auto fogTile = pTile->getFogTile(pLocalHouse->getHouseID());
 
-                        if (!pTile->isFogged(pLocalHouse->getHouseID())) {
+                        if (pTile->isFogged(pLocalHouse->getHouseID())) {
                             fogTile = Terrain_HiddenFull;
                         }
 
