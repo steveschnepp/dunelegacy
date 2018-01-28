@@ -22,6 +22,7 @@
 
 #include <SDL2/SDL.h>
 #include <vector>
+#include "GUI/ProgressBar.h"
 
 #define INVALID_FRAME ((unsigned int) -1)
 
@@ -31,17 +32,26 @@ public:
     Animation();
     ~Animation();
 
+    Animation(const Animation &) = delete;
+    Animation(Animation &&) = delete;
+    Animation& operator=(const Animation &) = delete;
+    Animation& operator=(Animation &&) = delete;
+
     unsigned int getCurrentFrameNumber();
 
-    void setCurrentFrameNumber(unsigned int newCurrentFrame) noexcept { curFrame = newCurrentFrame; };
+    void setCurrentFrameNumber(unsigned int newCurrentFrame) noexcept { curFrame = newCurrentFrame; }
 
-    unsigned int getNumberOfFrames() const noexcept { return static_cast<unsigned int>(frames.size()); };
+    unsigned int getNumberOfFrames() const noexcept { return static_cast<unsigned int>(frames.size()); }
+
+    template<typename Visitor>
+    void for_each_frame(Visitor&& visitor) {
+        for (auto& s : frames)
+            visitor(s.get());
+    }
 
     SDL_Surface* getFrame();
 
     SDL_Texture* getFrameTexture();
-
-    const std::vector<SDL_Surface*>& getFrames() const noexcept { return frames; };
 
     void setFrameRate(double FrameRate) noexcept {
         if(FrameRate == 0.0) {
@@ -92,8 +102,8 @@ private:
     int loopsLeft;
     unsigned int curFrame;
     unsigned int curFrameOverride;
-    std::vector<SDL_Surface*> frames;
-    std::vector<SDL_Texture*> frameTextures;
+    std::vector<sdl2::surface_ptr> frames;
+    std::vector<sdl2::texture_ptr> frameTextures;
 };
 
 #endif // ANIMATION_H

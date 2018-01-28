@@ -20,8 +20,8 @@
 #include <misc/Scaler.h>
 #include <misc/draw_util.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 Animation::Animation() {
     curFrameStartTime = SDL_GetTicks();
@@ -31,19 +31,7 @@ Animation::Animation() {
     loopsLeft = -1;
 }
 
-Animation::~Animation() {
-    while(frames.empty() == false) {
-        SDL_FreeSurface(frames.back());
-        frames.pop_back();
-    }
-
-    while(frameTextures.empty() == false) {
-        if(frameTextures.back() != nullptr) {
-            SDL_DestroyTexture(frameTextures.back());
-        }
-        frameTextures.pop_back();
-    }
-}
+Animation::~Animation() = default;
 
 unsigned int Animation::getCurrentFrameNumber() {
     if((SDL_GetTicks() - curFrameStartTime) > frameDurationTime) {
@@ -75,7 +63,7 @@ SDL_Surface* Animation::getFrame() {
         return nullptr;
     }
 
-    return frames[getCurrentFrameNumber()];
+    return frames[getCurrentFrameNumber()].get();
 }
 
 SDL_Texture* Animation::getFrameTexture() {
@@ -83,33 +71,36 @@ SDL_Texture* Animation::getFrameTexture() {
         return nullptr;
     }
 
-    unsigned int index = getCurrentFrameNumber();
+    const unsigned int index = getCurrentFrameNumber();
 
     if(frameTextures.size() <= index) {
-        frameTextures.resize(frames.size(), nullptr);
+        // vector<>.resize() doesn't work with unique_ptr<>
+        frameTextures.reserve(frames.size());
+        const auto needed = index - frameTextures.size() + 1;
+        std::fill_n(std::back_inserter(frameTextures), needed, nullptr);
     }
 
     if(frameTextures[index] == nullptr) {
-        frameTextures[index] = convertSurfaceToTexture(frames[index], false);
+        frameTextures[index] = convertSurfaceToTexture(frames[index].get(), false);
     }
 
-    return frameTextures[index];
+    return frameTextures[index].get();
 }
 
 void Animation::addFrame(SDL_Surface* newFrame, bool bDoublePic, bool bSetColorKey) {
     if(bDoublePic == true) {
-        newFrame = Scaler::defaultDoubleSurface(newFrame,true);
+        newFrame = Scaler::defaultDoubleSurface(newFrame,true).release();
     }
 
     if(bSetColorKey == true) {
         SDL_SetColorKey(newFrame, SDL_TRUE, 0);
     }
 
-    frames.push_back(newFrame);
+    frames.emplace_back(newFrame);
 }
 
 void Animation::setPalette(const Palette& newPalette) {
-    for(SDL_Surface* pSurface : frames) {
-        newPalette.applyToSurface(pSurface);
+    for(auto& pSurface : frames) {
+        newPalette.applyToSurface(pSurface.get());
     }
 }
