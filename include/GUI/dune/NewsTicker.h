@@ -25,6 +25,21 @@
 
 #include <SDL2/SDL.h>
 
+template<typename T>
+class unique_queue {
+    std::deque<T> queue_;
+public:
+    bool empty() const noexcept { return queue_.empty(); }
+    bool contains(const T& value) const { return std::end(queue_) != std::find(std::begin(queue_), std::end(queue_), value); }
+    void clear() { queue_.clear(); }
+    auto size() const { return queue_.size(); }
+    auto& front() { return queue_.front(); }
+    auto& front() const { return queue_.front(); }
+    void push(const T& value) { queue_.push_back(value); }
+    void push(T&& value) { queue_.push_back(value); }
+    void pop() { queue_.pop_front(); }
+};
+
 class NewsTicker : public Widget {
 public:
     NewsTicker();
@@ -56,9 +71,9 @@ public:
 
 private:
     SDL_Texture* pBackground;
-    std::queue<std::string> messages;
+    unique_queue<std::string> messages;
     std::string currentMessage;
-    SDL_Texture* pCurrentMessageTexture;
+    sdl2::texture_ptr pCurrentMessageTexture;
     int timer;
 };
 
