@@ -21,10 +21,12 @@
 #include <GUI/Widget.h>
 
 #include <SDL2/SDL.h>
+#include <misc/sdl_support.h>
 
 #include <memory>
 #include <string>
-#include <list>
+#include <deque>
+#include <unordered_map>
 
 /**
     This class manages all the chat messages that are shown on the screen.
@@ -45,6 +47,11 @@ public:
     */
     ChatManager();
 
+    ChatManager(const ChatManager &) = delete;
+    ChatManager(ChatManager &&) = delete;
+    ChatManager& operator=(const ChatManager&) = delete;
+    ChatManager& operator=(ChatManager &&) = delete;
+
     /// destructor
     ~ChatManager();
 
@@ -61,31 +68,34 @@ public:
     void draw(Point position) override;
 
 private:
+    SDL_Texture * getUserTexture(std::string username);
+    void prune_messages();
 
-    struct ChatMessage {
+    struct ChatMessage final {
 
-        ChatMessage(std::shared_ptr<SDL_Texture>& _pMessageTexture, Uint32 _messageTime, MessageType _messageType)
-         : pMessageTexture(_pMessageTexture), messageTime(_messageTime), messageType(_messageType) {
+        ChatMessage(sdl2::texture_ptr _pMessageTexture, Uint32 _messageTime, MessageType _messageType)
+         : pMessageTexture(std::move(_pMessageTexture)), messageTime(_messageTime), messageType(_messageType) {
         }
 
-        ChatMessage(std::shared_ptr<SDL_Texture>& _pTimeTexture, std::shared_ptr<SDL_Texture>& _pUsernameTexture,
-                    std::shared_ptr<SDL_Texture>& _pMessageTexture, Uint32 _messageTime, MessageType _messageType)
-         : pTimeTexture(_pTimeTexture), pUsernameOrPictureTexture(_pUsernameTexture), pMessageTexture(_pMessageTexture), messageTime(_messageTime), messageType(_messageType) {
+        ChatMessage(sdl2::texture_ptr _pTimeTexture, SDL_Texture* _pUsernameTexture,
+            sdl2::texture_ptr _pMessageTexture, Uint32 _messageTime, MessageType _messageType)
+         : pTimeTexture(std::move(_pTimeTexture)), pUsernameOrPictureTexture(_pUsernameTexture), pMessageTexture(std::move(_pMessageTexture)), messageTime(_messageTime), messageType(_messageType) {
         }
 
-        ChatMessage(std::shared_ptr<SDL_Texture>& _pMessageTexture, std::shared_ptr<SDL_Texture>& _pPictureTexture, Uint32 _messageTime, MessageType _messageType)
-         : pUsernameOrPictureTexture(_pPictureTexture), pMessageTexture(_pMessageTexture), messageTime(_messageTime), messageType(_messageType) {
+        ChatMessage(sdl2::texture_ptr _pMessageTexture, SDL_Texture* _pPictureTexture, Uint32 _messageTime, MessageType _messageType)
+         : pUsernameOrPictureTexture(_pPictureTexture), pMessageTexture(std::move(_pMessageTexture)), messageTime(_messageTime), messageType(_messageType) {
         }
 
-        std::shared_ptr<SDL_Texture>    pTimeTexture;
-        std::shared_ptr<SDL_Texture>    pUsernameOrPictureTexture;
-        std::shared_ptr<SDL_Texture>    pMessageTexture;
+        sdl2::texture_ptr    pTimeTexture;
+        SDL_Texture*    pUsernameOrPictureTexture{};
+        sdl2::texture_ptr    pMessageTexture;
 
         Uint32      messageTime;
         MessageType messageType;
     };
 
-    std::list<ChatMessage> chatMessages;
+    std::deque<ChatMessage> chatMessages;
+    std::unordered_map<std::string, sdl2::texture_ptr> user_textures;
 };
 
 #endif // CHATMANAGER_H
