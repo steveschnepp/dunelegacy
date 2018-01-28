@@ -21,59 +21,28 @@
 
 #include <SDL2/SDL.h>
 
-Scene::Scene()
-{
-    currentFrameNumber = 0;
-}
+Scene::Scene() = default;
 
-Scene::~Scene()
-{
-    while(videoEvents.empty() == false) {
-        VideoEvent* pVideoEvent = videoEvents.front();
-        videoEvents.pop();
-        delete pVideoEvent;
-    }
-
-    for(TextEvent* pTextEvent : textEvents) {
-        delete pTextEvent;
-    }
-    textEvents.clear();
-
-    for(CutSceneTrigger* pCutSceneTrigger : triggerList) {
-        delete pCutSceneTrigger;
-    }
-    triggerList.clear();
-
-}
+Scene::~Scene() = default;
 
 void Scene::addVideoEvent(VideoEvent* newVideoEvent)
 {
-    videoEvents.push(newVideoEvent);
+    videoEvents.emplace(newVideoEvent);
 }
 
 void Scene::addTextEvent(TextEvent* newTextEvent)
 {
-    textEvents.push_back(newTextEvent);
+    textEvents.emplace_back(newTextEvent);
 }
 
 void Scene::addTrigger(CutSceneTrigger* newTrigger)
 {
-    std::list<CutSceneTrigger*>::iterator iter = triggerList.begin();
-
-    while(iter != triggerList.end()) {
-        if((*iter)->getTriggerFrameNumber() > newTrigger->getTriggerFrameNumber()) {
-            break;
-        }
-
-        ++iter;
-    }
-
-    triggerList.insert(iter, newTrigger);
+    triggerList.emplace(newTrigger);
 }
 
 int Scene::draw()
 {
-    int nextFrameTime = 0;
+    auto nextFrameTime = 0;
 
     // 1.: Clear the whole screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -81,10 +50,9 @@ int Scene::draw()
 
     // 2.: Draw everything on the screen
     while(videoEvents.empty() == false) {
-        VideoEvent* pVideoEvent = videoEvents.front();
+        auto& pVideoEvent = videoEvents.front();
 
         if(pVideoEvent->isFinished() == true) {
-            delete pVideoEvent;
             videoEvents.pop();
             continue;
         } else {
@@ -93,7 +61,7 @@ int Scene::draw()
         }
     }
 
-    for(TextEvent* pTextEvent : textEvents) {
+    for(const auto& pTextEvent : textEvents) {
         pTextEvent->draw(currentFrameNumber);
     }
 
@@ -102,7 +70,7 @@ int Scene::draw()
 
     // 4.: Process Triggers
     while(triggerList.empty() == false) {
-        CutSceneTrigger* pTrigger = triggerList.front();
+        auto& pTrigger = triggerList.top();
 
         if(pTrigger->getTriggerFrameNumber() > currentFrameNumber) {
             break;
@@ -112,8 +80,7 @@ int Scene::draw()
             pTrigger->trigger(currentFrameNumber);
         }
 
-        triggerList.pop_front();
-        delete pTrigger;
+        triggerList.pop();
     }
 
     currentFrameNumber++;
