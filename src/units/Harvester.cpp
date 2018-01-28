@@ -102,7 +102,7 @@ void Harvester::blitToScreen()
     int x = screenborder->world2screenX(realX);
     int y = screenborder->world2screenY(realY);
 
-    SDL_Texture* pUnitGraphic = graphic[currentZoomlevel];
+    auto pUnitGraphic = graphic[currentZoomlevel];
     SDL_Rect source = calcSpriteSourceRect(pUnitGraphic, drawnAngle, numImagesX);
     SDL_Rect dest = calcSpriteDrawingRect( pUnitGraphic, x, y, numImagesX, 1, HAlign::Center, VAlign::Center);
 
@@ -121,8 +121,8 @@ void Harvester::blitToScreen()
                                             };
 
 
-        SDL_Texture** sand = pGFXManager->getObjPic(ObjPic_Harvester_Sand,getOwner()->getHouseID());
-        SDL_Texture* pSandGraphic = sand[currentZoomlevel];
+        const auto sand = pGFXManager->getObjPic(ObjPic_Harvester_Sand,getOwner()->getHouseID());
+        auto pSandGraphic = sand[currentZoomlevel];
 
         int frame = ((currentGame->getGameCycleCount() + (getObjectID() * 10)) / HARVESTERDELAY) % (2*LASTSANDFRAME);
         if(frame > LASTSANDFRAME) {
@@ -159,7 +159,7 @@ void Harvester::checkPos()
     if(active)  {
         if (returningToRefinery) {
             if (target && (target.getObjPointer() != nullptr) && (target.getObjPointer()->getItemID() == Structure_Refinery)) {
-                Refinery* pRefinery = static_cast<Refinery*>(target.getObjPointer());
+                auto pRefinery = static_cast<Refinery*>(target.getObjPointer());
                 Tile* pTile = currentGameMap->getTile(location);
                 ObjectBase *pObject = pTile->getGroundObject();
 
@@ -186,7 +186,7 @@ void Harvester::checkPos()
                 FixPoint closestLeastBookedRefineryDistance = FixPt32_MAX;
                 Refinery* pBestRefinery = nullptr;
 
-                for(StructureBase* pStructure : structureList) {
+                for(auto pStructure : structureList) {
                     if((pStructure->getItemID() == Structure_Refinery) && (pStructure->getOwner() == owner)) {
                         Refinery* pRefinery = static_cast<Refinery*>(pStructure);
                         Coord closestPoint = pRefinery->getClosestPoint(location);

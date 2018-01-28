@@ -1136,7 +1136,7 @@ void Game::runMainLoop() {
         SDL_RenderCopy(renderer, screenTexture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
 
-        int frameEnd = SDL_GetTicks();
+        const int frameEnd = SDL_GetTicks();
 
         if(frameEnd == frameStart) {
             SDL_Delay(1);

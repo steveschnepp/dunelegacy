@@ -1409,13 +1409,13 @@ bool UnitBase::SearchPathWithAStar() {
     }
 }
 
-void UnitBase::drawSmoke(int x, int y) {
+void UnitBase::drawSmoke(int x, int y) const {
     int frame = ((currentGame->getGameCycleCount() + (getObjectID() * 10)) / SMOKEDELAY) % (2*2);
     if(frame == 3) {
         frame = 1;
     }
 
-    SDL_Texture** smoke = pGFXManager->getObjPic(ObjPic_Smoke,getOwner()->getHouseID());
+    auto smoke = pGFXManager->getObjPic(ObjPic_Smoke,getOwner()->getHouseID());
 
     SDL_Rect dest = calcSpriteDrawingRect(smoke[currentZoomlevel], x, y, 3, 1, HAlign::Center, VAlign::Bottom);
     SDL_Rect source = calcSpriteSourceRect(smoke[currentZoomlevel], frame, 3);

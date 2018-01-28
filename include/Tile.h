@@ -483,7 +483,7 @@ private:
 
     FixPoint    spice;          ///< how much spice on this particular tile is left
 
-    SDL_Texture** sprite;       ///< the graphic to draw
+    GFXManager::Zoomable sprite;       ///< the graphic to draw
 
     Sint32                          destroyedStructureTile;         ///< the tile drawn for a destroyed structure
     std::array<Uint32, NUM_ANGLES>  tracksCreationTime{};           ///< Contains the game cycle the tracks on sand appeared

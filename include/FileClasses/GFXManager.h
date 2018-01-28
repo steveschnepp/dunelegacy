@@ -516,48 +516,76 @@ public:
     GFXManager();
     ~GFXManager();
 
-    SDL_Texture**   getObjPic(unsigned int id, int house=HOUSE_HARKONNEN);
+    GFXManager(const GFXManager &) = delete;
+    GFXManager(GFXManager &&) = default;
+    GFXManager& operator=(const GFXManager &) = default;
+    GFXManager& operator=(GFXManager &&) = default;
+
+    class Zoomable final
+    {
+        const std::array<sdl2::texture_ptr, NUM_ZOOMLEVEL>* textures_{};
+    public:
+        Zoomable() = default;
+        Zoomable(const std::array<sdl2::texture_ptr, NUM_ZOOMLEVEL>* textures) : textures_(textures)
+        { }
+
+        Zoomable(const Zoomable &) = default;
+        Zoomable(Zoomable &&) = default;
+        Zoomable& operator=(const Zoomable &) = default;
+        Zoomable& operator=(Zoomable &&) = default;
+
+        SDL_Texture* operator[](int index) const { return (*textures_)[index].get(); }
+        bool empty() const noexcept { return textures_; }
+    };
+
+    Zoomable getObjPic(unsigned int id, int house=HOUSE_HARKONNEN);
 
     SDL_Texture*    getSmallDetailPic(unsigned int id);
-    SDL_Texture*    getTinyPicture(unsigned int id);
+    SDL_Texture*    getTinyPicture(unsigned int id) const;
     SDL_Texture*    getUIGraphic(unsigned int id, int house=HOUSE_HARKONNEN);
     SDL_Texture*    getMapChoicePiece(unsigned int num, int house);
 
     SDL_Surface*    getUIGraphicSurface(unsigned int id, int house=HOUSE_HARKONNEN);
     SDL_Surface*    getMapChoicePieceSurface(unsigned int num, int house);
 
-    SDL_Surface*    getBackgroundSurface() const noexcept { return pBackgroundSurface; };
+    SDL_Surface*    getBackgroundSurface() const noexcept { return pBackgroundSurface.get(); }
 
     Animation*      getAnimation(unsigned int id);
 
 private:
     Animation*      loadAnimationFromWsa(const std::string& filename) const;
-    SDL_Surface*    generateWindtrapAnimationFrames(SDL_Surface* windtrapPic) const;
-    SDL_Surface*    generateMapChoiceArrowFrames(SDL_Surface* arrowPic, int house=HOUSE_HARKONNEN) const;
+    sdl2::surface_ptr    generateWindtrapAnimationFrames(SDL_Surface* windtrapPic) const;
+    sdl2::surface_ptr    generateMapChoiceArrowFrames(SDL_Surface* arrowPic, int house=HOUSE_HARKONNEN) const;
 
-    std::shared_ptr<Shpfile>  loadShpfile(const std::string& filename) const;
-    std::shared_ptr<Wsafile>  loadWsafile(const std::string& filename) const;
+    std::unique_ptr<Shpfile>  loadShpfile(const std::string& filename) const;
+    std::unique_ptr<Wsafile>  loadWsafile(const std::string& filename) const;
 
-    SDL_Texture*    extractSmallDetailPic(const std::string& filename) const;
+    sdl2::texture_ptr    extractSmallDetailPic(const std::string& filename) const;
 
-    SDL_Surface*    generateDoubledObjPic(unsigned int id, int h);
-    SDL_Surface*    generateTripledObjPic(unsigned int id, int h);
+    sdl2::surface_ptr    generateDoubledObjPic(unsigned int id, int h) const;
+    sdl2::surface_ptr    generateTripledObjPic(unsigned int id, int h) const;
 
     // 8-bit surfaces kept in main memory for processing as needed, e.g. color remapping
-    SDL_Surface*    objPic[NUM_OBJPICS][static_cast<int>(NUM_HOUSES)][NUM_ZOOMLEVEL];
-    SDL_Surface*    uiGraphic[NUM_UIGRAPHICS][static_cast<int>(NUM_HOUSES)];
-    SDL_Surface*    mapChoicePieces[NUM_MAPCHOICEPIECES][static_cast<int>(NUM_HOUSES)];
-    Animation*      animation[NUM_ANIMATION];
+    std::array<std::array<std::array<sdl2::surface_ptr, NUM_ZOOMLEVEL>, NUM_HOUSES>, NUM_OBJPICS> objPic;
+    std::array<std::array<sdl2::surface_ptr, NUM_HOUSES>, NUM_UIGRAPHICS> uiGraphic;
+    std::array<std::array<sdl2::surface_ptr, NUM_HOUSES>, NUM_MAPCHOICEPIECES> mapChoicePieces;
+    std::array<Animation *, NUM_ANIMATION> animation{};
 
     // 32-bit surfaces
-    SDL_Surface*    pBackgroundSurface;
+    sdl2::surface_ptr    pBackgroundSurface;
 
     // Textures
-    std::array<std::array<std::array<SDL_Texture *, NUM_ZOOMLEVEL>, NUM_HOUSES>, NUM_OBJPICS> objPicTex;
-    std::array<SDL_Texture *, NUM_SMALLDETAILPICS> smallDetailPicTex;
-    std::array<SDL_Texture *, NUM_TINYPICTURE> tinyPictureTex;
-    std::array<std::array<SDL_Texture *, NUM_HOUSES>, NUM_UIGRAPHICS> uiGraphicTex;
-    std::array<std::array<SDL_Texture *, NUM_HOUSES>, NUM_MAPCHOICEPIECES> mapChoicePiecesTex;
+    std::array<std::array<std::array<sdl2::texture_ptr, NUM_ZOOMLEVEL>, NUM_HOUSES>, NUM_OBJPICS> objPicTex;
+    std::array<sdl2::texture_ptr, NUM_SMALLDETAILPICS> smallDetailPicTex;
+    std::array<sdl2::texture_ptr, NUM_TINYPICTURE> tinyPictureTex;
+    std::array<std::array<sdl2::texture_ptr, NUM_HOUSES>, NUM_UIGRAPHICS> uiGraphicTex;
+    std::array<std::array<sdl2::texture_ptr, NUM_HOUSES>, NUM_MAPCHOICEPIECES> mapChoicePiecesTex;
 };
+
+inline bool operator==(const GFXManager::Zoomable& z, nullptr_t) { return z.empty(); }
+inline bool operator==(nullptr_t, const GFXManager::Zoomable& z) { return z.empty(); }
+inline bool operator!=(const GFXManager::Zoomable& z, nullptr_t) { return !z.empty(); }
+inline bool operator!=(nullptr_t, const GFXManager::Zoomable& z) { return !z.empty(); }
+
 
 #endif // GFXMANAGER_H

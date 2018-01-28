@@ -26,12 +26,12 @@
 class PictureButton : public Button {
 public:
     /// Default contructor
-    PictureButton() : Button() {
-        enableResizing(false,false);
+    PictureButton() {
+        Widget::enableResizing(false,false);
     }
 
     /// destructor
-    virtual ~PictureButton() { ; };
+    virtual ~PictureButton() = default;
 
     /**
         This method is used for setting the different surfaces for this button.
@@ -51,7 +51,7 @@ public:
                             pActiveSurface,bFreeActiveSurface);
 
         if(pUnpressedSurface != nullptr) {
-            resize(getTextureSize(pUnpressedTexture));
+            resize(getTextureSize(pUnpressedTexture.get()));
         } else {
             resize(0,0);
         }
@@ -89,7 +89,7 @@ public:
     Point getMinimumSize() const override
     {
         if(pUnpressedTexture != nullptr) {
-            return getTextureSize(pUnpressedTexture);
+            return getTextureSize(pUnpressedTexture.get());
         } else {
             return Point(0,0);
         }

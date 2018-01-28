@@ -56,7 +56,7 @@ public:
 private:
     int currentFrame;           ///< the current frame number relative to the start of this FadeInVideoEvent
     int numFrames2FadeIn;       ///< the number of frames the fading should take
-    SDL_Texture* pTexture;      ///< the picture to fade in
+    sdl2::texture_ptr pTexture; ///< the picture to fade in
     bool bCenterVertical;       ///< true = center the surface vertically on the screen, false = blit the surface at the top of the screen
     bool bFadeWhite;            ///< true = fade from white, false = fade from black
 };

@@ -640,13 +640,27 @@ int main(int argc, char *argv[]) {
             SDL_Log("Loading graphics and sounds...");
 
 #ifdef HAS_ASYNC
-            auto gfxManagerFut = std::async(std::launch::async, []() { return new GFXManager(); } );
-            auto sfxManagerFut = std::async(std::launch::async, []() { return new SFXManager(); } );
+            decltype(std::chrono::steady_clock::now() - std::chrono::steady_clock::now()) elapsed_gfx;
+            auto gfxManagerFut = std::async(std::launch::async, [&elapsed_gfx]()
+            {
+                auto start = std::chrono::steady_clock::now();
+                auto ret = std::make_unique<GFXManager>();
+                elapsed_gfx = std::chrono::steady_clock::now() - start;
+                return ret;
+            });
 
-            pGFXManager = gfxManagerFut.get();
+            decltype(std::chrono::steady_clock::now() - std::chrono::steady_clock::now()) elapsed_sfx;
+            auto sfxManagerFut = std::async(std::launch::async, [&elapsed_sfx]() {
+                auto start = std::chrono::steady_clock::now();
+                auto ret = std::make_unique<SFXManager>();
+                elapsed_sfx = std::chrono::steady_clock::now() - start;
+                return ret;
+                });
+
+            pGFXManager = gfxManagerFut.get().release();
 
             try {
-                pSFXManager = sfxManagerFut.get();
+                pSFXManager = sfxManagerFut.get().release();
             } catch(const std::exception& e) {
                 pSFXManager = nullptr;
                 const auto message = fmt::sprintf("The sound manager was unable to initialize: '%s' was thrown:\n\n%s\n\nDune Legacy is unable to play sound!", demangleSymbol(typeid(e).name()), e.what());

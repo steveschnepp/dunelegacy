@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "Animation.h"
+#include <misc/sdl_support.h>
 
 #define TILE_NORMAL     0x00010000
 #define TILE_FLIPH      0x00100000
@@ -55,8 +56,8 @@ public:
     Shpfile& operator=(Shpfile &&) = delete;
     virtual ~Shpfile();
 
-    SDL_Surface* getPicture(Uint32 indexOfFile);
-    SDL_Surface* getPictureArray(unsigned int tilesX, unsigned int tilesY, ...);
+    sdl2::surface_ptr getPicture(Uint32 indexOfFile);
+    sdl2::surface_ptr getPictureArray(unsigned int tilesX, unsigned int tilesY, ...);
     Animation* getAnimation(unsigned int startindex, unsigned int endindex, bool bDoublePic=true, bool bSetColorKey=true, bool bLoopRewindBackwards=false);
 
     /// Returns the number of contained pictures
@@ -64,7 +65,7 @@ public:
         Returns the number of pictures in this SHP-File.
         \return Number of pictures in this SHP-File.
     */
-    inline int getNumFiles() const { return static_cast<int>(shpfileEntries.size()); };
+    int getNumFiles() const { return static_cast<int>(shpfileEntries.size()); };
 
 private:
     void readIndex();

@@ -31,7 +31,7 @@ Ornithopter::Ornithopter(House* newOwner) : AirUnit(newOwner) {
 
     Ornithopter::init();
 
-    setHealth(getMaxHealth());
+    ObjectBase::setHealth(getMaxHealth());
 }
 
 Ornithopter::Ornithopter(InputStream& stream) : AirUnit(stream) {

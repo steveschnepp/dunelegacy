@@ -17,8 +17,8 @@
 
 #include <GUI/ListBox.h>
 
-ListBox::ListBox() : Widget() {
-    enableResizing(true,true);
+ListBox::ListBox() {
+    Widget::enableResizing(true,true);
 
     pBackground = nullptr;
     pForeground = nullptr;
@@ -30,11 +30,11 @@ ListBox::ListBox() : Widget() {
     lastClickTime = 0;
 
     scrollbar.setOnChange(std::bind(&ListBox::onScrollbarChange, this));
-    resize(getMinimumSize().x,getMinimumSize().y);
+    ListBox::resize(ListBox::getMinimumSize().x, ListBox::getMinimumSize().y);
 }
 
 ListBox::~ListBox() {
-    invalidateTextures();
+    ListBox::invalidateTextures();
 }
 
 void ListBox::handleMouseMovement(Sint32 x, Sint32 y, bool insideOverlay) {
@@ -116,12 +116,12 @@ void ListBox::draw(Point position) {
     updateTextures();
 
     if(pBackground != nullptr) {
-        SDL_Rect dest = calcDrawingRect(pBackground, position.x, position.y);
-        SDL_RenderCopy(renderer, pBackground, nullptr, &dest);
+        SDL_Rect dest = calcDrawingRect(pBackground.get(), position.x, position.y);
+        SDL_RenderCopy(renderer, pBackground.get(), nullptr, &dest);
     }
 
-    SDL_Rect dest = calcDrawingRect(pForeground, position.x + 2, position.y + 1);
-    SDL_RenderCopy(renderer, pForeground, nullptr, &dest);
+    SDL_Rect dest = calcDrawingRect(pForeground.get(), position.x + 2, position.y + 1);
+    SDL_RenderCopy(renderer, pForeground.get(), nullptr, &dest);
 
     Point ScrollBarPos = position;
     ScrollBarPos.x += getSize().x - scrollbar.getSize().x;
@@ -182,6 +182,40 @@ void ListBox::setSelectedItem(int index, bool bInteractive) {
     }
 }
 
+void ListBox::updateTextures() {
+    Widget::updateTextures();
+
+    if (pBackground == nullptr) {
+        pBackground = convertSurfaceToTexture(GUIStyle::getInstance().createWidgetBackground(getSize().x, getSize().y),
+                                              true);
+    }
+
+    if (pForeground == nullptr) {
+        // create surfaces
+        auto surfaceHeight = getSize().y - 2;
+        if (surfaceHeight < 0) {
+            surfaceHeight = 0;
+        }
+
+        auto pForegroundSurface = sdl2::surface_ptr{ GUIStyle::getInstance().createEmptySurface(getSize().x - 4, surfaceHeight, true) };
+
+        const auto numVisibleElements = static_cast<int>(surfaceHeight / GUIStyle::getInstance().getListBoxEntryHeight());
+        for (auto i = firstVisibleElement; i < firstVisibleElement + numVisibleElements; ++i) {
+            if (i >= getNumEntries())
+                break;
+
+            auto pSurface = sdl2::surface_ptr{ GUIStyle::getInstance().createListBoxEntry(getSize().x - 4, getEntry(i),
+                                                           bHighlightSelectedElement && (i == selectedElement), color) };
+
+            auto dest = calcDrawingRect(pSurface.get(), 0,
+                                        (i - firstVisibleElement) * static_cast<int>(GUIStyle::getInstance().
+                                            getListBoxEntryHeight()));
+            SDL_BlitSurface(pSurface.get(), nullptr, pForegroundSurface.get(), &dest);
+        }
+        pForeground = convertSurfaceToTexture(pForegroundSurface.get(), false);
+    }
+}
+
 void ListBox::updateList() {
     invalidateTextures();
 
@@ -191,7 +225,7 @@ void ListBox::updateList() {
         surfaceHeight = 0;
     }
 
-    int numVisibleElements = surfaceHeight / GUIStyle::getInstance().getListBoxEntryHeight();
+    const int numVisibleElements = surfaceHeight / GUIStyle::getInstance().getListBoxEntryHeight();
 
     scrollbar.setRange(0,std::max(0,getNumEntries() - numVisibleElements));
     scrollbar.setBigStepSize(std::max(1, numVisibleElements-1));

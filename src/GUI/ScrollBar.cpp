@@ -26,7 +26,7 @@ ScrollBar::ScrollBar() : Widget() {
     bigStepSize = 10;
     bDragSlider = false;
 
-    enableResizing(false,true);
+    Widget::enableResizing(false,true);
 
     updateArrowButtonSurface();
 
@@ -35,24 +35,22 @@ ScrollBar::ScrollBar() : Widget() {
 
     pBackground = nullptr;
 
-    resize(getMinimumSize());
+    ScrollBar::resize(ScrollBar::getMinimumSize());
 }
 
-ScrollBar::~ScrollBar() {
-    invalidateTextures();
-}
+ScrollBar::~ScrollBar() = default;
 
 void ScrollBar::handleMouseMovement(Sint32 x, Sint32 y, bool insideOverlay) {
     arrow1.handleMouseMovement(x,y,insideOverlay);
     arrow2.handleMouseMovement(x,y - getSize().y + arrow2.getSize().y,insideOverlay);
 
     if(bDragSlider) {
-        int SliderAreaHeight = getSize().y - arrow1.getSize().y - arrow2.getSize().y;
-        int Range = (maxValue - minValue + 1);
+        const auto SliderAreaHeight = getSize().y - arrow1.getSize().y - arrow2.getSize().y;
+        const auto Range = (maxValue - minValue + 1);
 
-        double OneTickHeight = ((double)(SliderAreaHeight - sliderButton.getSize().y)) / ((double) (Range-1));
+        const auto OneTickHeight = static_cast<double>(SliderAreaHeight - sliderButton.getSize().y) / static_cast<double>(Range - 1);
 
-        setCurrentValue((int) ((y - dragPositionFromSliderTop - arrow1.getSize().y) / OneTickHeight));
+        setCurrentValue(static_cast<int>((y - dragPositionFromSliderTop - arrow1.getSize().y) / OneTickHeight));
     }
 }
 
@@ -111,12 +109,12 @@ void ScrollBar::draw(Point position) {
     updateTextures();
 
     if(pBackground != nullptr) {
-        SDL_Rect dest = calcDrawingRect(pBackground, position.x, position.y);
-        SDL_RenderCopy(renderer, pBackground, nullptr, &dest);
+        SDL_Rect dest = calcDrawingRect(pBackground.get(), position.x, position.y);
+        SDL_RenderCopy(renderer, pBackground.get(), nullptr, &dest);
     }
 
     arrow1.draw(position);
-    Point p = position;
+    auto p = position;
     p.y = p.y + getSize().y - arrow2.getSize().y;
     arrow2.draw(p);
     sliderButton.draw(position+sliderPosition);
@@ -131,9 +129,9 @@ void ScrollBar::resize(Uint32 width, Uint32 height) {
 }
 
 void ScrollBar::updateSliderButton() {
-    double Range = (double) (maxValue - minValue + 1);
-    int ArrowHeight = GUIStyle::getInstance().getMinimumScrollBarArrowButtonSize().y;
-    double SliderAreaHeight = (double) (getSize().y - 2*ArrowHeight);
+    const auto Range = static_cast<double>(maxValue - minValue + 1);
+    const auto ArrowHeight = GUIStyle::getInstance().getMinimumScrollBarArrowButtonSize().y;
+    auto SliderAreaHeight = static_cast<double>(getSize().y - 2 * ArrowHeight);
 
     if(SliderAreaHeight < 0.0) {
         SliderAreaHeight = GUIStyle::getInstance().getMinimumScrollBarArrowButtonSize().y;

@@ -47,8 +47,8 @@ private:
     Uint32 explosionID;
     Coord position;
     int house;
-    SDL_Texture** graphic;
-    int numFrames;
+    GFXManager::Zoomable graphic;
+    int numFrames{0};
     int currentFrame;
     int frameTimer;
 

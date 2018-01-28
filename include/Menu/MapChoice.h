@@ -74,13 +74,15 @@ private:
 
 private:
     struct TGroup {
-        std::vector<int> newRegion[NUM_HOUSES];
+        std::array<std::vector<int>, NUM_HOUSES> newRegion;
 
         struct TAttackRegion {
             int regionNum;
             int arrowNum;
             Coord arrowPosition;
-        } attackRegion[4];
+        };
+
+        std::array<TAttackRegion, 4> attackRegion;
 
         struct TText {
             std::string message;
@@ -88,15 +90,17 @@ private:
         };
 
         std::vector<TText> text;
-    } group[9];
+    };
+
+    std::array<TGroup, 9> group;
 
     int house;
     unsigned int lastScenario;
     Uint32 alreadyPlayedRegions;
-    SDL_Surface* mapSurface;
-    SDL_Texture* mapTexture;
-    Coord piecePosition[28];
-    BlendBlitter* curBlendBlitter;
+    sdl2::surface_ptr mapSurface;
+    sdl2::texture_ptr mapTexture;
+    std::array<Coord, 28> piecePosition;
+    std::unique_ptr<BlendBlitter> curBlendBlitter;
     unsigned int curHouse2Blit;
     unsigned int curRegion2Blit;
     bool bFastBlending;

@@ -130,6 +130,10 @@ public:
         return tmp;
     }
 
+    BuilderList(const BuilderList &) = delete;
+    BuilderList(BuilderList &&) = delete;
+    BuilderList& operator=(const BuilderList &) = delete;
+    BuilderList& operator=(BuilderList &&) = delete;
 private:
     explicit BuilderList(Uint32 builderObjectID);
     virtual ~BuilderList();
@@ -155,13 +159,13 @@ private:
     int mouseLeftButton;
     int mouseRightButton;
 
-    SDL_Texture*    pSoldOutTextTexture;
-    SDL_Texture*    pAlreadyBuiltTextTexture;
-    SDL_Texture*    pPlaceItTextTexture;
-    SDL_Texture*    pOnHoldTextTexture;
-    SDL_Texture*    pUnitLimitReachedTextTexture;
+    sdl2::texture_ptr    pSoldOutTextTexture;
+    sdl2::texture_ptr    pAlreadyBuiltTextTexture;
+    sdl2::texture_ptr    pPlaceItTextTexture;
+    sdl2::texture_ptr    pOnHoldTextTexture;
+    sdl2::texture_ptr    pUnitLimitReachedTextTexture;
 
-    SDL_Texture*    pLastTooltip;
+    sdl2::texture_ptr    pLastTooltip;
     std::string     tooltipText;
     Uint32          lastMouseMovement;
     Point           lastMousePos;

@@ -51,9 +51,9 @@ void CutScene::run()
 
     while (!quiting)
     {
-        int frameStart = SDL_GetTicks();
+        const int frameStart = SDL_GetTicks();
 
-        int nextFrameTime = draw();
+        const auto nextFrameTime = draw();
 
         while(SDL_PollEvent(&event)) {
 
@@ -73,7 +73,7 @@ void CutScene::run()
             }
         }
 
-        int frameTime = SDL_GetTicks() - frameStart;
+        const int frameTime = SDL_GetTicks() - frameStart;
         if(frameTime < nextFrameTime) {
             SDL_Delay(nextFrameTime - frameTime);
         }

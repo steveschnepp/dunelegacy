@@ -84,7 +84,7 @@ private:
     bool     airAttack;                  ///< Is this an air attack?
 
     // drawing information
-    SDL_Texture** graphic;               ///< The graphic of the bullet
+    GFXManager::Zoomable graphic; ///< The graphic of the bullet
     int           numFrames = 1;         ///< Number of frames of the bullet
 };
 

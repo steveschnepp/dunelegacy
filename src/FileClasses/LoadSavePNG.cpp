@@ -36,7 +36,7 @@ typedef std::unique_ptr<unsigned char, free_deleter> lodepng_ptr;
 
 // TODO: Whis is this code using lodepng's C API, instead of the C++ API?
 
-SDL_Surface* LoadPNG_RW(SDL_RWops* RWop, int freesrc) {
+sdl2::surface_ptr LoadPNG_RW(SDL_RWops* RWop, int freesrc) {
     if(RWop == nullptr) {
         return nullptr;
     }
@@ -155,7 +155,7 @@ SDL_Surface* LoadPNG_RW(SDL_RWops* RWop, int freesrc) {
 
         lodepng_state_cleanup(&lodePNGState);
 
-        return pic.release();
+        return pic;
     } catch (std::exception &e) {
         SDL_Log("%s", e.what());
 

@@ -31,20 +31,18 @@
 class Label : public Widget {
 public:
     /// default constructor
-    Label() : Widget() {
-        enableResizing(true,true);
+    Label() {
+        Widget::enableResizing(true,true);
     }
 
     /// destructor
-    virtual ~Label() {
-        invalidateTextures();
-    }
+    virtual ~Label() = default;
 
     /**
         Sets a font for this label. Default font of a label is FONT_STD12
         \param  fontID      the ID of the new font
     */
-    virtual inline void setTextFont(int fontID) {
+    virtual void setTextFont(int fontID) {
         this->fontID = fontID;
         resizeAll();
     }
@@ -53,7 +51,7 @@ public:
         Gets the font of this label. Default font of a label is FONT_STD12
         \return the font ID of this label
     */
-    virtual inline int getTextFont() const {
+    virtual int getTextFont() const {
        return fontID;
     }
 
@@ -63,7 +61,7 @@ public:
         \param  textshadowcolor the color of the shadow of the text (COLOR_DEFAULT = default color)
         \param  backgroundcolor the color of the label background (COLOR_TRANSPARENT = transparent)
     */
-    virtual inline void setTextColor(Uint32 textcolor, Uint32 textshadowcolor = COLOR_DEFAULT, Uint32 backgroundcolor = COLOR_TRANSPARENT) {
+    virtual void setTextColor(Uint32 textcolor, Uint32 textshadowcolor = COLOR_DEFAULT, Uint32 backgroundcolor = COLOR_TRANSPARENT) {
         this->textcolor = textcolor;
         this->textshadowcolor = textshadowcolor;
         this->backgroundcolor = backgroundcolor;
@@ -83,7 +81,7 @@ public:
         Returns the alignment of the text in this label.
         \return Combination of (Alignment_HCenter, Alignment_Left or Alignment_Right) and (Alignment_VCenter, Alignment_Top or Alignment_Bottom)
     */
-    virtual inline Alignment_Enum getAlignment() const {
+    virtual Alignment_Enum getAlignment() const {
         return alignment;
     }
 
@@ -92,7 +90,7 @@ public:
         to fit this text.
         \param  Text The new text for this button
     */
-    virtual inline void setText(const std::string& text) {
+    virtual void setText(const std::string& text) {
         if(text != this->text) {
             this->text = text;
             resizeAll();
@@ -103,7 +101,7 @@ public:
         Get the text of this label.
         \return the text of this button
     */
-    inline const std::string& getText() const { return text; };
+    const std::string& getText() const { return text; };
 
     /**
         This method resizes the label. This method should only
@@ -139,19 +137,19 @@ public:
         //split text into single lines at every '\n'
         size_t startpos = 0;
         size_t nextpos;
-        std::list<std::string> hardLines;
+        std::vector<std::string> hardLines;
         do {
-            nextpos = text.find("\n",startpos);
+            nextpos = text.find('\n',startpos);
             if(nextpos == std::string::npos) {
-                hardLines.push_back(text.substr(startpos,text.length()-startpos));
+                hardLines.emplace_back(text, startpos, text.length()-startpos);
             } else {
-                hardLines.push_back(text.substr(startpos,nextpos-startpos));
+                hardLines.emplace_back(text, startpos, nextpos-startpos);
                 startpos = nextpos+1;
             }
         } while(nextpos != std::string::npos);
 
-        for(const std::string hardLine : hardLines) {
-            Point minLabelSize = GUIStyle::getInstance().getMinimumLabelSize(hardLine, fontID);
+        for(const auto& hardLine : hardLines) {
+            const auto minLabelSize = GUIStyle::getInstance().getMinimumLabelSize(hardLine, fontID);
             p.x = std::max(p.x, minLabelSize.x);
             p.y += minLabelSize.y;
         }
@@ -174,8 +172,8 @@ public:
             return;
         }
 
-        SDL_Rect dest = calcDrawingRect(pTexture, position.x + getSize().x/2, position.y + getSize().y/2, HAlign::Center, VAlign::Center);
-        SDL_RenderCopy(renderer, pTexture, nullptr, &dest);
+        SDL_Rect dest = calcDrawingRect(pTexture.get(), position.x + getSize().x/2, position.y + getSize().y/2, HAlign::Center, VAlign::Center);
+        SDL_RenderCopy(renderer, pTexture.get(), nullptr, &dest);
     };
 
     /**
@@ -208,7 +206,7 @@ protected:
 
         if(pTexture == nullptr) {
             int fontID = this->fontID;
-            std::vector<std::string> textLines = greedyWordWrap(text,
+            const auto textLines = greedyWordWrap(text,
                                                                 getSize().x,
                                                                 [fontID](const std::string& tmp) {
                                                                     return GUIStyle::getInstance().getMinimumLabelSize(tmp, fontID).x - 4;
@@ -223,10 +221,7 @@ protected:
     */
     void invalidateTextures() override
     {
-        if(pTexture != nullptr) {
-            SDL_DestroyTexture(pTexture);
-            pTexture = nullptr;
-        }
+        pTexture.reset();
     }
 
 private:
@@ -235,8 +230,8 @@ private:
     Uint32 textshadowcolor = COLOR_DEFAULT;     ///< the color of the shadow of the text
     Uint32 backgroundcolor = COLOR_TRANSPARENT; ///< the color of the label background
     std::string text;                           ///< the text of this label
-    SDL_Texture* pTexture = nullptr;            ///< the texture of this label
-    Alignment_Enum alignment = (Alignment_Enum) (Alignment_Left | Alignment_VCenter);   ///< the alignment of this label
+    sdl2::texture_ptr pTexture = nullptr;            ///< the texture of this label
+    Alignment_Enum alignment = static_cast<Alignment_Enum>(Alignment_Left | Alignment_VCenter);   ///< the alignment of this label
 };
 
 #endif // LABEL_H

@@ -36,12 +36,12 @@ LoadSaveWindow::LoadSaveWindow(bool bSave, const std::string& caption, const std
  : Window(0,0,0,0), bSaveWindow(bSave), directories(directories), directoryTitles(directoryTitles), extension(std::move(extension)), currentDirectoryIndex(preselectedDirectoryIndex), preselectedFile(preselectedFile), color(color) {
 
     // set up window
-    SDL_Texture *pBackground = pGFXManager->getUIGraphic(UI_LoadSaveWindow);
-    setBackground(pBackground, false);
+    const auto pBackground = pGFXManager->getUIGraphic(UI_LoadSaveWindow);
+    Window::setBackground(pBackground, false);
 
-    setCurrentPosition(calcAlignedDrawingRect(pBackground, HAlign::Center, VAlign::Center));
+    Window::setCurrentPosition(calcAlignedDrawingRect(pBackground, HAlign::Center, VAlign::Center));
 
-    setWindowWidget(&mainHBox);
+    Window::setWindowWidget(&mainHBox);
 
     mainHBox.addWidget(HSpacer::create(16));
     mainHBox.addWidget(&mainVBox);
@@ -152,7 +152,7 @@ bool LoadSaveWindow::handleKeyPress(SDL_KeyboardEvent& key) {
         } else if(key.keysym.sym == SDLK_DELETE) {
             const auto index = fileList.getSelectedIndex();
             if(index >= 0) {
-                QstBox* pQstBox = QstBox::create(   fmt::sprintf(_("Do you really want to delete '%s' ?"), fileList.getEntry(index).c_str()),
+                auto pQstBox = QstBox::create(   fmt::sprintf(_("Do you really want to delete '%s' ?"), fileList.getEntry(index).c_str()),
                                                     _("No"),
                                                     _("Yes"),
                                                     QSTBOX_BUTTON2);
@@ -173,25 +173,23 @@ bool LoadSaveWindow::handleKeyPress(SDL_KeyboardEvent& key) {
 
 
 void LoadSaveWindow::onChildWindowClose(Window* pChildWindow) {
-    QstBox* pQstBox = dynamic_cast<QstBox*>(pChildWindow);
-    if(pQstBox != nullptr) {
-        if(pQstBox->getPressedButtonID() == QSTBOX_BUTTON2) {
-            const auto index = fileList.getSelectedIndex();
-            if(index >= 0) {
-                const auto file2delete = directories[currentDirectoryIndex] + fileList.getEntry(index) + "." + extension;
+    const auto pQstBox = dynamic_cast<QstBox*>(pChildWindow);
+    if(pQstBox == nullptr || pQstBox->getPressedButtonID() != QSTBOX_BUTTON2) return;
 
-                if(remove(file2delete.c_str()) == 0) {
-                    // remove was successful => delete from list
-                    fileList.removeEntry(index);
-                    if(fileList.getNumEntries() > 0) {
-                        if(index >= fileList.getNumEntries()) {
-                            fileList.setSelectedItem(fileList.getNumEntries() - 1);
-                        } else {
-                            fileList.setSelectedItem(index);
-                        }
-                    }
-                }
-            }
+    const auto index = fileList.getSelectedIndex();
+    if(index < 0) return;
+
+    const auto file2delete = directories[currentDirectoryIndex] + fileList.getEntry(index) + "." + extension;
+
+    if(remove(file2delete.c_str()) != 0) return;
+
+    // remove was successful => delete from list
+    fileList.removeEntry(index);
+    if(fileList.getNumEntries() > 0) {
+        if(index >= fileList.getNumEntries()) {
+            fileList.setSelectedItem(fileList.getNumEntries() - 1);
+        } else {
+            fileList.setSelectedItem(index);
         }
     }
 }
@@ -225,7 +223,7 @@ void LoadSaveWindow::onOK() {
 }
 
 void LoadSaveWindow::onCancel() {
-    Window* pParentWindow = dynamic_cast<Window*>(getParent());
+    auto pParentWindow = dynamic_cast<Window*>(getParent());
     if(pParentWindow != nullptr) {
         pParentWindow->closeChildWindow();
     }
@@ -233,7 +231,7 @@ void LoadSaveWindow::onCancel() {
 
 void LoadSaveWindow::onDirectoryChange(int i) {
     currentDirectoryIndex = i;
-    for(int j = 0; j < (int) directoryButtons.size(); j++) {
+    for(auto j = 0; j < directoryButtons.size(); j++) {
         directoryButtons[j].setToggleState( (i==j) );
     }
 
@@ -241,11 +239,11 @@ void LoadSaveWindow::onDirectoryChange(int i) {
 }
 
 void LoadSaveWindow::onSelectionChange(bool bInteractive) {
-    if(bSaveWindow == true) {
-        int index = fileList.getSelectedIndex();
-        if(index >= 0) {
-            saveName.setText(fileList.getEntry(index));
-        }
+    if(bSaveWindow != true) return;
+
+    const auto index = fileList.getSelectedIndex();
+    if(index >= 0) {
+        saveName.setText(fileList.getEntry(index));
     }
 }
 

@@ -23,6 +23,8 @@
 #include <stdarg.h>
 #include <vector>
 
+#include <misc/sdl_support.h>
+
 /// A class for loading a *.ICN-File and the corresponding *.MAP-File.
 /**
     This class can read icn-Files and return the contained pictures as a SDL_Surface. An icn-File contains
@@ -48,10 +50,10 @@ public:
     Icnfile& operator=(const Icnfile &) = delete;
     Icnfile& operator=(Icnfile &&) = delete;
 
-    SDL_Surface * getPicture(Uint32 indexOfFile);
-    SDL_Surface * getPictureArray(Uint32 mapfileIndex, int tilesX = 0, int tilesY = 0, int tilesN = 0);
-    SDL_Surface * getPictureRow(Uint32 startIndex,Uint32 endIndex, Uint32 maxRowLength = 0);
-    SDL_Surface * getPictureRow2(unsigned int numTiles, ...);
+    sdl2::surface_ptr getPicture(Uint32 indexOfFile) const;
+    sdl2::surface_ptr getPictureArray(Uint32 mapfileIndex, int tilesX = 0, int tilesY = 0, int tilesN = 0);
+    sdl2::surface_ptr getPictureRow(Uint32 startIndex,Uint32 endIndex, Uint32 maxRowLength = 0) const;
+    sdl2::surface_ptr getPictureRow2(unsigned int numTiles, ...) const;
 
     /// Returns the number of tiles
     /**
@@ -68,16 +70,16 @@ public:
     int getNumTilesets() const noexcept { return tilesets.size(); };
 
 private:
-    uint8_t* pIcnFiledata;
+    std::unique_ptr<uint8_t[]> pIcnFiledata;
     Uint32 numFiles;
 
     std::vector<MapfileEntry> tilesets;
 
-    uint8_t* SSET;
+    const uint8_t* SSET;
     Uint32 SSET_Length;
-    uint8_t* RPAL;
+    const uint8_t* RPAL;
     Uint32 RPAL_Length;
-    uint8_t* RTBL;
+    const uint8_t* RTBL;
     Uint32 RTBL_Length;
 };
 

@@ -374,7 +374,7 @@ void Tile::blitDeadUnits(int xPos, int yPos) {
 
     for (const auto& deadUnit : deadUnits) {
         SDL_Rect source = { 0, 0, zoomed_tile, zoomed_tile };
-        SDL_Texture** pTexture = nullptr;
+        GFXManager::Zoomable pTexture;
         switch (deadUnit.type) {
         case DeadUnit_Infantry: {
             pTexture = pGFXManager->getObjPic(ObjPic_DeadInfantry, deadUnit.house);
@@ -1177,6 +1177,8 @@ int Tile::getTerrainTile() const {
 
 int Tile::getHideTile(int houseID) const {
 
+    //const auto x = currentGameMap->for_all_neighbors(location.x, location.y, [houseID](Tile& t) { return t.isExplored(houseID); });
+
     // are all surrounding tiles explored?
     if (((currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isExplored(houseID) == true))
         && ((currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isExplored(houseID) == true))
@@ -1191,10 +1193,16 @@ int Tile::getHideTile(int houseID) const {
     bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isExplored(houseID) == false);
     bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isExplored(houseID) == false);
 
-    return (((int)up) | (right << 1) | (down << 2) | (left << 3));
+    const auto ret = (((int)up) | (right << 1) | (down << 2) | (left << 3));
+
+    //assert(x == ret);
+
+    return ret;
 }
 
 int Tile::getFogTile(int houseID) const {
+
+    //const auto x = currentGameMap->for_all_neighbors(location.x, location.y, [houseID](Tile& t) { return !t.isFogged(houseID); });
 
     // are all surrounding tiles fogged?
     if (((currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isFogged(houseID) == false))
@@ -1210,7 +1218,11 @@ int Tile::getFogTile(int houseID) const {
     bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isFogged(houseID) == true);
     bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isFogged(houseID) == true);
 
-    return (((int)up) | (right << 1) | (down << 2) | (left << 3));
+    const auto ret = (((int)up) | (right << 1) | (down << 2) | (left << 3));
+
+    //assert(x == ret);
+
+    return ret;
 }
 
 #ifdef __cpp_coroutines

@@ -40,7 +40,7 @@ public:
 
 private:
     // drawing information
-    SDL_Texture**   turretGraphic;      ///< The turret graphic
+    GFXManager::Zoomable turretGraphic;      ///< The turret graphic
     int             gunGraphicID;       ///< The id of the turret graphic (needed if we want to reload the graphic)
 };
 

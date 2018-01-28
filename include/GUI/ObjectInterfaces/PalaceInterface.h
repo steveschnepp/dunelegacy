@@ -30,7 +30,7 @@
 class PalaceInterface : public DefaultStructureInterface {
 public:
     static PalaceInterface* create(int objectID) {
-        PalaceInterface* tmp = new PalaceInterface(objectID);
+        const auto tmp = new PalaceInterface(objectID);
         tmp->pAllocated = true;
         return tmp;
     }
@@ -39,21 +39,20 @@ protected:
     explicit PalaceInterface(int objectID) : DefaultStructureInterface(objectID) {
         mainHBox.addWidget(&weaponBox);
 
-        SDL_Texture* pTexture = pGFXManager->getSmallDetailPic(Picture_DeathHand);
+        const auto pTexture = pGFXManager->getSmallDetailPic(Picture_DeathHand);
         weaponBox.addWidget(&weaponProgressBar, Point((SIDEBARWIDTH - 25 - getWidth(pTexture))/2,5), getTextureSize(pTexture));
 
         weaponBox.addWidget(&weaponSelectButton, Point((SIDEBARWIDTH - 25 - getWidth(pTexture))/2,5), getTextureSize(pTexture));
 
-        SDL_Surface* pText = pFontManager->createSurfaceWithText(_("READY"), COLOR_WHITE, FONT_STD10);
+        sdl2::surface_ptr pText{ pFontManager->createSurfaceWithText(_("READY"), COLOR_WHITE, FONT_STD10) };
 
-        SDL_Surface* pReady = SDL_CreateRGBSurface(0, getWidth(pTexture), getHeight(pTexture), SCREEN_BPP, RMASK, GMASK, BMASK, AMASK);
-        SDL_FillRect(pReady, nullptr, COLOR_TRANSPARENT);
+        sdl2::surface_ptr pReady{ SDL_CreateRGBSurface(0, getWidth(pTexture), getHeight(pTexture), SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
+        SDL_FillRect(pReady.get(), nullptr, COLOR_TRANSPARENT);
 
-        SDL_Rect dest = calcAlignedDrawingRect(pText, pReady);
-        SDL_BlitSurface(pText, nullptr, pReady, &dest);
+        auto dest = calcAlignedDrawingRect(pText.get(), pReady.get());
+        SDL_BlitSurface(pText.get(), nullptr, pReady.get(), &dest);
 
-        SDL_FreeSurface(pText);
-        weaponSelectButton.setTextures(convertSurfaceToTexture(pReady, true),true);
+        weaponSelectButton.setTextures(convertSurfaceToTexture(pReady.release(), true).release(),true);
         weaponSelectButton.setVisible(false);
 
         weaponSelectButton.setOnClick(std::bind(&PalaceInterface::onSpecial, this));
@@ -66,12 +65,12 @@ protected:
     */
     bool update() override
     {
-        ObjectBase* pObject = currentGame->getObjectManager().getObject(objectID);
+        const auto pObject = currentGame->getObjectManager().getObject(objectID);
         if(pObject == nullptr) {
             return false;
         }
 
-        Palace* pPalace = dynamic_cast<Palace*>(pObject);
+        const auto pPalace = dynamic_cast<Palace*>(pObject);
 
         if(pPalace != nullptr) {
             int picID;

@@ -146,7 +146,7 @@ void StructureBase::blitToScreen() {
     SDL_RenderCopy(renderer, graphic[currentZoomlevel], &source, &dest);
 
     if(!fogged) {
-        SDL_Texture** pSmokeSurface = pGFXManager->getObjPic(ObjPic_Smoke,getOwner()->getHouseID());
+        auto pSmokeSurface = pGFXManager->getObjPic(ObjPic_Smoke,getOwner()->getHouseID());
         SDL_Rect smokeSource = calcSpriteSourceRect(pSmokeSurface[currentZoomlevel], 0, 3);
         for(const StructureSmoke& structureSmoke : smoke) {
             SDL_Rect smokeDest = calcSpriteDrawingRect( pSmokeSurface[currentZoomlevel],

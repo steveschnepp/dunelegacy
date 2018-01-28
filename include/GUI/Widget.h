@@ -141,6 +141,11 @@ public:
         }
     }
 
+    Widget(const Widget &) = default;
+    Widget(Widget &&) = default;
+    Widget& operator=(const Widget &) = delete;
+    Widget& operator=(Widget &&) = default;
+
     /**
         Sets the parent of this widget.
         \param pParent new parent (nullptr is also possible)

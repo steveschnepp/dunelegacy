@@ -19,6 +19,7 @@
 #define MESSAGETICKER_H
 
 #include <GUI/Widget.h>
+#include <misc/sdl_support.h>
 
 #include <string>
 #include <memory>
@@ -50,7 +51,7 @@ public:
     }
 
 private:
-    std::queue<std::shared_ptr<SDL_Texture>> messageTextures;
+    std::queue<sdl2::texture_ptr> messageTextures;
     int timer;
 };
 

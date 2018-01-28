@@ -24,13 +24,14 @@
 
 #include <algorithm>
 
-FadeInVideoEvent::FadeInVideoEvent(SDL_Surface* pSurface, int numFrames2FadeIn, bool bFreeSurface, bool bCenterVertical, bool bFadeWhite) : VideoEvent()
+FadeInVideoEvent::FadeInVideoEvent(SDL_Surface* pSurface, int numFrames2FadeIn, bool bFreeSurface, bool bCenterVertical, bool bFadeWhite)
 {
-    SDL_Surface *pTmp = convertSurfaceToDisplayFormat(Scaler::defaultDoubleSurface(pSurface, bFreeSurface), true);
-    pTexture = SDL_CreateTextureFromSurface(renderer, pTmp);
-    SDL_FreeSurface(pTmp);
+    { // Scope
+        auto pTmp = convertSurfaceToDisplayFormat(Scaler::defaultDoubleSurface(pSurface, bFreeSurface).release(), true);
+        pTexture = sdl2::texture_ptr{ SDL_CreateTextureFromSurface(renderer, pTmp.get()) };
+    }
 
-    SDL_SetTextureBlendMode(pTexture, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(pTexture.get(), SDL_BLENDMODE_BLEND);
 
     this->numFrames2FadeIn = numFrames2FadeIn;
     this->bCenterVertical = bCenterVertical;
@@ -38,14 +39,11 @@ FadeInVideoEvent::FadeInVideoEvent(SDL_Surface* pSurface, int numFrames2FadeIn, 
     currentFrame = 0;
 }
 
-FadeInVideoEvent::~FadeInVideoEvent()
-{
-    SDL_DestroyTexture(pTexture);
-}
+FadeInVideoEvent::~FadeInVideoEvent() = default;
 
 int FadeInVideoEvent::draw()
 {
-    SDL_Rect dest = calcAlignedDrawingRect(pTexture, HAlign::Center, bCenterVertical ? VAlign::Center : VAlign::Top);
+    SDL_Rect dest = calcAlignedDrawingRect(pTexture.get(), HAlign::Center, bCenterVertical ? VAlign::Center : VAlign::Top);
 
     int alpha  = std::min(255, (255*currentFrame)/numFrames2FadeIn);
     if(bFadeWhite) {
@@ -53,8 +51,8 @@ int FadeInVideoEvent::draw()
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderFillRect(renderer, &dest);
     }
-    SDL_SetTextureAlphaMod(pTexture, alpha);
-    SDL_RenderCopy(renderer, pTexture, nullptr, &dest);
+    SDL_SetTextureAlphaMod(pTexture.get(), alpha);
+    SDL_RenderCopy(renderer, pTexture.get(), nullptr, &dest);
 
     currentFrame++;
 
