@@ -26,6 +26,8 @@
 
 #include <cstdio>
 
+class BoxOffsets;
+
 class Map
 {
 public:
@@ -279,8 +281,7 @@ private:
 
     void init_tile_location();
 
-    decltype(tiles)::size_type tile_index(int xPos, int yPos) const noexcept
-    {
+    decltype(tiles)::size_type tile_index(int xPos, int yPos) const noexcept {
         return xPos * sizeY + yPos;
     }
 
@@ -297,6 +298,10 @@ private:
 
         return &tiles[tile_index(xPos, yPos)];
     }
+
+    std::unique_ptr<BoxOffsets> offsets_;
+
+    void init_box_sets();
 };
 
 
