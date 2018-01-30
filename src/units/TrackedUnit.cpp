@@ -58,44 +58,36 @@ void TrackedUnit::checkPos()
         currentGameMap->getTile(location.x, location.y)->squash();
 }
 
-bool TrackedUnit::canPass(int xPos, int yPos) const
-{
-    if(!currentGameMap->tileExists(xPos, yPos)) {
+bool TrackedUnit::canPassTile(Tile* pTile) const {
+    if(!pTile || pTile->isMountain()) {
         return false;
     }
 
-    Tile* pTile = currentGameMap->getTile(xPos, yPos);
+    if(!pTile->hasAGroundObject()) return true;
 
-    if(pTile->isMountain()) {
-        return false;
-    }
+    const auto pObject = pTile->getGroundObject();
 
-    if(pTile->hasAGroundObject()) {
-        ObjectBase *pObject = pTile->getGroundObject();
-
-        if( (pObject != nullptr)
-            && (pObject->getObjectID() == target.getObjectID())
-            && targetFriendly
-            && pObject->isAStructure()
-            && (pObject->getOwner()->getTeam() == owner->getTeam())
-            && pObject->isVisible(getOwner()->getTeam()))
-        {
-            // are we entering a repair yard?
-            if(goingToRepairYard && (pObject->getItemID() == Structure_RepairYard)) {
-                return static_cast<const RepairYard*>(pObject)->isFree();
-            } else {
-                const Harvester* pHarvester = dynamic_cast<const Harvester*>(this);
-                return ((pHarvester != nullptr) && pHarvester->isReturning() && (pObject->getItemID() == Structure_Refinery) && static_cast<const Refinery*>(pObject)->isFree());
-            }
+    if( (pObject != nullptr)
+        && (pObject->getObjectID() == target.getObjectID())
+        && targetFriendly
+        && pObject->isAStructure()
+        && (pObject->getOwner()->getTeam() == owner->getTeam())
+        && pObject->isVisible(getOwner()->getTeam()))
+    {
+        // are we entering a repair yard?
+        if(goingToRepairYard && (pObject->getItemID() == Structure_RepairYard)) {
+            return static_cast<const RepairYard*>(pObject)->isFree();
         } else {
-            if (!pTile->hasANonInfantryGroundObject() && (pTile->getInfantryTeam() != getOwner()->getTeam())) {
-                // possibly squashing this unit
-                return true;
-            } else {
-                return false;
-            }
+            const auto pHarvester = dynamic_cast<const Harvester*>(this);
+            return ((pHarvester != nullptr) && pHarvester->isReturning() && (pObject->getItemID() == Structure_Refinery)
+                && static_cast<const Refinery*>(pObject)->isFree());
         }
     }
 
-    return true;
+    if (!pTile->hasANonInfantryGroundObject() && (pTile->getInfantryTeam() != getOwner()->getTeam())) {
+        // possibly squashing this unit
+        return true;
+    } else {
+        return false;
+    }
 }
