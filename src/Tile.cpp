@@ -1177,7 +1177,7 @@ int Tile::getTerrainTile() const {
 
 int Tile::getHideTile(int houseID) const {
 
-    //const auto x = currentGameMap->for_all_neighbors(location.x, location.y, [houseID](Tile& t) { return t.isExplored(houseID); });
+    //const auto x = currentGameMap->get_neighbor_mask(location.x, location.y, [houseID](Tile& t) { return t.isExplored(houseID); });
 
     // are all surrounding tiles explored?
     if (((currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isExplored(houseID) == true))
@@ -1202,7 +1202,7 @@ int Tile::getHideTile(int houseID) const {
 
 int Tile::getFogTile(int houseID) const {
 
-    //const auto x = currentGameMap->for_all_neighbors(location.x, location.y, [houseID](Tile& t) { return !t.isFogged(houseID); });
+    //const auto x = currentGameMap->get_neighbor_mask(location.x, location.y, [houseID](Tile& t) { return !t.isFogged(houseID); });
 
     // are all surrounding tiles fogged?
     if (((currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isFogged(houseID) == false))
