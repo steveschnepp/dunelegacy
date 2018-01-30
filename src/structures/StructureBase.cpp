@@ -154,36 +154,36 @@ void StructureBase::assignToMap(const Coord& pos) {
 }
 
 void StructureBase::blitToScreen() {
-    int index = fogged ? lastVisibleFrame : curAnimFrame;
-    int indexX = index % numImagesX;
-    int indexY = index / numImagesX;
+    const auto index = fogged ? lastVisibleFrame : curAnimFrame;
+    const auto indexX = index % numImagesX;
+    const auto indexY = index / numImagesX;
 
-    SDL_Rect dest = calcSpriteDrawingRect(  graphic[currentZoomlevel],
+    auto dest = calcSpriteDrawingRect(  graphic[currentZoomlevel],
                                             screenborder->world2screenX(lround(realX)),
                                             screenborder->world2screenY(lround(realY)),
                                             numImagesX, numImagesY);
-    SDL_Rect source = calcSpriteSourceRect(graphic[currentZoomlevel],indexX,numImagesX,indexY,numImagesY);
+    auto source = calcSpriteSourceRect(graphic[currentZoomlevel],indexX,numImagesX,indexY,numImagesY);
 
     SDL_RenderCopy(renderer, graphic[currentZoomlevel], &source, &dest);
 
-    if(!fogged) {
-        auto pSmokeSurface = pGFXManager->getObjPic(ObjPic_Smoke,getOwner()->getHouseID());
-        SDL_Rect smokeSource = calcSpriteSourceRect(pSmokeSurface[currentZoomlevel], 0, 3);
-        for(const StructureSmoke& structureSmoke : smoke) {
-            SDL_Rect smokeDest = calcSpriteDrawingRect( pSmokeSurface[currentZoomlevel],
-                                                        screenborder->world2screenX(structureSmoke.realPos.x),
-                                                        screenborder->world2screenY(structureSmoke.realPos.y),
-                                                        3, 1, HAlign::Center, VAlign::Bottom);
-            Uint32 cycleDiff = currentGame->getGameCycleCount() - structureSmoke.startGameCycle;
+    if(fogged) return;
 
-            Uint32 smokeFrame = (cycleDiff/25) % 4;
-            if(smokeFrame == 3) {
-                smokeFrame = 1;
-            }
+    const auto pSmokeSurface = pGFXManager->getObjPic(ObjPic_Smoke,getOwner()->getHouseID());
+    auto smokeSource = calcSpriteSourceRect(pSmokeSurface[currentZoomlevel], 0, 3);
+    for(const auto& structureSmoke : smoke) {
+        auto smokeDest = calcSpriteDrawingRect( pSmokeSurface[currentZoomlevel],
+                                                screenborder->world2screenX(structureSmoke.realPos.x),
+                                                screenborder->world2screenY(structureSmoke.realPos.y),
+                                                3, 1, HAlign::Center, VAlign::Bottom);
+        const auto cycleDiff = currentGame->getGameCycleCount() - structureSmoke.startGameCycle;
 
-            smokeSource.x = smokeFrame * smokeSource.w;
-            SDL_RenderCopy(renderer, pSmokeSurface[currentZoomlevel], &smokeSource, &smokeDest);
+        auto smokeFrame = (cycleDiff/25) % 4;
+        if(smokeFrame == 3) {
+            smokeFrame = 1;
         }
+
+        smokeSource.x = smokeFrame * smokeSource.w;
+        SDL_RenderCopy(renderer, pSmokeSurface[currentZoomlevel], &smokeSource, &smokeDest);
     }
 }
 
