@@ -636,6 +636,9 @@ void Tile::setType(int newType) {
     type = newType;
     destroyedStructureTile = DestroyedStructure_None;
 
+    terrainTile = TerrainTile_Invalid;
+    currentGameMap->for_each_neighbor(location.x, location.y, [](Tile& t) { t.terrainTile = TerrainTile_Invalid; });
+
     if (type == Terrain_Spice) {
         spice = currentGame->randomGen.rand(RANDOMSPICEMIN, RANDOMSPICEMAX);
     }
@@ -1087,7 +1090,8 @@ Uint32 Tile::getRadarColor(House* pHouse, bool radar) {
     return fogColor;
 }
 
-int Tile::getTerrainTile() const {
+
+Tile::TERRAINTILETYPE Tile::getTerrainTileImpl() const {
     auto terrainType = type;
     if (terrainType == Terrain_ThickSpice) {
         // check if we are surrounded by spice/thick spice
@@ -1118,7 +1122,7 @@ int Tile::getTerrainTile() const {
         bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isRock() == true);
         bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isRock() == true);
 
-        return TerrainTile_Rock + (((int)up) | (right << 1) | (down << 2) | (left << 3));
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Rock + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
     } break;
 
     case Terrain_Dunes: {
@@ -1128,7 +1132,7 @@ int Tile::getTerrainTile() const {
         bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->getType() == Terrain_Dunes);
         bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->getType() == Terrain_Dunes);
 
-        return TerrainTile_Dunes + (((int)up) | (right << 1) | (down << 2) | (left << 3));
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Dunes + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
     } break;
 
     case Terrain_Mountain: {
@@ -1138,7 +1142,7 @@ int Tile::getTerrainTile() const {
         bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isMountain() == true);
         bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isMountain() == true);
 
-        return TerrainTile_Mountain + (((int)up) | (right << 1) | (down << 2) | (left << 3));
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Mountain + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
     } break;
 
     case Terrain_Spice: {
@@ -1148,7 +1152,7 @@ int Tile::getTerrainTile() const {
         bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isSpice() == true);
         bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isSpice() == true);
 
-        return TerrainTile_Spice + (((int)up) | (right << 1) | (down << 2) | (left << 3));
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Spice + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
     } break;
 
     case Terrain_ThickSpice: {
@@ -1158,7 +1162,7 @@ int Tile::getTerrainTile() const {
         bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->getType() == Terrain_ThickSpice);
         bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->getType() == Terrain_ThickSpice);
 
-        return TerrainTile_ThickSpice + (((int)up) | (right << 1) | (down << 2) | (left << 3));
+        return static_cast<TERRAINTILETYPE>(TerrainTile_ThickSpice + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
     } break;
 
     case Terrain_SpiceBloom: {

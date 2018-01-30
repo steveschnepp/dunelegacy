@@ -98,7 +98,7 @@ enum destroyedStructureEnum {
 };
 
 
-class Tile
+class Tile final
 {
 public:
 
@@ -217,7 +217,9 @@ public:
         TerrainTile_ThickSpiceFull = TerrainTile_ThickSpice + 0x0F,
 
         TerrainTile_SpiceBloom = 0x54,
-        TerrainTile_SpecialBloom = 0x55
+        TerrainTile_SpecialBloom = 0x55,
+
+        TerrainTile_Invalid = ~0
     } TERRAINTILETYPE;
 
 
@@ -449,7 +451,12 @@ public:
     const Coord& getLocation() const noexcept { return location; }
 
     Uint32 getRadarColor(House* pHouse, bool radar);
-    int getTerrainTile() const;
+    int getTerrainTile() const {
+        if (terrainTile == TerrainTile_Invalid)
+            terrainTile = getTerrainTileImpl();
+
+        return terrainTile;
+    }
     int getHideTile(int houseID) const;
     int getFogTile(int houseID) const;
     int getDestroyedStructureTile() const noexcept { return  destroyedStructureTile; };
@@ -486,6 +493,7 @@ private:
     GFXManager::Zoomable sprite;       ///< the graphic to draw
 
     Sint32                          destroyedStructureTile;         ///< the tile drawn for a destroyed structure
+    mutable TERRAINTILETYPE         terrainTile{TerrainTile_Invalid};
     std::array<Uint32, NUM_ANGLES>  tracksCreationTime{};           ///< Contains the game cycle the tracks on sand appeared
     std::vector<DAMAGETYPE>         damage;                         ///< damage positions
     std::vector<DEADUNITTYPE>       deadUnits;                      ///< dead units
@@ -505,6 +513,8 @@ private:
 
     template<typename Visitor>
     void forEachUnit(Visitor&& visitor) const;
+
+    TERRAINTILETYPE getTerrainTileImpl() const;
 
 #ifdef __cpp_coroutines
     generator<Uint32> all_assigned() const noexcept;
