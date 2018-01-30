@@ -94,7 +94,7 @@ void StructureBase::save(OutputStream& stream) const {
     stream.writeSint32(degradeTimer);
 
     stream.writeUint32(smoke.size());
-    for(const StructureSmoke& structureSmoke : smoke) {
+    for(const auto& structureSmoke : smoke) {
         structureSmoke.save(stream);
     }
 }
@@ -383,6 +383,11 @@ bool StructureBase::update() {
     }
 
     // check smoke
+    smoke.erase(std::remove_if(std::begin(smoke), std::end(smoke),
+        [](const StructureSmoke& s) { return currentGame->getGameCycleCount() - s.startGameCycle >= MILLI2CYCLES(8 * 1000); }),
+        std::end(smoke));
+
+#if 0
     std::list<StructureSmoke>::iterator iter = smoke.begin();
     while(iter != smoke.end()) {
         if(currentGame->getGameCycleCount() - iter->startGameCycle >= MILLI2CYCLES(8*1000)) {
@@ -391,6 +396,7 @@ bool StructureBase::update() {
             ++iter;
         }
     }
+#endif // 0
 
     // update animations
     animationCounter++;
