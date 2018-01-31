@@ -29,6 +29,7 @@
 #include <list>
 #include <vector>
 #include <algorithm>
+#include "FileClasses/GFXManager.h"
 
 #ifdef __cpp_coroutines
 #include "misc/generator.h"

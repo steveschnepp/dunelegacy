@@ -21,6 +21,7 @@
 #include <DataTypes.h>
 #include <misc/InputStream.h>
 #include <misc/OutputStream.h>
+#include <FileClasses/GFXManager.h>
 
 #include <SDL2/SDL.h>
 

@@ -21,6 +21,8 @@
 #include <SDL2/SDL.h>
 #include "Font.h"
 
+#include <misc/sdl_support.h>
+
 #include <memory>
 #include <string>
 

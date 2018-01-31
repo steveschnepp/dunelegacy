@@ -24,6 +24,7 @@
 #include <misc/draw_util.h>
 #include <misc/BlendBlitter.h>
 #include <mmath.h>
+#include <array>
 #include <vector>
 #include <SDL2/SDL.h>
 

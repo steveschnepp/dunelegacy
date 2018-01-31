@@ -20,6 +20,7 @@
 
 #include <CutScenes/Scene.h>
 #include <FileClasses/Palette.h>
+#include <FileClasses/Wsafile.h>
 
 #include <SDL2/SDL.h>
 #include <queue>
@@ -89,24 +90,10 @@ protected:
         \return the milliseconds until the next frame shall be drawn.
     */
     int draw();
-    static std::unique_ptr<Wsafile> create_wsafile(const char *name1) {
-        auto file1 = sdl2::RWop_ptr{ pFileManager->openFile(name1) };
 
-        return std::make_unique<Wsafile>(file1.get());
-    }
-    static std::unique_ptr<Wsafile> create_wsafile(const char* name1, const char* name2) {
-        auto file1 = sdl2::RWop_ptr{ pFileManager->openFile(name1) };
-        auto file2 = sdl2::RWop_ptr{ pFileManager->openFile(name2) };
-
-        return std::make_unique<Wsafile>(file1.get(), file2.get());
-    }
-    static std::unique_ptr<Wsafile> create_wsafile(const char* name1, const char* name2, const char* name3) {
-        auto file1 = sdl2::RWop_ptr{ pFileManager->openFile(name1) };
-        auto file2 = sdl2::RWop_ptr{ pFileManager->openFile(name2) };
-        auto file3 = sdl2::RWop_ptr{ pFileManager->openFile(name3) };
-
-        return std::make_unique<Wsafile>(file1.get(), file2.get(), file3.get());
-    }
+    static std::unique_ptr<Wsafile> create_wsafile(const char* name1);
+    static std::unique_ptr<Wsafile> create_wsafile(const char* name1, const char* name2);
+    static std::unique_ptr<Wsafile> create_wsafile(const char* name1, const char* name2, const char* name3);
 
 private:
     std::queue<Scene*> scenes;      ///< List of all scenes

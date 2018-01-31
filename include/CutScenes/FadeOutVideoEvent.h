@@ -20,6 +20,7 @@
 
 #include <CutScenes/VideoEvent.h>
 #include <SDL2/SDL.h>
+#include <misc/sdl_support.h>
 
 /**
     This VideoEvent is used for fading out a picture

@@ -19,6 +19,7 @@
 #define LOADSAVEPNG_H
 
 #include <SDL2/SDL.h>
+#include <misc/sdl_support.h>
 
 #define LoadPNG(file) SDL_LoadPNG_RW(SDL_RWFromFile(file, "rb"), 1)
 #define SavePNG(surface, file) SavePNG_RW(surface, SDL_RWFromFile(file, "wb"), 1)

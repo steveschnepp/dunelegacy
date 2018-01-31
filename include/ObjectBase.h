@@ -23,6 +23,8 @@
 #include <Definitions.h>
 #include <DataTypes.h>
 #include <fixmath/FixPoint.h>
+#include <FileClasses/GFXManager.h>
+
 #include <mmath.h>
 
 #include <globals.h>

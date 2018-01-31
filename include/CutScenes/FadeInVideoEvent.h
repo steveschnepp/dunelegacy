@@ -21,6 +21,7 @@
 #include <CutScenes/VideoEvent.h>
 #include <FileClasses/Palette.h>
 #include <SDL2/SDL.h>
+#include <misc/sdl_support.h>
 
 /**
     This VideoEvent is used for fading in a picture

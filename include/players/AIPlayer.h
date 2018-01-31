@@ -22,6 +22,8 @@
 
 #include <DataTypes.h>
 
+#include <deque>
+
 class AIPlayer : public Player
 {
 public:

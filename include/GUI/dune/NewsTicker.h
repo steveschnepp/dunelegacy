@@ -24,6 +24,7 @@
 #include <queue>
 
 #include <SDL2/SDL.h>
+#include <misc/sdl_support.h>
 
 template<typename T>
 class unique_queue {

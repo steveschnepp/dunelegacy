@@ -19,6 +19,7 @@
 #define FINALE_H
 
 #include <SDL2/SDL_mixer.h>
+#include <misc/sound_util.h>
 
 #include <CutScenes/CutScene.h>
 #include <FileClasses/Wsafile.h>

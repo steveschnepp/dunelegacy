@@ -19,6 +19,7 @@
 #define OUTPUTSTREAM_H
 
 #include <fixmath/FixPoint.h>
+#include <DataTypes.h>
 
 #include <SDL2/SDL.h>
 #include <string>
