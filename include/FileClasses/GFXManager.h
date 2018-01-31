@@ -535,7 +535,8 @@ public:
         Zoomable& operator=(Zoomable &&) = default;
 
         SDL_Texture* operator[](int index) const { return (*textures_)[index].get(); }
-        bool empty() const noexcept { return textures_; }
+        bool empty() const noexcept { return !textures_; }
+        auto size() const noexcept { return textures_ ? textures_->size() : 0; }
     };
 
     Zoomable getObjPic(unsigned int id, int house=HOUSE_HARKONNEN);
