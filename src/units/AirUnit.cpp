@@ -96,11 +96,12 @@ void AirUnit::blitToScreen()
     if(shadowGraphic != nullptr) {
         const auto x = screenborder->world2screenX(realX + 4);
         const auto y = screenborder->world2screenY(realY + 12);
+        const auto texture = shadowGraphic[currentZoomlevel];
 
-        auto source = calcSpriteSourceRect(shadowGraphic[currentZoomlevel], drawnAngle, numImagesX, drawnFrame, numImagesY);
-        auto dest = calcSpriteDrawingRect(shadowGraphic[currentZoomlevel], x, y, numImagesX, numImagesY, HAlign::Center, VAlign::Center);
+        auto source = calcSpriteSourceRect(texture, drawnAngle, numImagesX, drawnFrame, numImagesY);
+        auto dest = calcSpriteDrawingRect(texture, x, y, numImagesX, numImagesY, HAlign::Center, VAlign::Center);
 
-        SDL_RenderCopy(renderer, shadowGraphic[currentZoomlevel], &source, &dest);
+        SDL_RenderCopy(renderer, texture, &source, &dest);
     }
 
     UnitBase::blitToScreen();
