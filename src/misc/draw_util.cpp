@@ -518,11 +518,11 @@ sdl2::surface_ptr createShadowSurface(SDL_Surface* source) {
 
     sdl2::surface_lock lock{ retPic.get() };
 
-    for(auto i = 0; i < retPic->w; i++) {
-        for(auto j = 0; j < retPic->h; j++) {
-            const auto pixel = &static_cast<Uint8*>(retPic->pixels)[j * retPic->pitch + i];
-            if(*pixel != PALCOLOR_TRANSPARENT) {
-                *pixel = PALCOLOR_BLACK;
+    for (auto j = 0; j < retPic->h; ++j) {
+        Uint8 * const RESTRICT p = static_cast<Uint8*>(retPic->pixels) + j * retPic->pitch;
+        for(auto i = 0; i < retPic->w; ++i) {
+            if(p[i] != PALCOLOR_TRANSPARENT) {
+                p[i] = PALCOLOR_BLACK;
             }
         }
     }
