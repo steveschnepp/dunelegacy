@@ -17,9 +17,11 @@
 
 #include <FileClasses/PictureFont.h>
 #include <misc/exceptions.h>
+#include <misc/sdl_support.h>
 
-#include <stdlib.h>
-#include <string.h>
+#include <numeric>
+#include <cstdlib>
+#include <cstring>
 
 /// Constructor
 /**
@@ -30,53 +32,46 @@
 */
 PictureFont::PictureFont(SDL_Surface* pic, int freesrc)
 {
+    auto  pic_handle = sdl2::surface_ptr{ freesrc ? pic : nullptr };
+
     if(pic == nullptr) {
-        if(freesrc) SDL_FreeSurface(pic);
         THROW(std::invalid_argument, "PictureFont::PictureFont(): pic == nullptr!");
     }
 
-    SDL_LockSurface(pic);
+    sdl2::surface_lock lock{ pic };
 
-    try {
-        characterHeight = pic->h - 2;
+    characterHeight = pic->h - 2;
 
-        int curXPos = 1;
-        int oldXPos = curXPos;
-        char* secondLine = ((char*) pic->pixels) + pic->pitch;
-        for(int i = 0; i < 256; i++) {
-            while((curXPos < pic->w) && (*(secondLine + curXPos) != 14)) {
-                curXPos++;
-            }
-
-            if(curXPos >= pic->w) {
-                THROW(std::runtime_error, "PictureFont::PictureFont(): No valid surface for loading font!");
-            }
-
-            character[i].width = curXPos - oldXPos;
-            character[i].data.resize(character[i].width * characterHeight);
-
-            int mempos = 0;
-            for(int y = 1; y < pic->h - 1; y++) {
-                for(int x = oldXPos; x < curXPos; x++) {
-                    unsigned char col = *(((unsigned char*) pic->pixels) + y*pic->pitch + x);
-                    if(col != 0) {
-                        col = 1;
-                    }
-
-                    character[i].data[mempos] = col;
-                    mempos++;
-                }
-            }
+    auto curXPos = 1;
+    auto oldXPos = curXPos;
+    char* const RESTRICT secondLine = static_cast<char*>(pic->pixels) + pic->pitch;
+    for(auto & c : character) {
+        while((curXPos < pic->w) && (secondLine[curXPos] != 14)) {
             curXPos++;
-            oldXPos = curXPos;
         }
 
-        SDL_UnlockSurface(pic);
-        if(freesrc) SDL_FreeSurface(pic);
+        if(curXPos >= pic->w) {
+            THROW(std::runtime_error, "PictureFont::PictureFont(): No valid surface for loading font!");
+        }
 
-    } catch (std::exception&) {
-        SDL_UnlockSurface(pic);
-        if(freesrc) SDL_FreeSurface(pic);
+        c.width = curXPos - oldXPos;
+        c.data.resize(c.width * characterHeight);
+
+        auto mempos = 0;
+        for(auto y = 1; y < pic->h - 1; y++) {
+            const unsigned char * const RESTRICT in = static_cast<unsigned char*>(pic->pixels) + y * pic->pitch;
+            for(auto x = oldXPos; x < curXPos; x++) {
+                auto col = in[x];
+                if(col != 0) {
+                    col = 1;
+                }
+
+                c.data[mempos] = col;
+                mempos++;
+            }
+        }
+        curXPos++;
+        oldXPos = curXPos;
     }
 }
 
@@ -88,21 +83,21 @@ PictureFont::~PictureFont() = default;
 
 
 void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& text, Uint32 baseColor) {
-    SDL_LockSurface(pSurface);
+    sdl2::surface_lock lock{ pSurface };
 
-    int bpp = pSurface->format->BytesPerPixel;
+    const int bpp = pSurface->format->BytesPerPixel;
 
-    int curXPos = 0;
-    const unsigned char* pText = (unsigned char*) text.c_str();
-    while(*pText != '\0') {
-        int index = *pText;
-
+    auto curXPos = 0;
+    for (unsigned char index : text) {
+        const auto font_character = character[index];
         //Now we can copy pixel by pixel
         for(int y = 0; y < characterHeight; y++) {
-            for(int x = 0; x < character[index].width; x++) {
-                char color = character[index].data[y*character[index].width+x];
+            Uint8 * const RESTRICT out = static_cast<Uint8 *>(pSurface->pixels) + y * pSurface->pitch;
+            const char * const RESTRICT in = &font_character.data[y * font_character.width];
+            for(int x = 0; x < font_character.width; x++) {
+                const char color = in[x];
                 if(color != 0) {
-                    Uint8 *pixel = (Uint8 *)pSurface->pixels + y * pSurface->pitch + (x+curXPos) * bpp;
+                    const auto pixel = out + (x+curXPos) * bpp;
 
                     switch(bpp) {
                         case 1:
@@ -110,7 +105,7 @@ void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& te
                             break;
 
                         case 2:
-                            *(Uint16 *)pixel = baseColor;
+                            *reinterpret_cast<Uint16 *>(pixel) = baseColor;
                             break;
 
                         case 3:
@@ -126,7 +121,7 @@ void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& te
                             break;
 
                         case 4:
-                            *(Uint32 *)pixel = baseColor;
+                            *reinterpret_cast<Uint32 *>(pixel) = baseColor;
                             break;
                     }
                 }
@@ -134,12 +129,8 @@ void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& te
             }
         }
 
-        curXPos += character[index].width;
-        pText++;
+        curXPos += font_character.width;
     }
-
-
-    SDL_UnlockSurface(pSurface);
 }
 
 /// Returns the number of pixels a text needs
@@ -149,13 +140,15 @@ void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& te
         \return Number of pixels needed
 */
 int PictureFont::getTextWidth(const std::string& text) const {
-    int width = 0;
-    const unsigned char* pText = (unsigned char*) text.c_str();
-    while(*pText != '\0') {
-        width += character[*pText].width;
-        pText++;
+    return std::accumulate(std::begin(text), std::end(text),
+        0, [&](int a, unsigned char b) {return a + character[b].width; });
+#if 0
+    auto width = 0;
+    for (unsigned char c : text) {
+        width += character[c].width;
     }
 
     return width;
+#endif // 0
 }
 
