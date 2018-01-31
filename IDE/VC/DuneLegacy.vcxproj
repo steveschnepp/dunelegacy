@@ -302,6 +302,7 @@ IF %ERRORLEVEL% LSS 8 exit 0</Command>
     <ClInclude Include="..\..\include\FileClasses\PictureFactory.h" />
     <ClInclude Include="..\..\include\FileClasses\PictureFont.h" />
     <ClInclude Include="..\..\include\FileClasses\POFile.h" />
+    <ClInclude Include="..\..\include\FileClasses\SaveTextureAsBmp.h" />
     <ClInclude Include="..\..\include\FileClasses\SFXManager.h" />
     <ClInclude Include="..\..\include\FileClasses\Shpfile.h" />
     <ClInclude Include="..\..\include\FileClasses\TextManager.h" />
@@ -513,6 +514,7 @@ IF %ERRORLEVEL% LSS 8 exit 0</Command>
     <ClInclude Include="..\..\include\units\Trike.h" />
     <ClInclude Include="..\..\include\units\Trooper.h" />
     <ClInclude Include="..\..\include\units\UnitBase.h" />
+    <ClCompile Include="..\..\src\FileClasses\SaveTextureAsBmp.cpp" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
