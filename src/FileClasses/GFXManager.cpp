@@ -119,59 +119,23 @@ static const Coord objPicTiles[] {
 
 GFXManager::GFXManager() {
 
-    // init whole objPic and objPicTex arrays
-    for(int i = 0; i < NUM_OBJPICS; i++) {
-        for(int j = 0; j < (int) NUM_HOUSES; j++) {
-            for(int z=0; z < NUM_ZOOMLEVEL; z++) {
-                objPic[i][j][z] = nullptr;
-                objPicTex[i][j][z] = nullptr;
-            }
-        }
-    }
-
-    // init whole smallDetailPicTex array
-    for(auto & pic : smallDetailPicTex) {
-        pic = nullptr;
-    }
-
-    // init whole tinyPictureTex array
-    for(int i = 0; i < NUM_SMALLDETAILPICS; i++) {
-        tinyPictureTex[i] = nullptr;
-    }
-
-    // init whole UIGraphic array
-    for(int i = 0; i < NUM_UIGRAPHICS; i++) {
-        for(int j = 0; j < (int) NUM_HOUSES; j++) {
-            uiGraphic[i][j] = nullptr;
-            uiGraphicTex[i][j] = nullptr;
-        }
-    }
-
-    // init whole mapChoicePieces and mapChoicePiecesTex array
-    for(int i = 0; i < NUM_MAPCHOICEPIECES; i++) {
-        for(int j = 0; j < (int) NUM_HOUSES; j++) {
-            mapChoicePieces[i][j] = nullptr;
-            mapChoicePiecesTex[i][j] = nullptr;
-        }
-    }
-
     // init whole Anim array
     for(int i = 0; i < NUM_ANIMATION; i++) {
         animation[i] = nullptr;
     }
 
     // open all shp files
-    shared_ptr<Shpfile> units = loadShpfile("UNITS.SHP");
-    shared_ptr<Shpfile> units1 = loadShpfile("UNITS1.SHP");
-    shared_ptr<Shpfile> units2 = loadShpfile("UNITS2.SHP");
-    shared_ptr<Shpfile> mouse = loadShpfile("MOUSE.SHP");
-    shared_ptr<Shpfile> shapes = loadShpfile("SHAPES.SHP");
-    shared_ptr<Shpfile> menshpa = loadShpfile("MENSHPA.SHP");
-    shared_ptr<Shpfile> menshph = loadShpfile("MENSHPH.SHP");
-    shared_ptr<Shpfile> menshpo = loadShpfile("MENSHPO.SHP");
-    shared_ptr<Shpfile> menshpm = loadShpfile("MENSHPM.SHP");
+    auto units = loadShpfile("UNITS.SHP");
+    auto units1 = loadShpfile("UNITS1.SHP");
+    auto units2 = loadShpfile("UNITS2.SHP");
+    auto mouse = loadShpfile("MOUSE.SHP");
+    auto shapes = loadShpfile("SHAPES.SHP");
+    auto menshpa = loadShpfile("MENSHPA.SHP");
+    auto menshph = loadShpfile("MENSHPH.SHP");
+    auto menshpo = loadShpfile("MENSHPO.SHP");
+    auto menshpm = loadShpfile("MENSHPM.SHP");
 
-    shared_ptr<Shpfile> choam;
+    std::unique_ptr<Shpfile> choam;
     if(pFileManager->exists("CHOAM." + _("LanguageFileExtension"))) {
         choam = loadShpfile("CHOAM." + _("LanguageFileExtension"));
     } else if(pFileManager->exists("CHOAMSHP.SHP")) {
@@ -180,7 +144,7 @@ GFXManager::GFXManager() {
         THROW(std::runtime_error, "GFXManager::GFXManager(): Cannot open CHOAMSHP.SHP or CHOAM."+_("LanguageFileExtension")+"!");
     }
 
-    shared_ptr<Shpfile> bttn;
+    std::unique_ptr<Shpfile> bttn;
     if(pFileManager->exists("BTTN." + _("LanguageFileExtension"))) {
         bttn = loadShpfile("BTTN." + _("LanguageFileExtension"));
     } else {
@@ -188,28 +152,28 @@ GFXManager::GFXManager() {
         // => bttn == nullptr
     }
 
-    shared_ptr<Shpfile> mentat;
+    std::unique_ptr<Shpfile> mentat;
     if(pFileManager->exists("MENTAT." + _("LanguageFileExtension"))) {
         mentat = loadShpfile("MENTAT." + _("LanguageFileExtension"));
     } else {
         mentat = loadShpfile("MENTAT.SHP");
     }
 
-    shared_ptr<Shpfile> pieces = loadShpfile("PIECES.SHP");
-    shared_ptr<Shpfile> arrows = loadShpfile("ARROWS.SHP");
+    auto pieces = loadShpfile("PIECES.SHP");
+    auto arrows = loadShpfile("ARROWS.SHP");
 
     // Load icon file
-    shared_ptr<Icnfile> icon = std::make_shared<Icnfile>(pFileManager->openFile("ICON.ICN"),
+    auto icon = std::make_unique<Icnfile>(pFileManager->openFile("ICON.ICN"),
                                                          pFileManager->openFile("ICON.MAP"), true);
 
     // Load radar static
-    shared_ptr<Wsafile> radar = loadWsafile("STATIC.WSA");
+    const auto radar = loadWsafile("STATIC.WSA");
 
     // open bene palette
     Palette benePalette = LoadPalette_RW(pFileManager->openFile("BENE.PAL"), true);
 
     //create PictureFactory
-    shared_ptr<PictureFactory> PicFactory = std::make_shared<PictureFactory>();
+    const auto PicFactory = std::make_unique<PictureFactory>();
 
 
 
