@@ -139,7 +139,7 @@ ObjectBase::ObjectBase(InputStream& stream) {
 
     stream.readBools(&b[0], &b[1], &b[2], &b[3], &b[4], &b[5], &b[6]);
 
-    for (decltype(visible.count()) i = 0; i < visible.count(); ++i)
+    for (decltype(visible.count()) i = 0; i < visible.size(); ++i)
         visible[i] = b[i];
 }
 
