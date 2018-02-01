@@ -172,7 +172,7 @@ void AirUnit::turn() {
     }
 }
 
-bool AirUnit::canPassTile(Tile* pTile) const
+bool AirUnit::canPassTile(const Tile* pTile) const
 {
     return pTile;
 }

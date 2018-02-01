@@ -100,6 +100,6 @@ bool Ornithopter::canPass(int xPos, int yPos) const {
     return currentGameMap->tileExists(xPos, yPos) && canPassTile(currentGameMap->getTile(xPos, yPos));
 }
 
-bool Ornithopter::canPassTile(Tile* pTile) const {
+bool Ornithopter::canPassTile(const Tile* pTile) const {
     return pTile && (!pTile->hasAnAirUnit());
 }
