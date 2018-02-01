@@ -31,7 +31,7 @@
 class House;
 
 
-class Bullet
+class Bullet final
 {
 public:
     Bullet(Uint32 shooterID, Coord* newRealLocation, Coord* newRealDestination, Uint32 bulletID, int damage, bool air);
