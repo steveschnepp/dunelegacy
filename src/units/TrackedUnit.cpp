@@ -26,7 +26,7 @@
 
 #include <House.h>
 #include <Map.h>
-
+#include <Game.h>
 
 TrackedUnit::TrackedUnit(House* newOwner) : GroundUnit(newOwner)
 {
@@ -59,35 +59,46 @@ void TrackedUnit::checkPos()
 }
 
 bool TrackedUnit::canPassTile(const Tile* pTile) const {
-    if(!pTile || pTile->isMountain()) {
+    if (!pTile || pTile->isMountain()) {
         return false;
     }
 
-    if(!pTile->hasAGroundObject()) return true;
+    if (!pTile->hasAGroundObject()) return true;
 
-    const auto pObject = pTile->getGroundObject();
+    const auto ground_object_result = pTile->getGroundObjectID();
 
-    if( (pObject != nullptr)
-        && (pObject->getObjectID() == target.getObjectID())
-        && targetFriendly
-        && pObject->isAStructure()
-        && (pObject->getOwner()->getTeam() == owner->getTeam())
-        && pObject->isVisible(getOwner()->getTeam()))
-    {
-        // are we entering a repair yard?
-        if(goingToRepairYard && (pObject->getItemID() == Structure_RepairYard)) {
-            return static_cast<const RepairYard*>(pObject)->isFree();
-        } else {
-            const auto pHarvester = dynamic_cast<const Harvester*>(this);
-            return ((pHarvester != nullptr) && pHarvester->isReturning() && (pObject->getItemID() == Structure_Refinery)
-                && static_cast<const Refinery*>(pObject)->isFree());
+    if (ground_object_result.first && ground_object_result.second == target.getObjectID()) {
+        const auto pObject = currentGame->getObjectManager().getObject(ground_object_result.second);
+
+        if ((pObject != nullptr)
+            && (pObject->getObjectID() == target.getObjectID())
+            && targetFriendly
+            && pObject->isAStructure()
+            && (pObject->getOwner()->getTeam() == owner->getTeam())
+            && pObject->isVisible(getOwner()->getTeam()))
+        {
+            // are we entering a repair yard?
+            if (goingToRepairYard && (pObject->getItemID() == Structure_RepairYard)) {
+                return static_cast<const RepairYard*>(pObject)->isFree();
+            }
+            else {
+                const auto pHarvester = dynamic_cast<const Harvester*>(this);
+                return ((pHarvester != nullptr) && pHarvester->isReturning() && (pObject->getItemID() == Structure_Refinery)
+                    && static_cast<const Refinery*>(pObject)->isFree());
+            }
         }
     }
 
-    if (!pTile->hasANonInfantryGroundObject() && (pTile->getInfantryTeam() != getOwner()->getTeam())) {
-        // possibly squashing this unit
-        return true;
-    } else {
-        return false;
+    if (!pTile->hasANonInfantryGroundObject()) {
+        // The tile does not have a non-infantry ground object, therefore the ground object ID must
+        // be for an infantry unit.  We have complicated this function since profiling puts it in
+        // the hotpath...
+        const auto pObject = currentGame->getObjectManager().getObject(ground_object_result.second);
+        if (pObject->getOwner()->getTeam() != getOwner()->getTeam()) {
+            // possibly squashing this unit
+            return true;
+        }
     }
+
+    return false;
 }
