@@ -26,7 +26,7 @@
 
 #include <unordered_set>
 
-class Coord {
+class Coord final {
 public:
     Coord() noexcept
      : x(0), y(0) {
