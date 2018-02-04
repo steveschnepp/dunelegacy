@@ -173,16 +173,18 @@ int SavePNG_RW(SDL_Surface* surface, SDL_RWops* RWop, int freedst) {
     const unsigned int width = surface->w;
     const unsigned int height = surface->h;
 
-    auto pImage = std::make_unique<unsigned char>(width*height*4);
+    auto pImage = std::make_unique<unsigned char[]>(width*height*4);
 
     { // Scope
         sdl2::surface_lock lock{ surface };
 
+        unsigned char * RESTRICT out = pImage.get();
+
         // Now we can copy pixel by pixel
         for(unsigned int y = 0; y < height; y++) {
-            unsigned char * RESTRICT out = pImage.get() + y * 4*width;
             for(unsigned int x = 0; x < width; x++) {
                 const auto pixel = getPixel(surface, x, y);
+                assert(out + 4 <= pImage.get() + width * height * 4);
                 SDL_GetRGBA(pixel, surface->format, &out[0], &out[1], &out[2], &out[3]);
                 out += 4;
             }
