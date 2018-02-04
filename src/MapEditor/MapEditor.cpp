@@ -1982,31 +1982,30 @@ void MapEditor::drawMap(ScreenBorder* pScreenborder, bool bCompleteMap) {
 }
 
 void MapEditor::saveMapshot() {
-    int oldCurrentZoomlevel = currentZoomlevel;
+    const int oldCurrentZoomlevel = currentZoomlevel;
     currentZoomlevel = 0;
 
-    std::string mapshotFilename = (lastSaveName.empty() ? generateMapname() : getBasename(lastSaveName, true)) + ".png";
+    auto mapshotFilename = (lastSaveName.empty() ? generateMapname() : getBasename(lastSaveName, true)) + ".png";
 
-    int sizeX = world2zoomedWorld(map.getSizeX()*TILESIZE);
-    int sizeY = world2zoomedWorld(map.getSizeY()*TILESIZE);
+    const auto sizeX = world2zoomedWorld(map.getSizeX()*TILESIZE);
+    const auto sizeY = world2zoomedWorld(map.getSizeY()*TILESIZE);
 
-    SDL_Rect board = { 0, 0, sizeX, sizeY };
+    const SDL_Rect board = { 0, 0, sizeX, sizeY };
 
     ScreenBorder tmpScreenborder(board);
     tmpScreenborder.adjustScreenBorderToMapsize(map.getSizeX(), map.getSizeY());
 
-    SDL_Texture* renderTarget = SDL_CreateTexture(renderer, SCREEN_FORMAT, SDL_TEXTUREACCESS_TARGET, sizeX, sizeY);
+    auto renderTarget = sdl2::texture_ptr{ SDL_CreateTexture(renderer, SCREEN_FORMAT, SDL_TEXTUREACCESS_TARGET, sizeX, sizeY) };
     if(renderTarget == nullptr) {
         SDL_Log("SDL_CreateTexture() failed: %s", SDL_GetError());
         currentZoomlevel = oldCurrentZoomlevel;
         return;
     }
 
-    SDL_Texture* oldRenderTarget = SDL_GetRenderTarget(renderer);
-    if(SDL_SetRenderTarget(renderer, renderTarget) != 0) {
+    const auto oldRenderTarget = SDL_GetRenderTarget(renderer);
+    if(SDL_SetRenderTarget(renderer, renderTarget.get()) != 0) {
         SDL_Log("SDL_SetRenderTarget() failed: %s", SDL_GetError());
         SDL_SetRenderTarget(renderer, oldRenderTarget);
-        SDL_DestroyTexture(renderTarget);
         currentZoomlevel = oldCurrentZoomlevel;
         return;
     }
@@ -2016,12 +2015,10 @@ void MapEditor::saveMapshot() {
 
     drawMap(&tmpScreenborder, true);
 
-    SDL_Surface* pMapshotSurface = renderReadSurface(renderer);
-    SavePNG(pMapshotSurface, mapshotFilename.c_str());
-    SDL_FreeSurface(pMapshotSurface);
+    auto pMapshotSurface = renderReadSurface(renderer);
+    SavePNG(pMapshotSurface.get(), mapshotFilename.c_str());
 
     SDL_SetRenderTarget(renderer, oldRenderTarget);
-    SDL_DestroyTexture(renderTarget);
 
     currentZoomlevel = oldCurrentZoomlevel;
 }

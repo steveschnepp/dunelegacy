@@ -164,7 +164,8 @@ void drawRect(SDL_Surface *surface, int x1, int y1, int x2, int y2, Uint32 color
     drawRectNoLock(surface, x1, y1, x2, y2, color);
 }
 
-SDL_Surface* renderReadSurface(SDL_Renderer* renderer) {
+sdl2::surface_ptr renderReadSurface(SDL_Renderer* renderer) {
+    assert(renderer == ::renderer);
     const auto rendererSize = getRendererSize();
     sdl2::surface_ptr pScreen{ SDL_CreateRGBSurface(0, rendererSize.w, rendererSize.h, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
     if((pScreen == nullptr) || (SDL_RenderReadPixels(renderer, nullptr, SCREEN_FORMAT, pScreen->pixels, pScreen->pitch) != 0)) {
@@ -192,10 +193,10 @@ SDL_Surface* renderReadSurface(SDL_Renderer* renderer) {
 
     if(need_workaround) {
         if(SDL_GetRenderTarget(renderer) != nullptr)
-            return flipHSurface(pScreen.release(), true).release();
+            return flipHSurface(pScreen.release(), true);
     }
 
-    return pScreen.release();
+    return pScreen;
 }
 
 void replaceColor(SDL_Surface *surface, Uint32 oldColor, Uint32 newColor) {

@@ -2491,10 +2491,9 @@ void Game::takeScreenshot() const {
         i++;
     } while(existsFile(screenshotFilename) == true);
 
-    SDL_Surface* pCurrentScreen = renderReadSurface(renderer);
-    SavePNG(pCurrentScreen, screenshotFilename.c_str());
+    auto pCurrentScreen = renderReadSurface(renderer);
+    SavePNG(pCurrentScreen.get(), screenshotFilename.c_str());
     currentGame->addToNewsTicker(_("Screenshot saved") + ": '" + screenshotFilename + "'");
-    SDL_FreeSurface(pCurrentScreen);
 }
 
 
