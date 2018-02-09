@@ -347,7 +347,6 @@ void Game::drawScreen()
         const auto hiddenFogTex = pGFXManager->getObjPic(ObjPic_Terrain_HiddenFog)[currentZoomlevel];
 
         const auto fogOfWar = gameInitSettings.getGameOptions().fogOfWar;
-        const auto zoomedTileSize = world2zoomedWorld(TILESIZE);
 
         tiles->for_each(top_left.x - 1, top_left.y - 1, bottom_right.x + 2, bottom_right.y + 1,
             [=](Tile& t) {
@@ -356,27 +355,30 @@ void Game::drawScreen()
 
                 const auto pTile = &t;
 
-                if (t.isExplored(pLocalHouse->getHouseID())) {
-                    auto hideTile = t.getHideTile(pLocalHouse->getHouseID());
+                auto border = screenborder;
+                auto house_id = pLocalHouse->getHouseID();
+
+                if (t.isExplored(house_id)) {
+                    auto hideTile = t.getHideTile(house_id);
 
                     if (hideTile != 0) {
                         const SDL_Rect source = { hideTile*zoomedTileSize, 0, zoomedTileSize, zoomedTileSize };
-                        const SDL_Rect drawLocation = { screenborder->world2screenX(x*TILESIZE), screenborder->world2screenY(y*TILESIZE),
+                        const SDL_Rect drawLocation = { border->world2screenX(x*TILESIZE), border->world2screenY(y*TILESIZE),
                                                     zoomedTileSize, zoomedTileSize };
                         SDL_RenderCopy(renderer, hiddenTex, &source, &drawLocation);
                     }
 
                     if (fogOfWar) {
-                        auto fogTile = pTile->getFogTile(pLocalHouse->getHouseID());
+                        auto fogTile = pTile->getFogTile(house_id);
 
-                        if (pTile->isFogged(pLocalHouse->getHouseID())) {
+                        if (pTile->isFogged(house_id)) {
                             fogTile = Terrain_HiddenFull;
                         }
 
                         if (fogTile != 0) {
                             const SDL_Rect source = { fogTile*zoomedTileSize, 0,
                                                 zoomedTileSize, zoomedTileSize };
-                            const SDL_Rect drawLocation = { screenborder->world2screenX(x*TILESIZE), screenborder->world2screenY(y*TILESIZE),
+                            const SDL_Rect drawLocation = { border->world2screenX(x*TILESIZE), border->world2screenY(y*TILESIZE),
                                                         zoomedTileSize, zoomedTileSize };
 
                             SDL_RenderCopy(renderer, hiddenFogTex, &source, &drawLocation);
@@ -386,7 +388,7 @@ void Game::drawScreen()
                 else {
                     if (!debug) {
                         const SDL_Rect source = { zoomedTileSize * 15, 0, zoomedTileSize, zoomedTileSize };
-                        const SDL_Rect drawLocation = { screenborder->world2screenX(x*TILESIZE), screenborder->world2screenY(y*TILESIZE),
+                        const SDL_Rect drawLocation = { border->world2screenX(x*TILESIZE), border->world2screenY(y*TILESIZE),
                                                     zoomedTileSize, zoomedTileSize };
                         SDL_RenderCopy(renderer, hiddenTex, &source, &drawLocation);
                     }
@@ -1176,7 +1178,7 @@ void Game::runMainLoop() {
 
                 // test if we need to wait for data to arrive
                 for(const auto& playername : pNetworkManager->getConnectedPeers()) {
-                    auto pPlayer = dynamic_cast<HumanPlayer*>(getPlayerByName(playername));
+                    const auto pPlayer = dynamic_cast<HumanPlayer*>(getPlayerByName(playername));
                     if(pPlayer != nullptr) {
                         if(pPlayer->nextExpectedCommandsCycle <= gameCycleCount) {
                             //SDL_Log("Cycle %d: Waiting for player '%s' to send data for cycle %d...", GameCycleCount, pPlayer->getPlayername().c_str(), pPlayer->nextExpectedCommandsCycle);
@@ -1474,7 +1476,8 @@ bool Game::loadSaveGame(InputStream& stream) {
     gameInitSettings = GameInitSettings(stream);
 
     // read the actual house setup choosen at the beginning of the game
-    Uint32 numHouseInfo = stream.readUint32();
+    const auto numHouseInfo = stream.readUint32();
+    houseInfoListSetup.reserve(numHouseInfo);
     for(Uint32 i=0;i<numHouseInfo;i++) {
         houseInfoListSetup.push_back(GameInitSettings::HouseInfo(stream));
     }
