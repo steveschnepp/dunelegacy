@@ -66,16 +66,15 @@ sdl2::surface_ptr FontManager::createSurfaceWithText(const std::string& text, Ui
     const auto width = font->getTextWidth(text);
     const auto height = font->getTextHeight();
 
-    auto pic = sdl2::surface_ptr{ SDL_CreateRGBSurface(0, width, height, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
+    auto pic = sdl2::surface_ptr{ SDL_CreateRGBSurfaceWithFormat(0, width, height, SCREEN_BPP, SCREEN_FORMAT) };
 
     // create new picture surface
     if(pic == nullptr) {
         return nullptr;
     }
 
-    SDL_SetSurfaceBlendMode(pic.get(), SDL_BLENDMODE_NONE);
-    SDL_FillRect(pic.get(), nullptr, COLOR_INVALID);
-    SDL_SetColorKey(pic.get(), SDL_TRUE, COLOR_INVALID);
+    SDL_SetSurfaceBlendMode(pic.get(), SDL_BLENDMODE_BLEND);
+    SDL_FillRect(pic.get(), nullptr, SDL_MapRGBA(pic->format, 0, 0, 0, 0));
 
     font->drawTextOnSurface(pic.get(),text, color);
 
@@ -113,14 +112,13 @@ sdl2::surface_ptr FontManager::createSurfaceWithMultilineText(const std::string&
     const int height = lineHeight * textLines.size() + (lineHeight * (textLines.size()-1))/2;
 
     // create new picture surface
-    auto pic = sdl2::surface_ptr{ SDL_CreateRGBSurface(0, width, height, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
+    auto pic = sdl2::surface_ptr{ SDL_CreateRGBSurfaceWithFormat(0, width, height, SCREEN_BPP, SCREEN_FORMAT) };
     if(pic == nullptr) {
         return nullptr;
     }
 
-    SDL_SetSurfaceBlendMode(pic.get(), SDL_BLENDMODE_NONE);
-    SDL_FillRect(pic.get(), nullptr, COLOR_INVALID);
-    SDL_SetColorKey(pic.get(), SDL_TRUE, COLOR_INVALID);
+    SDL_SetSurfaceBlendMode(pic.get(), SDL_BLENDMODE_BLEND);
+    SDL_FillRect(pic.get(), nullptr, SDL_MapRGBA(pic->format, 0, 0, 0, 0));
 
     auto currentLineNum = 0;
     for(const auto& textLine : textLines) {

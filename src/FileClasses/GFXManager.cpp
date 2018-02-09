@@ -960,6 +960,7 @@ SDL_Texture* GFXManager::getUIGraphic(unsigned int id, int house) {
         } else if(id == UI_Indicator) {
             const auto pIndicator = convertSurfaceToDisplayFormat(pSurface, false);
             replaceColor(pIndicator.get(), COLOR_WHITE, COLOR_INDICATOR_TRANSPARENT);
+            SDL_SetSurfaceBlendMode(pIndicator.get(), SDL_BLENDMODE_BLEND);
             uiGraphicTex[UI_Indicator][house] = convertSurfaceToTexture(pIndicator.get(), false);
         } else {
             uiGraphicTex[id][house] = convertSurfaceToTexture(pSurface, false);

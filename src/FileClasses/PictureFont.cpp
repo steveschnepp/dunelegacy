@@ -18,6 +18,7 @@
 #include <FileClasses/PictureFont.h>
 #include <misc/exceptions.h>
 #include <misc/sdl_support.h>
+#include <Colors.h>
 
 #include <numeric>
 #include <cstdlib>
@@ -83,6 +84,9 @@ PictureFont::~PictureFont() = default;
 
 
 void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& text, Uint32 baseColor) {
+
+    const auto surface_color = MapRGBA(pSurface->format, baseColor);
+
     sdl2::surface_lock lock{ pSurface };
 
     const int bpp = pSurface->format->BytesPerPixel;
@@ -102,27 +106,27 @@ void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& te
 
                 switch(bpp) {
                 case 1:
-                    *pixel = baseColor;
+                    *pixel = surface_color;
                     break;
 
                 case 2:
-                    *reinterpret_cast<Uint16 *>(pixel) = baseColor;
+                    *reinterpret_cast<Uint16 *>(pixel) = surface_color;
                     break;
 
                 case 3:
                     if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-                        pixel[0] = (baseColor>> 16) & 0xff;
-                        pixel[1] = (baseColor>> 8) & 0xff;
-                        pixel[2] = baseColor& 0xff;
+                        pixel[0] = (surface_color>> 16) & 0xff;
+                        pixel[1] = (surface_color>> 8) & 0xff;
+                        pixel[2] = surface_color& 0xff;
                     } else {
-                        pixel[0] = baseColor& 0xff;
-                        pixel[1] = (baseColor>> 8) & 0xff;
-                        pixel[2] = (baseColor>> 16) & 0xff;
+                        pixel[0] = surface_color& 0xff;
+                        pixel[1] = (surface_color>> 8) & 0xff;
+                        pixel[2] = (surface_color>> 16) & 0xff;
                     }
                     break;
 
                 case 4:
-                    *reinterpret_cast<Uint32 *>(pixel) = baseColor;
+                    *reinterpret_cast<Uint32 *>(pixel) = surface_color;
                     break;
                 }
             }
