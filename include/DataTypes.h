@@ -87,7 +87,7 @@ public:
         return *this;
     }
 
-    inline Coord operator/(int c) const {
+    Coord operator/(int c) const {
         Coord ret = *this;
         ret /= c;
         return ret;
