@@ -56,7 +56,7 @@ public:
     sdl2::surface_ptr createSurfaceWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered = false) const;
     sdl2::texture_ptr createTextureWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered = false) const;
 private:
-    std::shared_ptr<Font> fonts[NUM_FONTS];
+    std::unique_ptr<Font> fonts[NUM_FONTS];
 
 };
 

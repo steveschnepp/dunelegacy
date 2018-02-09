@@ -26,12 +26,9 @@
 #include <FileClasses/LoadSavePNG.h>
 
 FontManager::FontManager() {
-    fonts[FONT_STD10] = std::static_pointer_cast<Font>(
-        std::make_shared<PictureFont>(LoadPNG_RW(pFileManager->openFile("Font10.png"), true).release(), true));
-    fonts[FONT_STD12] = std::static_pointer_cast<Font>(
-        std::make_shared<PictureFont>(LoadPNG_RW(pFileManager->openFile("Font12.png"), true).release(), true));
-    fonts[FONT_STD24] = std::static_pointer_cast<Font>(
-        std::make_shared<PictureFont>(LoadPNG_RW(pFileManager->openFile("Font24.png"), true).release(), true));
+    fonts[FONT_STD10] = std::make_unique<PictureFont>(LoadPNG_RW(pFileManager->openFile("Font10.png"), true).release(), true);
+    fonts[FONT_STD12] = std::make_unique<PictureFont>(LoadPNG_RW(pFileManager->openFile("Font12.png"), true).release(), true);
+    fonts[FONT_STD24] = std::make_unique<PictureFont>(LoadPNG_RW(pFileManager->openFile("Font24.png"), true).release(), true);
 }
 
 FontManager::~FontManager() = default;
@@ -65,8 +62,9 @@ sdl2::surface_ptr FontManager::createSurfaceWithText(const std::string& text, Ui
         return nullptr;
     }
 
-    const auto width = fonts[fontNum]->getTextWidth(text);
-    const auto height = fonts[fontNum]->getTextHeight();
+    const auto font = fonts[fontNum].get();
+    const auto width = font->getTextWidth(text);
+    const auto height = font->getTextHeight();
 
     auto pic = sdl2::surface_ptr{ SDL_CreateRGBSurface(0, width, height, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
 
@@ -79,7 +77,7 @@ sdl2::surface_ptr FontManager::createSurfaceWithText(const std::string& text, Ui
     SDL_FillRect(pic.get(), nullptr, COLOR_INVALID);
     SDL_SetColorKey(pic.get(), SDL_TRUE, COLOR_INVALID);
 
-    fonts[fontNum]->drawTextOnSurface(pic.get(),text,color);
+    font->drawTextOnSurface(pic.get(),text, color);
 
     return pic;
 }
@@ -108,7 +106,7 @@ sdl2::surface_ptr FontManager::createSurfaceWithMultilineText(const std::string&
         }
     } while(nextpos != std::string::npos);
 
-    const auto& font = fonts[fontNum];
+    const auto font = fonts[fontNum].get();
 
     const auto lineHeight = font->getTextHeight();
     const auto width = font->getTextWidth(text);
