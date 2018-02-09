@@ -44,6 +44,7 @@
 #include <misc/format.h>
 
 #include <algorithm>
+#include <numeric>
 
 
 House::House(int newHouse, int newCredits, int maxUnits, Uint8 team, int quota) : choam(this) {
@@ -339,6 +340,8 @@ void House::incrementUnits(int itemID) {
     numUnits++;
     numItem[itemID]++;
 
+    assert(numUnits + numStructures == std::accumulate(std::begin(numItem), std::end(numItem), 0));
+
     if(itemID != Unit_Saboteur
        && itemID != Unit_Frigate
        && itemID != Unit_Carryall
@@ -354,6 +357,9 @@ void House::incrementUnits(int itemID) {
 
 
 void House::decrementUnits(int itemID) {
+    if (numUnits < 1)
+        THROW(std::runtime_error, "Cannot decrement number of units %d (itemId %d)", numUnits, itemID);
+
     numUnits--;
     numItemLosses[itemID]++;
 
@@ -362,6 +368,8 @@ void House::decrementUnits(int itemID) {
     } else {
         numItem[itemID]--;
     }
+
+    assert(numUnits + numStructures == std::accumulate(std::begin(numItem), std::end(numItem), 0));
 
     for(const auto& pPlayer : players) {
         pPlayer->onDecrementUnits(itemID);
@@ -390,6 +398,8 @@ void House::incrementStructures(int itemID) {
     numStructures++;
     numItem[itemID]++;
 
+    assert(numUnits + numStructures == std::accumulate(std::begin(numItem), std::end(numItem), 0));
+
     // change power requirements
     int currentItemPower = currentGame->objectData.data[itemID][houseID].power;
     if(currentItemPower >= 0) {
@@ -413,9 +423,14 @@ void House::incrementStructures(int itemID) {
 
 
 void House::decrementStructures(int itemID, const Coord& location) {
+    if (numStructures < 1)
+        THROW(std::runtime_error, "Cannot decrement number of structures %d (itemId %d)", numStructures, itemID);
+
     numStructures--;
     numItem[itemID]--;
     numItemLosses[itemID]++;
+
+    assert(numUnits + numStructures == std::accumulate(std::begin(numItem), std::end(numItem), 0));
 
     // change power requirements
     const auto currentItemPower = currentGame->objectData.data[itemID][houseID].power;
