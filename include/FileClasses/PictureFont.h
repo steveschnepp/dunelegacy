@@ -27,7 +27,7 @@
 /**
     This class can read a font from a surface.
 */
-class PictureFont : public Font
+class PictureFont final : public Font
 {
 private:
     // Internal structure used for storing the character data

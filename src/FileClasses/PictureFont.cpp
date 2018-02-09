@@ -96,36 +96,35 @@ void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& te
             const char * const RESTRICT in = &font_character.data[y * font_character.width];
             for(int x = 0; x < font_character.width; x++) {
                 const char color = in[x];
-                if(color != 0) {
-                    const auto pixel = out + (x+curXPos) * bpp;
+                if(color == 0) continue;
 
-                    switch(bpp) {
-                        case 1:
-                            *pixel = baseColor;
-                            break;
+                const auto pixel = out + (x+curXPos) * bpp;
 
-                        case 2:
-                            *reinterpret_cast<Uint16 *>(pixel) = baseColor;
-                            break;
+                switch(bpp) {
+                case 1:
+                    *pixel = baseColor;
+                    break;
 
-                        case 3:
-                            if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-                                pixel[0] = (baseColor>> 16) & 0xff;
-                                pixel[1] = (baseColor>> 8) & 0xff;
-                                pixel[2] = baseColor& 0xff;
-                            } else {
-                                pixel[0] = baseColor& 0xff;
-                                pixel[1] = (baseColor>> 8) & 0xff;
-                                pixel[2] = (baseColor>> 16) & 0xff;
-                            }
-                            break;
+                case 2:
+                    *reinterpret_cast<Uint16 *>(pixel) = baseColor;
+                    break;
 
-                        case 4:
-                            *reinterpret_cast<Uint32 *>(pixel) = baseColor;
-                            break;
+                case 3:
+                    if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+                        pixel[0] = (baseColor>> 16) & 0xff;
+                        pixel[1] = (baseColor>> 8) & 0xff;
+                        pixel[2] = baseColor& 0xff;
+                    } else {
+                        pixel[0] = baseColor& 0xff;
+                        pixel[1] = (baseColor>> 8) & 0xff;
+                        pixel[2] = (baseColor>> 16) & 0xff;
                     }
-                }
+                    break;
 
+                case 4:
+                    *reinterpret_cast<Uint32 *>(pixel) = baseColor;
+                    break;
+                }
             }
         }
 

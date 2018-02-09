@@ -34,24 +34,21 @@
 
 
 RadarView::RadarView()
- : RadarViewBase(), currentRadarMode(RadarMode::RadarOff), animFrame(NUM_STATIC_FRAMES - 1), animCounter(NUM_STATIC_FRAME_TIME)
+ : currentRadarMode(RadarMode::RadarOff), animFrame(NUM_STATIC_FRAMES - 1), animCounter(NUM_STATIC_FRAME_TIME)
 {
     radarStaticAnimation = pGFXManager->getUIGraphic(UI_RadarAnimation);
 
-    if((radarSurface = SDL_CreateRGBSurface(0, 128, 128, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK)) == nullptr) {
+    radarSurface = sdl2::surface_ptr{ SDL_CreateRGBSurface(0, 128, 128, SCREEN_BPP, RMASK, GMASK, BMASK, AMASK) };
+    if(radarSurface == nullptr) {
         THROW(std::runtime_error, "RadarView::RadarView(): Cannot create new surface!");
     }
-    SDL_FillRect(radarSurface, nullptr, COLOR_BLACK);
+    SDL_FillRect(radarSurface.get(), nullptr, COLOR_BLACK);
 
-    radarTexture = SDL_CreateTexture(renderer, SCREEN_FORMAT, SDL_TEXTUREACCESS_STREAMING, 128, 128);
+    radarTexture = sdl2::texture_ptr{ SDL_CreateTexture(renderer, SCREEN_FORMAT, SDL_TEXTUREACCESS_STREAMING, 128, 128) };
 }
 
 
-RadarView::~RadarView()
-{
-    SDL_FreeSurface(radarSurface);
-    SDL_DestroyTexture(radarTexture);
-}
+RadarView::~RadarView() = default;
 
 int RadarView::getMapSizeX() const {
     return currentGameMap->getSizeX();
@@ -64,13 +61,13 @@ int RadarView::getMapSizeY() const {
 
 void RadarView::draw(Point position)
 {
-    SDL_Rect radarPosition = { position.x + RADARVIEW_BORDERTHICKNESS, position.y + RADARVIEW_BORDERTHICKNESS, RADARWIDTH, RADARHEIGHT};
+    const SDL_Rect radarPosition = { position.x + RADARVIEW_BORDERTHICKNESS, position.y + RADARVIEW_BORDERTHICKNESS, RADARWIDTH, RADARHEIGHT};
 
     switch(currentRadarMode) {
         case RadarMode::RadarOff:
         case RadarMode::RadarOn: {
-            int mapSizeX = currentGameMap->getSizeX();
-            int mapSizeY = currentGameMap->getSizeY();
+            const auto mapSizeX = currentGameMap->getSizeX();
+            const auto mapSizeY = currentGameMap->getSizeY();
 
             int scale = 1;
             int offsetX = 0;
@@ -78,12 +75,12 @@ void RadarView::draw(Point position)
 
             calculateScaleAndOffsets(mapSizeX, mapSizeY, scale, offsetX, offsetY);
 
-            updateRadarSurface(mapSizeX, mapSizeY, scale, offsetX, offsetY);
+            updateRadarSurface(scale, offsetX, offsetY);
 
-            SDL_UpdateTexture(radarTexture, nullptr, radarSurface->pixels, radarSurface->pitch);
+            SDL_UpdateTexture(radarTexture.get(), nullptr, radarSurface->pixels, radarSurface->pitch);
 
-            SDL_Rect dest = calcDrawingRect(radarTexture, radarPosition.x, radarPosition.y);
-            SDL_RenderCopy(renderer, radarTexture, nullptr, &dest);
+            auto dest = calcDrawingRect(radarTexture.get(), radarPosition.x, radarPosition.y);
+            SDL_RenderCopy(renderer, radarTexture.get(), nullptr, &dest);
 
             SDL_Rect radarRect;
             radarRect.x = (screenborder->getLeft() * mapSizeX*scale) / (mapSizeX*TILESIZE) + offsetX;
@@ -101,12 +98,12 @@ void RadarView::draw(Point position)
                 radarRect.y = offsetY;
             }
 
-            int offsetFromRightX = 128 - mapSizeX*scale - offsetX;
+            const auto offsetFromRightX = 128 - mapSizeX*scale - offsetX;
             if(radarRect.x + radarRect.w > radarPosition.w - offsetFromRightX) {
                 radarRect.w  = radarPosition.w - offsetFromRightX - radarRect.x - 1;
             }
 
-            int offsetFromBottomY = 128 - mapSizeY*scale - offsetY;
+            const auto offsetFromBottomY = 128 - mapSizeY*scale - offsetY;
             if(radarRect.y + radarRect.h > radarPosition.h - offsetFromBottomY) {
                 radarRect.h = radarPosition.h - offsetFromBottomY - radarRect.y - 1;
             }
@@ -122,16 +119,16 @@ void RadarView::draw(Point position)
 
         case RadarMode::AnimationRadarOff:
         case RadarMode::AnimationRadarOn: {
-            SDL_Rect source = calcSpriteSourceRect( radarStaticAnimation,
-                                                    animFrame % NUM_STATIC_ANIMATIONS_PER_ROW,
-                                                    NUM_STATIC_ANIMATIONS_PER_ROW,
-                                                    animFrame / NUM_STATIC_ANIMATIONS_PER_ROW,
-                                                    (NUM_STATIC_FRAMES + NUM_STATIC_ANIMATIONS_PER_ROW - 1) / NUM_STATIC_ANIMATIONS_PER_ROW);
-            SDL_Rect dest = calcSpriteDrawingRect(  radarStaticAnimation,
-                                                    radarPosition.x,
-                                                    radarPosition.y,
-                                                    NUM_STATIC_ANIMATIONS_PER_ROW,
-                                                    (NUM_STATIC_FRAMES + NUM_STATIC_ANIMATIONS_PER_ROW - 1) / NUM_STATIC_ANIMATIONS_PER_ROW);
+            auto source = calcSpriteSourceRect( radarStaticAnimation,
+                                                animFrame % NUM_STATIC_ANIMATIONS_PER_ROW,
+                                                NUM_STATIC_ANIMATIONS_PER_ROW,
+                                                animFrame / NUM_STATIC_ANIMATIONS_PER_ROW,
+                                                (NUM_STATIC_FRAMES + NUM_STATIC_ANIMATIONS_PER_ROW - 1) / NUM_STATIC_ANIMATIONS_PER_ROW);
+            auto dest = calcSpriteDrawingRect(  radarStaticAnimation,
+                                                radarPosition.x,
+                                                radarPosition.y,
+                                                NUM_STATIC_ANIMATIONS_PER_ROW,
+                                                (NUM_STATIC_FRAMES + NUM_STATIC_ANIMATIONS_PER_ROW - 1) / NUM_STATIC_ANIMATIONS_PER_ROW);
             SDL_RenderCopy(renderer, radarStaticAnimation, &source, &dest);
         } break;
     }
@@ -195,32 +192,52 @@ void RadarView::switchRadarMode(bool bOn) {
     }
 }
 
-void RadarView::updateRadarSurface(int mapSizeX, int mapSizeY, int scale, int offsetX, int offsetY) {
+void RadarView::updateRadarSurface(int scale, int offsetX, int offsetY) {
 
     // Lock radarSurface for direct access to the pixels
-    if(!SDL_MUSTLOCK(radarSurface) || (SDL_LockSurface(radarSurface) == 0)) {
-        for(int x = 0; x <  mapSizeX; x++) {
-            for(int y = 0; y <  mapSizeY; y++) {
+    sdl2::surface_lock lock{ radarSurface.get() };
 
-                Tile* pTile = currentGameMap->getTile(x,y);
+    auto map = currentGameMap;
 
-                /* Selecting the right color is handled in Tile::getRadarColor() */
-                Uint32 color = pTile->getRadarColor(pLocalHouse, ((currentRadarMode == RadarMode::RadarOn) || (currentRadarMode == RadarMode::AnimationRadarOff)));
-                color = MapRGBA(radarSurface->format, color);
+    auto radar_on = ((currentRadarMode == RadarMode::RadarOn) || (currentRadarMode == RadarMode::AnimationRadarOff));
 
-                for(int j = 0; j < scale; j++) {
-                    Uint32* p = ((Uint32*) ((Uint8 *) radarSurface->pixels + (offsetY + scale*y + j) * radarSurface->pitch)) + (offsetX + scale*x);
+    map->for_all([&](Tile& t)
+        {
+            auto color = t.getRadarColor(pLocalHouse, radar_on);
+            color = MapRGBA(radarSurface->format, color);
 
-                    for(int i = 0; i < scale; i++, p++) {
-                        // Do not use putPixel here to avoid overhead
-                        *p = color;
-                    }
+            Uint8* const RESTRICT out = static_cast<Uint8 *>(radarSurface->pixels)
+                + (offsetY + scale * t.getLocation().y) * radarSurface->pitch;
+            const auto offset = (offsetX + scale * t.getLocation().x);
+
+            for (auto j = 0; j < scale; j++) {
+                auto p = reinterpret_cast<Uint32*>(out + j * radarSurface->pitch) + offset;
+
+                for (auto i = 0; i < scale; ++i, ++p) {
+                    // Do not use putPixel here to avoid overhead
+                    *p = color;
+                }
+            }
+        });
+#if 0
+    for(int x = 0; x <  mapSizeX; x++) {
+        for(int y = 0; y <  mapSizeY; y++) {
+
+            Tile* pTile = currentGameMap->getTile(x,y);
+
+            /* Selecting the right color is handled in Tile::getRadarColor() */
+            Uint32 color = pTile->getRadarColor(pLocalHouse, ((currentRadarMode == RadarMode::RadarOn) || (currentRadarMode == RadarMode::AnimationRadarOff)));
+            color = MapRGBA(radarSurface->format, color);
+
+            for(int j = 0; j < scale; j++) {
+                Uint32* p = ((Uint32*) ((Uint8 *) radarSurface->pixels + (offsetY + scale*y + j) * radarSurface->pitch)) + (offsetX + scale*x);
+
+                for(int i = 0; i < scale; i++, p++) {
+                    // Do not use putPixel here to avoid overhead
+                    *p = color;
                 }
             }
         }
-
-        if(SDL_MUSTLOCK(radarSurface)) {
-            SDL_UnlockSurface(radarSurface);
-        }
     }
+#endif // 0
 }

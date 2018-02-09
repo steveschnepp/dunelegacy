@@ -60,7 +60,7 @@ int FontManager::getTextHeight(unsigned int fontNum) const {
     return fonts[fontNum]->getTextHeight();
 }
 
-sdl2::surface_ptr FontManager::createSurfaceWithText(const std::string& text, Uint32 color, unsigned int fontNum) {
+sdl2::surface_ptr FontManager::createSurfaceWithText(const std::string& text, Uint32 color, unsigned int fontNum) const {
     if(fontNum >= NUM_FONTS) {
         return nullptr;
     }
@@ -84,11 +84,13 @@ sdl2::surface_ptr FontManager::createSurfaceWithText(const std::string& text, Ui
     return pic;
 }
 
-sdl2::texture_ptr FontManager::createTextureWithText(const std::string& text, Uint32 color, unsigned int fontNum) {
-    return convertSurfaceToTexture(createSurfaceWithText(text, color, fontNum).release(), true);
+sdl2::texture_ptr FontManager::createTextureWithText(const std::string& text, Uint32 color, unsigned int fontNum) const {
+    const auto surface = createSurfaceWithText(text, color, fontNum);
+
+    return convertSurfaceToTexture(surface.get(), false);
 }
 
-sdl2::surface_ptr FontManager::createSurfaceWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered) {
+sdl2::surface_ptr FontManager::createSurfaceWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered) const {
     if(fontNum >= NUM_FONTS) {
         return nullptr;
     }
@@ -135,6 +137,8 @@ sdl2::surface_ptr FontManager::createSurfaceWithMultilineText(const std::string&
     return pic;
 }
 
-sdl2::texture_ptr FontManager::createTextureWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered) {
-    return convertSurfaceToTexture(createSurfaceWithMultilineText(text, color, fontNum, bCentered).release(), true);
+sdl2::texture_ptr FontManager::createTextureWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered) const {
+    const auto surface = createSurfaceWithMultilineText(text, color, fontNum, bCentered);
+
+    return convertSurfaceToTexture(surface.get(), false);
 }

@@ -232,11 +232,11 @@ void BuilderList::draw(Point position) {
                 }
 
                 if(isStructure(buildItem.itemID)) {
-                    SDL_Texture* pLattice = pGFXManager->getUIGraphic(UI_StructureSizeLattice);
+                    const auto pLattice = pGFXManager->getUIGraphic(UI_StructureSizeLattice);
                     SDL_Rect destLattice = calcDrawingRect(pLattice, dest.x + 2, dest.y + 2);
                     SDL_RenderCopy(renderer, pLattice, nullptr, &destLattice);
 
-                    SDL_Texture* pConcrete = pGFXManager->getUIGraphic(UI_StructureSizeConcrete);
+                    const auto pConcrete = pGFXManager->getUIGraphic(UI_StructureSizeConcrete);
                     SDL_Rect srcConcrete = { 0, 0, 1 + getStructureSize(buildItem.itemID).x*6, 1 + getStructureSize(buildItem.itemID).y*6 };
                     SDL_Rect destConcrete = { dest.x + 2, dest.y + 2, srcConcrete.w, srcConcrete.h };
                     SDL_RenderCopy(renderer, pConcrete, &srcConcrete, &destConcrete);
@@ -250,7 +250,7 @@ void BuilderList::draw(Point position) {
                 }
 
                 if(pStarport != nullptr) {
-                    bool bSoldOut = (pStarport->getOwner()->getChoam().getNumAvailable(buildItem.itemID) == 0);
+                    const auto bSoldOut = (pStarport->getOwner()->getChoam().getNumAvailable(buildItem.itemID) == 0);
 
                     if(!pStarport->okToOrder() || bSoldOut) {
                         SDL_Rect progressBar = { dest.x, dest.y, BUILDERBTN_WIDTH, BUILDERBTN_HEIGHT };

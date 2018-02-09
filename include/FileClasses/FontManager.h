@@ -51,10 +51,10 @@ public:
     void drawTextOnSurface(SDL_Surface* pSurface, const std::string& text, Uint32 color, unsigned int fontNum);
     int getTextWidth(const std::string& text, unsigned int fontNum) const;
     int getTextHeight(unsigned int fontNum) const;
-    sdl2::surface_ptr createSurfaceWithText(const std::string& text, Uint32 color, unsigned int fontNum);
-    sdl2::texture_ptr createTextureWithText(const std::string& text, Uint32 color, unsigned int fontNum);
-    sdl2::surface_ptr createSurfaceWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered = false);
-    sdl2::texture_ptr createTextureWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered = false);
+    sdl2::surface_ptr createSurfaceWithText(const std::string& text, Uint32 color, unsigned int fontNum) const;
+    sdl2::texture_ptr createTextureWithText(const std::string& text, Uint32 color, unsigned int fontNum) const;
+    sdl2::surface_ptr createSurfaceWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered = false) const;
+    sdl2::texture_ptr createTextureWithMultilineText(const std::string& text, Uint32 color, unsigned int fontNum, bool bCentered = false) const;
 private:
     std::shared_ptr<Font> fonts[NUM_FONTS];
 

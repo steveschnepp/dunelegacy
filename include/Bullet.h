@@ -34,7 +34,7 @@ class House;
 class Bullet final
 {
 public:
-    Bullet(Uint32 shooterID, Coord* newRealLocation, Coord* newRealDestination, Uint32 bulletID, int damage, bool air);
+    Bullet(Uint32 shooterID, const Coord* newRealLocation, const Coord* newRealDestination, Uint32 bulletID, int damage, bool air);
     explicit Bullet(InputStream& stream);
     void init();
     ~Bullet();
@@ -52,8 +52,8 @@ public:
     void destroy();
 
     inline int getBulletID() const noexcept { return bulletID; }
-    inline FixPoint getRealX() const { return realX; }
-    inline FixPoint getRealY() const { return realY; }
+    inline FixPoint getRealX() const noexcept { return realX; }
+    inline FixPoint getRealY() const noexcept { return realY; }
 
 private:
     // constants for each bullet type

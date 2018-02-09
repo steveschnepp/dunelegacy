@@ -33,13 +33,13 @@
 #include <algorithm>
 
 
-Bullet::Bullet(Uint32 shooterID, Coord* newRealLocation, Coord* newRealDestination, Uint32 bulletID, int damage, bool air)
+Bullet::Bullet(Uint32 shooterID, const Coord* newRealLocation, const Coord* newRealDestination, Uint32 bulletID, int damage, bool air)
 {
     airAttack = air;
 
     this->shooterID = shooterID;
 
-    auto pShooter = currentGame->getObjectManager().getObject(shooterID);
+    const auto pShooter = currentGame->getObjectManager().getObject(shooterID);
     if(pShooter == nullptr) {
         owner = nullptr;
     } else {

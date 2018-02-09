@@ -188,7 +188,7 @@ void UnitBase::attack() {
         Coord centerPoint = getCenterPoint();
         bool bAirBullet;
 
-        ObjectBase* pObject = target.getObjPointer();
+        const auto pObject = target.getObjPointer();
         if(pObject != nullptr) {
             targetCenterPoint = pObject->getClosestCenterPoint(location);
             bAirBullet = pObject->isAFlyingUnit();
@@ -336,7 +336,7 @@ void UnitBase::destroy() {
 
     if(isVisible()) {
         if(currentGame->randomGen.rand(1,100) <= getInfSpawnProp()) {
-            UnitBase* pNewUnit = currentGame->getHouse(originalHouseID)->createUnit(Unit_Soldier);
+            auto pNewUnit = currentGame->getHouse(originalHouseID)->createUnit(Unit_Soldier);
             pNewUnit->setHealth(pNewUnit->getMaxHealth()/2);
             pNewUnit->deploy(location);
 
@@ -704,7 +704,7 @@ void UnitBase::navigate() {
                         noCloserPointCount = 0;
                     }
                 } else {
-                    int tempAngle = currentGameMap->getPosAngle(location, nextSpot);
+                    const auto tempAngle = currentGameMap->getPosAngle(location, nextSpot);
                     if(tempAngle != INVALID) {
                         nextSpotAngle = tempAngle;
                     }

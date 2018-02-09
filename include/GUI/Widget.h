@@ -23,26 +23,25 @@
 #include <SDL2/SDL.h>
 
 #include <functional>
-#include <iostream>
 #include <algorithm>
 
 /// A point class for representing a point.
-class Point {
+class Point final {
 public:
     /// Default constructor.
-    Point() : x(0) , y(0) { ; };
+    Point() : x(0) , y(0) { }
 
     /** A constructor that initializes the point with x and y
         \param x the x coordinate
         \param y the y coordinate
     */
-    Point(Sint32 x, Sint32 y) : x(x) , y(y) { ; };
+    Point(Sint32 x, Sint32 y) : x(x) , y(y) { }
 
     /** operator for adding two points.
         \param p the point to add
         \return the sum of both points
     */
-    inline Point operator+(const Point& p) const {
+    Point operator+(const Point& p) const {
         return Point(x+p.x,y+p.y);
     };
 
@@ -50,7 +49,7 @@ public:
         \param p the point to add
         \return this point minus p
     */
-    inline Point operator-(const Point& p) const {
+    Point operator-(const Point& p) const {
         return Point(x-p.x,y-p.y);
     };
 
@@ -58,7 +57,7 @@ public:
         \param c the scalar to multiply with
         \return this point times c
     */
-    inline Point operator*(Sint32 c) const {
+    Point operator*(Sint32 c) const {
         return Point(x*c,y*c);
     };
 
@@ -66,7 +65,7 @@ public:
         \param c the scalar to devide by
         \return this point divided by c
     */
-    inline Point operator/(Sint32 c) const {
+    Point operator/(Sint32 c) const {
         return Point(x/c,y/c);
     };
 
@@ -74,7 +73,7 @@ public:
         \param op the other operator
         \return true if both coordinates are equal, false otherwise
     */
-    inline bool operator==(const Point& op) const {
+    bool operator==(const Point& op) const {
             return (x == op.x) && (y == op.y);
     }
 
@@ -150,20 +149,20 @@ public:
         Sets the parent of this widget.
         \param pParent new parent (nullptr is also possible)
     */
-    inline void setParent(Widget* pParent) { parent = pParent; };
+    void setParent(Widget* pParent) noexcept { parent = pParent; };
 
     /**
         Returns the parent of this widget
         \return the parent of this widget or nullptr if it has no parent.
     */
-    inline Widget* getParent() const { return parent; };
+    Widget* getParent() const noexcept { return parent; };
 
     /**
         Enable or disable this widget. A disabled widget is not responding
         to clicks and key strokes and might look different.
         \param  bEnabled    true = enable widget, false = disable widget
     */
-    virtual inline void setEnabled(bool bEnabled) {
+    virtual void setEnabled(bool bEnabled) {
         if((bEnabled == false) && (isActive() == true)) {
             setInactive();
         }
@@ -174,20 +173,20 @@ public:
         Returns whether this widget is enabled or not.
         \return true = widget is enabled, false = widget is disabled
     */
-    inline bool isEnabled() const { return enabled; };
+    bool isEnabled() const noexcept { return enabled; };
 
     /**
         Sets this widget visible or invisible. An invisible widget does not
         responding to clicks and key presses.
         \return bVisible    true = visible, false = invisible
     */
-    virtual inline void setVisible(bool bVisible) { visible = bVisible; };
+    virtual void setVisible(bool bVisible) { visible = bVisible; };
 
     /**
         Returns whether this widget is visible or not.
         \return true = visible, false = invisible
     */
-    inline bool isVisible() const { return visible; };
+    bool isVisible() const noexcept { return visible; };
 
     /**
         Sets this widget active. The parent widgets are also activated and the
@@ -204,26 +203,26 @@ public:
         Returns whether this widget is currently active.
         \return true = currently active, false = currently inactive
     */
-    inline bool isActive() const { return active; };
+    bool isActive() const noexcept { return active; };
 
     /**
         Returns whether this widget can be set active.
         \return true = activatable, false = not activatable
     */
-    virtual inline bool isActivatable() const { return false; };
+    virtual bool isActivatable() const { return false; };
 
 
     /**
         Returns whether this widget is an container.
         \return true = container, false = any other widget
     */
-    virtual inline bool isContainer() const { return false; };
+    virtual bool isContainer() const { return false; };
 
     /**
         Returns the current size of this widget.
         \return current size of this widget
     */
-    inline const Point& getSize() const { return size; };
+    const Point& getSize() const noexcept { return size; };
 
     /**
         Returns the minimum size of this widget. The widget should not
@@ -238,14 +237,14 @@ public:
         You should not resize a widget, that is not resizeable.
         \return true = resizeable in X direction, false = not resizeable in X direction
     */
-    inline bool resizingXAllowed() const { return resizeX; };
+    bool resizingXAllowed() const { return resizeX; };
 
     /**
         Returns whether this widget is allowed to be resized in Y direction.
         You should not resize a widget, that is not resizeable.
         \return true = resizeable in Y direction, false = not resizeable in Y direction
     */
-    inline bool resizingYAllowed() const { return resizeY; };
+    bool resizingYAllowed() const { return resizeY; };
 
     /**
         This method resizes the widget. This method should only be
@@ -253,7 +252,7 @@ public:
         resizingYAllowed, getMinumumSize).
         \param  newSize the new size of this widget
     */
-    virtual inline void resize(Point newSize) {
+    virtual void resize(Point newSize) {
         resize(newSize.x, newSize.y);
     };
 
@@ -264,7 +263,7 @@ public:
         \param  width   the new width of this widget
         \param  height  the new height of this widget
     */
-    virtual inline void resize(Uint32 width, Uint32 height) {
+    virtual void resize(Uint32 width, Uint32 height) {
         size.x = width;
         size.y = height;
     };
@@ -287,7 +286,7 @@ public:
         \param  y               y-coordinate (relative to the left top corner of the widget)
         \param  insideOverlay   true, if (x,y) is inside an overlay and this widget may be behind it, false otherwise
     */
-    virtual inline void handleMouseMovement(Sint32 x, Sint32 y, bool insideOverlay) { ; };
+    virtual void handleMouseMovement(Sint32 x, Sint32 y, bool insideOverlay) { ; };
 
     /**
         Handles a left mouse click.
@@ -296,7 +295,7 @@ public:
         \param  pressed true = mouse button pressed, false = mouse button released
         \return true = click was processed by the widget, false = click was not processed by the widget
     */
-    virtual inline bool handleMouseLeft(Sint32 x, Sint32 y, bool pressed) { return false; };
+    virtual bool handleMouseLeft(Sint32 x, Sint32 y, bool pressed) { return false; };
 
     /**
         Handles a right mouse click.
@@ -305,7 +304,7 @@ public:
         \param  pressed true = mouse button pressed, false = mouse button released
         \return true = click was processed by the widget, false = click was not processed by the widget
     */
-    virtual inline bool handleMouseRight(Sint32 x, Sint32 y, bool pressed) { return false; };
+    virtual bool handleMouseRight(Sint32 x, Sint32 y, bool pressed) { return false; };
 
     /**
         Handles mouse wheel scrolling.
@@ -314,14 +313,14 @@ public:
         \param  up  true = mouse wheel up, false = mouse wheel down
         \return true = the mouse wheel scrolling was processed by the widget, false = mouse wheel scrolling was not processed by the widget
     */
-    virtual inline bool handleMouseWheel(Sint32 x, Sint32 y, bool up) { return false; };
+    virtual bool handleMouseWheel(Sint32 x, Sint32 y, bool up) { return false; };
 
     /**
         Handles a key stroke.
         \param  key the key that was pressed or released.
         \return true = key stroke was processed by the widget, false = key stroke was not processed by the widget
     */
-    virtual inline bool handleKeyPress(SDL_KeyboardEvent& key) {
+    virtual bool handleKeyPress(SDL_KeyboardEvent& key) {
         if(isActive() && (key.keysym.sym == SDLK_TAB)) {
             setInactive();
         }
@@ -333,7 +332,7 @@ public:
         \param  textInput the text input that was performed.
         \return true = text input was processed by the widget, false = text input was not processed by the widget
     */
-    virtual inline bool handleTextInput(SDL_TextInputEvent& textInput) { return false; }
+    virtual bool handleTextInput(SDL_TextInputEvent& textInput) { return false; }
 
     /**
         Handles mouse movement in overlays.
@@ -341,7 +340,7 @@ public:
         \param  y y-coordinate (relative to the left top corner of the widget)
         \return true if (x,y) is in overlay of this widget, false otherwise
     */
-    virtual inline bool handleMouseMovementOverlay(Sint32 x, Sint32 y) { return false; };
+    virtual bool handleMouseMovementOverlay(Sint32 x, Sint32 y) { return false; };
 
     /**
         Handles a left mouse click in overlays.
@@ -350,7 +349,7 @@ public:
         \param  pressed true = mouse button pressed, false = mouse button released
         \return true = click was processed by the widget, false = click was not processed by the widget
     */
-    virtual inline bool handleMouseLeftOverlay(Sint32 x, Sint32 y, bool pressed) { return false; };
+    virtual bool handleMouseLeftOverlay(Sint32 x, Sint32 y, bool pressed) { return false; };
 
     /**
         Handles a right mouse click in overlays.
@@ -359,7 +358,7 @@ public:
         \param  pressed true = mouse button pressed, false = mouse button released
         \return true = click was processed by the widget, false = click was not processed by the widget
     */
-    virtual inline bool handleMouseRightOverlay(Sint32 x, Sint32 y, bool pressed) { return false; };
+    virtual bool handleMouseRightOverlay(Sint32 x, Sint32 y, bool pressed) { return false; };
 
     /**
         Handles mouse wheel scrolling in overlays.
@@ -368,35 +367,35 @@ public:
         \param  up  true = mouse wheel up, false = mouse wheel down
         \return true = the mouse wheel scrolling was processed by the widget, false = mouse wheel scrolling was not processed by the widget
     */
-    virtual inline bool handleMouseWheelOverlay(Sint32 x, Sint32 y, bool up) { return false; };
+    virtual bool handleMouseWheelOverlay(Sint32 x, Sint32 y, bool up) { return false; };
 
     /**
         Handles a key stroke in overlays.
         \param  key the key that was pressed or released.
         \return true = key stroke was processed by the widget, false = key stroke was not processed by the widget
     */
-    virtual inline bool handleKeyPressOverlay(SDL_KeyboardEvent& key) { return false; }
+    virtual bool handleKeyPressOverlay(SDL_KeyboardEvent& key) { return false; }
 
     /**
         Handles a text input event in overlays.
         \param  textInput the text input that was performed.
         \return true = text input was processed by the widget, false = text input was not processed by the widget
     */
-    virtual inline bool handleTextInputOverlay(SDL_TextInputEvent& textInput) { return false; }
+    virtual bool handleTextInputOverlay(SDL_TextInputEvent& textInput) { return false; }
 
 
     /**
         Draws this widget to screen. This method is called before drawOverlay().
         \param  Position    Position to draw the widget to
     */
-    virtual inline void draw(Point position) { ; };
+    virtual void draw(Point position) { ; };
 
     /**
         This method draws the parts of this widget that must be drawn after all the other
         widgets are drawn (e.g. tooltips). This method is called after draw().
         \param  Position    Position to draw the widget to
     */
-    virtual inline void drawOverlay(Point position) { ; };
+    virtual void drawOverlay(Point position) { ; };
 
 
     /**
@@ -427,7 +426,7 @@ public:
         Sets the function that should be called when this widget gains focus.
         \param  pOnGainFocus    A function to call on focus gain
     */
-    inline void setOnGainFocus(std::function<void ()> pOnGainFocus) {
+    void setOnGainFocus(std::function<void ()> pOnGainFocus) {
         this->pOnGainFocus = pOnGainFocus;
     }
 
@@ -435,7 +434,7 @@ public:
         Sets the function that should be called when this widget loses focus.
         \param  pOnLostFocus    A function to call on focus loss
     */
-    inline void setOnLostFocus(std::function<void ()> pOnLostFocus) {
+    void setOnLostFocus(std::function<void ()> pOnLostFocus) {
         this->pOnLostFocus = pOnLostFocus;
     }
 
@@ -446,8 +445,8 @@ protected:
         widget.
         \param  bActive true = activate this widget, false = deactiviate this widget
     */
-    virtual void inline setActive(bool bActive) {
-        bool oldActive = active;
+    virtual void setActive(bool bActive) {
+        const auto oldActive = active;
         active = bActive;
 
         if(oldActive != bActive) {
@@ -465,7 +464,7 @@ protected:
         \param  bResizeX    true = resizing in x direction allowed, false = resizing in x direction not allowed
         \param  bResizeY    true = resizing in y direction allowed, false = resizing in y direction not allowed
     */
-    virtual inline void enableResizing(bool bResizeX, bool bResizeY) {
+    virtual void enableResizing(bool bResizeX, bool bResizeY) {
         resizeX = bResizeX;
         resizeY = bResizeY;
     };
