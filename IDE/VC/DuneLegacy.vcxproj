@@ -527,6 +527,7 @@ IF %ERRORLEVEL% LSS 8 exit 0</Command>
     <ClInclude Include="..\..\include\units\Trooper.h" />
     <ClInclude Include="..\..\include\units\UnitBase.h" />
     <ClCompile Include="..\..\src\FileClasses\SaveTextureAsBmp.cpp" />
+    <ClCompile Include="..\..\src\GUI\TextButton.cpp" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

@@ -35,13 +35,13 @@ public:
         Widget::enableResizing(true,true);
     }
 
-    TextButton(const TextButton &) = default;
+    TextButton(const TextButton &) = delete;
     TextButton(TextButton &&) = default;
-    TextButton& operator=(const TextButton &) = default;
+    TextButton& operator=(const TextButton &) = delete;
     TextButton& operator=(TextButton &&) = default;
 
     /// destructor
-    virtual ~TextButton() = default;
+    virtual ~TextButton();
 
     /**
         This method sets a new text for this button and resizes this button
@@ -108,18 +108,7 @@ protected:
         should be overwritten by subclasses if they like to defer texture creation as long as possible.
         This method should first check whether a renewal of the textures is necessary.
     */
-    void updateTextures() override
-    {
-        Button::updateTextures();
-
-        if(pUnpressedTexture == nullptr) {
-            invalidateTextures();
-
-            setSurfaces(    GUIStyle::getInstance().createButtonSurface(getSize().x, getSize().y, text, false, false, textcolor, textshadowcolor),true,
-                            GUIStyle::getInstance().createButtonSurface(getSize().x, getSize().y, text, true, true, textcolor, textshadowcolor),true,
-                            GUIStyle::getInstance().createButtonSurface(getSize().x, getSize().y, text, false, true, textcolor, textshadowcolor),true);
-        }
-    }
+    void updateTextures() override;
 
 private:
     Uint32 textcolor;
