@@ -63,11 +63,11 @@ bool TrackedUnit::canPassTile(const Tile* pTile) const {
         return false;
     }
 
-    if (!pTile->hasAGroundObject()) return true;
-
     const auto ground_object_result = pTile->getGroundObjectID();
 
-    if (ground_object_result.first && ground_object_result.second == target.getObjectID()) {
+    if (!ground_object_result.first) return true;
+
+    if (ground_object_result.second == target.getObjectID()) {
         const auto pObject = currentGame->getObjectManager().getObject(ground_object_result.second);
 
         if ((pObject != nullptr)
