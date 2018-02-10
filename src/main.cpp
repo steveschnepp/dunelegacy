@@ -503,8 +503,8 @@ int main(int argc, char *argv[]) {
         int currentDisplayIndex = SCREEN_DEFAULT_DISPLAYINDEX;
 
         do {
-            unsigned int seed = (unsigned int) time(nullptr);
-            srand(seed);
+            const auto seed = std::random_device{}();
+            srand(seed);    // Is anything still using ::rand()?
 
             // check if configfile exists
             std::string configfilepath = getConfigFilepath();
