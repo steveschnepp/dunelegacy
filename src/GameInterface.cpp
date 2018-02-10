@@ -50,7 +50,7 @@ GameInterface::GameInterface() : Window(0,0,0,0) {
     // side bar
     const auto pSideBarTex = gfx->getUIGraphic(UI_SideBar, pLocalHouse->getHouseID());
     sideBar.setTexture(pSideBarTex,false);
-    auto dest = calcAlignedDrawingRect(pSideBarTex, HAlign::Right, VAlign::Top);
+    const auto dest = calcAlignedDrawingRect(pSideBarTex, HAlign::Right, VAlign::Top);
     windowWidget.addWidget(&sideBar, dest);
 
     // add buttons
