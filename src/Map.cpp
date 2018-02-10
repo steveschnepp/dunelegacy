@@ -819,7 +819,7 @@ void Map::viewMap(const int playerTeam, const Coord& location, const int maxView
     const auto cycle_count = currentGame->getGameCycleCount();
 
     for_each_filter(location.x - maxViewRange, location.y - maxViewRange,
-        location.x + maxViewRange, location.y + maxViewRange,
+        location.x + maxViewRange + 1, location.y + maxViewRange + 1,
         [&](int x, int y) {
             const auto distance = maxViewRange <= 1
                 ? maximumDistance(location, { x, y })
