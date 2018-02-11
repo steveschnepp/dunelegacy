@@ -145,13 +145,5 @@ void PictureFont::drawTextOnSurface(SDL_Surface* pSurface, const std::string& te
 int PictureFont::getTextWidth(const std::string& text) const {
     return std::accumulate(std::begin(text), std::end(text),
         0, [&](int a, unsigned char b) {return a + character[b].width; });
-#if 0
-    auto width = 0;
-    for (unsigned char c : text) {
-        width += character[c].width;
-    }
-
-    return width;
-#endif // 0
 }
 

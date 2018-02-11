@@ -220,25 +220,4 @@ void RadarView::updateRadarSurface(int scale, int offsetX, int offsetY) {
                 }
             }
         });
-#if 0
-    for(int x = 0; x <  mapSizeX; x++) {
-        for(int y = 0; y <  mapSizeY; y++) {
-
-            Tile* pTile = currentGameMap->getTile(x,y);
-
-            /* Selecting the right color is handled in Tile::getRadarColor() */
-            Uint32 color = pTile->getRadarColor(pLocalHouse, ((currentRadarMode == RadarMode::RadarOn) || (currentRadarMode == RadarMode::AnimationRadarOff)));
-            color = MapRGBA(radarSurface->format, color);
-
-            for(int j = 0; j < scale; j++) {
-                Uint32* p = ((Uint32*) ((Uint8 *) radarSurface->pixels + (offsetY + scale*y + j) * radarSurface->pitch)) + (offsetX + scale*x);
-
-                for(int i = 0; i < scale; i++, p++) {
-                    // Do not use putPixel here to avoid overhead
-                    *p = color;
-                }
-            }
-        }
-    }
-#endif // 0
 }
