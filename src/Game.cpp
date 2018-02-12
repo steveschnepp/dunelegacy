@@ -369,15 +369,10 @@ void Game::drawScreen()
                     }
 
                     if (fogOfWar) {
-                        auto fogTile = pTile->getFogTile(house_id);
-
-                        if (pTile->isFogged(house_id)) {
-                            fogTile = Terrain_HiddenFull;
-                        }
+                        const auto fogTile = pTile->isFogged(house_id) ? Terrain_HiddenFull : pTile->getFogTile(house_id);
 
                         if (fogTile != 0) {
-                            const SDL_Rect source = { fogTile*zoomedTileSize, 0,
-                                                zoomedTileSize, zoomedTileSize };
+                            const SDL_Rect source = { fogTile*zoomedTileSize, 0, zoomedTileSize, zoomedTileSize };
                             const SDL_Rect drawLocation = { border->world2screenX(x*TILESIZE), border->world2screenY(y*TILESIZE),
                                                         zoomedTileSize, zoomedTileSize };
 
