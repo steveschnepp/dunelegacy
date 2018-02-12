@@ -1093,17 +1093,19 @@ Uint32 Tile::getRadarColor(House* pHouse, bool radar) {
 
 
 Tile::TERRAINTILETYPE Tile::getTerrainTileImpl() const {
-    auto terrainType = type;
+    const auto terrainType = type;
+    const auto map = currentGameMap;
+
+    const auto x = location.x;
+    const auto y = location.y;
+
     if (terrainType == Terrain_ThickSpice) {
         // check if we are surrounded by spice/thick spice
-        bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isSpice() == true);
-        bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isSpice() == true);
-        bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isSpice() == true);
-        bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isSpice() == true);
+        const auto mask = map->get_neighbor_mask(x, y, [](const Tile& t) { return t.isSpice(); });
 
-        if (!up || !right || !down || !left) {
+        if (0x0f != mask) {
             // to avoid graphical glitches (there is no tile for thick spice next to a non-spice tile) we draw this tile as normal spice
-            terrainType = Terrain_Spice;
+            return static_cast<TERRAINTILETYPE>(TerrainTile_Spice + mask);
         }
     }
 
@@ -1118,53 +1120,38 @@ Tile::TERRAINTILETYPE Tile::getTerrainTileImpl() const {
 
     case Terrain_Rock: {
         // determine which surrounding tiles are rock
-        bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isRock() == true);
-        bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isRock() == true);
-        bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isRock() == true);
-        bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isRock() == true);
+        const auto mask = map->get_neighbor_mask(x, y, [](const Tile& t) { return t.isRock(); });
 
-        return static_cast<TERRAINTILETYPE>(TerrainTile_Rock + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
-    } break;
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Rock + mask);
+      }
 
     case Terrain_Dunes: {
         // determine which surrounding tiles are dunes
-        bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->getType() == Terrain_Dunes);
-        bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->getType() == Terrain_Dunes);
-        bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->getType() == Terrain_Dunes);
-        bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->getType() == Terrain_Dunes);
+        const auto mask = map->get_neighbor_mask(x, y, [](const Tile& t) { return t.getType() == Terrain_Dunes; });
 
-        return static_cast<TERRAINTILETYPE>(TerrainTile_Dunes + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
-    } break;
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Dunes + mask);
+    }
 
     case Terrain_Mountain: {
         // determine which surrounding tiles are mountains
-        bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isMountain() == true);
-        bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isMountain() == true);
-        bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isMountain() == true);
-        bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isMountain() == true);
+        const auto mask = map->get_neighbor_mask(x, y, [](const Tile& t) { return t.isMountain(); });
 
-        return static_cast<TERRAINTILETYPE>(TerrainTile_Mountain + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
-    } break;
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Mountain + mask);
+    }
 
     case Terrain_Spice: {
         // determine which surrounding tiles are spice
-        bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isSpice() == true);
-        bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isSpice() == true);
-        bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isSpice() == true);
-        bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isSpice() == true);
+        const auto mask = map->get_neighbor_mask(x, y, [](const Tile& t) { return t.isSpice(); });
 
-        return static_cast<TERRAINTILETYPE>(TerrainTile_Spice + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
-    } break;
+        return static_cast<TERRAINTILETYPE>(TerrainTile_Spice + mask);
+    }
 
     case Terrain_ThickSpice: {
         // determine which surrounding tiles are thick spice
-        bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->getType() == Terrain_ThickSpice);
-        bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->getType() == Terrain_ThickSpice);
-        bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->getType() == Terrain_ThickSpice);
-        bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->getType() == Terrain_ThickSpice);
+        const auto mask = map->get_neighbor_mask(x, y, [](const Tile& t) { return t.getType() == Terrain_ThickSpice; });
 
-        return static_cast<TERRAINTILETYPE>(TerrainTile_ThickSpice + (((int)up) | (right << 1) | (down << 2) | (left << 3)));
-    } break;
+        return static_cast<TERRAINTILETYPE>(TerrainTile_ThickSpice + mask);
+    }
 
     case Terrain_SpiceBloom: {
         return TerrainTile_SpiceBloom;
@@ -1174,58 +1161,60 @@ Tile::TERRAINTILETYPE Tile::getTerrainTileImpl() const {
         return TerrainTile_SpecialBloom;
     } break;
 
-    default: {
+    default:
         THROW(std::runtime_error, "Tile::getTerrainTile(): Invalid terrain type");
-    } break;
     }
 }
 
 int Tile::getHideTile(int houseID) const {
 
-    //const auto x = currentGameMap->get_neighbor_mask(location.x, location.y, [houseID](Tile& t) { return t.isExplored(houseID); });
+    const auto x = location.x;
+    const auto y = location.y;
+
+    const auto map = currentGameMap;
 
     // are all surrounding tiles explored?
-    if (((currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isExplored(houseID) == true))
-        && ((currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isExplored(houseID) == true))
-        && ((currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isExplored(houseID) == true))
-        && ((currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isExplored(houseID) == true))) {
+
+    if (((map->tileExists(x, y - 1) == false) || (map->getTile(x, y - 1)->isExplored(houseID) == true))
+        && ((map->tileExists(x + 1, y) == false) || (map->getTile(x + 1, y)->isExplored(houseID) == true))
+        && ((map->tileExists(x, y + 1) == false) || (map->getTile(x, y + 1)->isExplored(houseID) == true))
+        && ((map->tileExists(x - 1, y) == false) || (map->getTile(x - 1, y)->isExplored(houseID) == true))) {
         return 0;
     }
 
     // determine what tiles are unexplored
-    bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isExplored(houseID) == false);
-    bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isExplored(houseID) == false);
-    bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isExplored(houseID) == false);
-    bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isExplored(houseID) == false);
+    bool up = (map->tileExists(x, y - 1) == false) || (map->getTile(x, y - 1)->isExplored(houseID) == false);
+    bool right = (map->tileExists(x + 1, y) == false) || (map->getTile(x + 1, y)->isExplored(houseID) == false);
+    bool down = (map->tileExists(x, y + 1) == false) || (map->getTile(x, y + 1)->isExplored(houseID) == false);
+    bool left = (map->tileExists(x - 1, y) == false) || (map->getTile(x - 1, y)->isExplored(houseID) == false);
 
     const auto ret = (((int)up) | (right << 1) | (down << 2) | (left << 3));
-
-    //assert(x == ret);
 
     return ret;
 }
 
 int Tile::getFogTile(int houseID) const {
 
-    //const auto x = currentGameMap->get_neighbor_mask(location.x, location.y, [houseID](Tile& t) { return !t.isFogged(houseID); });
+    const auto map = currentGameMap;
+
+    const int x = location.x;
+    const auto y = location.y;
 
     // are all surrounding tiles fogged?
-    if (((currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isFogged(houseID) == false))
-        && ((currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isFogged(houseID) == false))
-        && ((currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isFogged(houseID) == false))
-        && ((currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isFogged(houseID) == false))) {
+    if (((map->tileExists(x, y - 1) == false) || (map->getTile(x, y - 1)->isFogged(houseID) == false))
+        && ((map->tileExists(x + 1, y) == false) || (map->getTile(x + 1, y)->isFogged(houseID) == false))
+        && ((map->tileExists(x, y + 1) == false) || (map->getTile(x, y + 1)->isFogged(houseID) == false))
+        && ((map->tileExists(x - 1, y) == false) || (map->getTile(x - 1, y)->isFogged(houseID) == false))) {
         return 0;
     }
 
     // determine what tiles are fogged
-    bool up = (currentGameMap->tileExists(location.x, location.y - 1) == false) || (currentGameMap->getTile(location.x, location.y - 1)->isFogged(houseID) == true);
-    bool right = (currentGameMap->tileExists(location.x + 1, location.y) == false) || (currentGameMap->getTile(location.x + 1, location.y)->isFogged(houseID) == true);
-    bool down = (currentGameMap->tileExists(location.x, location.y + 1) == false) || (currentGameMap->getTile(location.x, location.y + 1)->isFogged(houseID) == true);
-    bool left = (currentGameMap->tileExists(location.x - 1, location.y) == false) || (currentGameMap->getTile(location.x - 1, location.y)->isFogged(houseID) == true);
+    bool up = (map->tileExists(x, y - 1) == false) || (map->getTile(x, y - 1)->isFogged(houseID) == true);
+    bool right = (map->tileExists(x + 1, y) == false) || (map->getTile(x + 1, y)->isFogged(houseID) == true);
+    bool down = (map->tileExists(x, y + 1) == false) || (map->getTile(x, y + 1)->isFogged(houseID) == true);
+    bool left = (map->tileExists(x - 1, y) == false) || (map->getTile(x - 1, y)->isFogged(houseID) == true);
 
     const auto ret = (((int)up) | (right << 1) | (down << 2) | (left << 3));
-
-    //assert(x == ret);
 
     return ret;
 }
