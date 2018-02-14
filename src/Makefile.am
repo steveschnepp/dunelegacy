@@ -70,11 +70,15 @@ dunelegacy_SOURCES =	AStarSearch.cpp\
 						misc/IFileStream.cpp\
 						misc/md5.cpp\
 						misc/OFileStream.cpp\
+						misc/Random.cpp\
+						misc/RngSupport.cpp\
+						misc/SDL_LogRenderer.cpp\
 						misc/sound_util.cpp\
 						misc/string_util.cpp\
 						misc/Scaler.cpp\
 						$(NULL)\
 						GUI/Button.cpp\
+						GUI/TextButton.cpp\
 						GUI/GUIStyle.cpp\
 						GUI/Widget.cpp\
 						GUI/Window.cpp\
