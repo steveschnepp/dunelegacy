@@ -693,7 +693,13 @@ int main(int argc, char *argv[]) {
 #else
             // g++ does not provide std::launch::async on all platforms
             pGFXManager = new GFXManager();
-            pSFXManager = new SFXManager();
+            try {
+                pSFXManager = new SFXManager();
+            } catch(const std::exception& e) {
+                pSFXManager = nullptr;
+                const auto message = fmt::sprintf("The sound manager was unable to initialize: '%s' was thrown:\n\n%s\n\nDune Legacy is unable to play sound!", demangleSymbol(typeid(e).name()), e.what());
+                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Dune Legacy: Warning", message.c_str(), nullptr);
+            }
 #endif
 
             GUIStyle::setGUIStyle(new DuneStyle);
