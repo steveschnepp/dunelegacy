@@ -23,6 +23,7 @@
 #include <DataTypes.h>
 
 #include <SDL2/SDL.h>
+#include <misc/sdl_support.h>
 
 
 /// This class manages the mini map at the top right corner of the screen
