@@ -30,7 +30,7 @@
 /**
     The command manager collects all the given user commands (e.g. move unit u to position (x,y)) . These commands might be transfered over a network.
 */
-class CommandManager {
+class CommandManager final {
 public:
 
     /**
@@ -38,21 +38,26 @@ public:
     */
     CommandManager();
 
+    CommandManager(CommandManager&&) = delete;
+    CommandManager(const CommandManager&) = delete;
+    CommandManager& operator=(const CommandManager &) = delete;
+    CommandManager& operator=(CommandManager &&) = delete;
+
     /// destructor
-    virtual ~CommandManager();
+    ~CommandManager();
 
     /**
         This method sets a stream where all commands are written when they are added to the command manager. This can be used for
         logging the complete game and enable a replay afterwards.
         \param  pStream     pointer to a stream all new commands will be written to (the stream must be created with new). nullptr for disabling. pStream is deleted with delete if this command manager is destroyed.
     */
-    void setStream(OutputStream* pStream) noexcept { this->pStream = pStream; }
+    void setStream(std::unique_ptr<OutputStream> pStream) noexcept { this->pStream = std::move(pStream); }
 
     /**
         Get the stream used for recording new commands (see setStream).
         \return the set stream or nullptr if none is set
     */
-    OutputStream* getStream() const noexcept { return pStream; }
+    OutputStream* getStream() const noexcept { return pStream.get(); }
 
     /**
         If bReadOnly == true it is impossible to add new commands to this command manager. This is useful for replays.
@@ -119,9 +124,9 @@ public:
 
 private:
     std::vector< std::vector<Command> > timeslot;   ///< a vector of vectors containing the scheduled commands. At index x is a list of all commands scheduled for game cycle x.
-    OutputStream* pStream;                          ///< a stream all added commands will be written to. May be nullptr
-    bool bReadOnly;                                 ///< true = addCommand() is a NO-OP, false = addCommand() has normal behaviour
-    Uint32 networkCycleBuffer;                      ///< the number of frames a command is given in advance
+    std::unique_ptr<OutputStream> pStream;          ///< a stream all added commands will be written to. May be nullptr
+    bool bReadOnly = false;                         ///< true = addCommand() is a NO-OP, false = addCommand() has normal behaviour
+    Uint32 networkCycleBuffer = 0;                  ///< the number of frames a command is given in advance
 };
 
 #endif // COMMANDMANAGER_H

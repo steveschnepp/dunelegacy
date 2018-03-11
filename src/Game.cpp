@@ -1084,7 +1084,7 @@ void Game::runMainLoop() {
             pStream->flush();
 
             // now all new commands might be added
-            cmdManager.setStream(pStream.release());
+            cmdManager.setStream(std::move(pStream));
         }
         else
         {
