@@ -1275,12 +1275,11 @@ void Game::runMainLoop() {
         fnkdat(std::string("replay/" + mapnameBase + ".rpl").c_str(), tmp, FILENAME_MAX, FNKDAT_USER | FNKDAT_CREAT);
         std::string replayname(tmp);
 
-        OFileStream* pStream = new OFileStream();
-        pStream->open(replayname);
-        pStream->writeString(getLocalPlayerName());
-        gameInitSettings.save(*pStream);
-        cmdManager.save(*pStream);
-        delete pStream;
+        OFileStream stream;
+        stream.open(replayname);
+        stream.writeString(getLocalPlayerName());
+        gameInitSettings.save(stream);
+        cmdManager.save(stream);
     }
 
     if(pNetworkManager != nullptr) {
