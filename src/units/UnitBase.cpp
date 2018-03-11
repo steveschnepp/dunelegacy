@@ -196,13 +196,13 @@ void UnitBase::attack() {
             bAirBullet = false;
         }
 
-        int currentBulletType = bulletType;
-        Sint32 currentWeaponDamage = currentGame->objectData.data[itemID][originalHouseID].weapondamage;
+        auto currentBulletType = bulletType;
+        auto currentWeaponDamage = currentGame->objectData.data[itemID][originalHouseID].weapondamage;
 
         if(getItemID() == Unit_Trooper && !bAirBullet) {
             // Troopers change weapon type depending on distance
 
-            FixPoint distance = distanceFrom(centerPoint, targetCenterPoint);
+            const auto distance = distanceFrom(centerPoint, targetCenterPoint);
             if(distance <= 2*TILESIZE) {
                 currentBulletType = Bullet_ShellSmall;
                 currentWeaponDamage--;
@@ -258,12 +258,12 @@ void UnitBase::attack() {
 }
 
 void UnitBase::blitToScreen() {
-    int x = screenborder->world2screenX(realX);
-    int y = screenborder->world2screenY(realY);
+    const auto x = screenborder->world2screenX(realX);
+    const auto y = screenborder->world2screenY(realY);
 
-    SDL_Texture* pUnitGraphic = graphic[currentZoomlevel];
-    SDL_Rect source = calcSpriteSourceRect(pUnitGraphic, drawnAngle, numImagesX, drawnFrame, numImagesY);
-    SDL_Rect dest = calcSpriteDrawingRect( pUnitGraphic, x, y, numImagesX, numImagesY, HAlign::Center, VAlign::Center);
+    const auto pUnitGraphic = graphic[currentZoomlevel];
+    const auto source = calcSpriteSourceRect(pUnitGraphic, drawnAngle, numImagesX, drawnFrame, numImagesY);
+    const auto dest = calcSpriteDrawingRect( pUnitGraphic, x, y, numImagesX, numImagesY, HAlign::Center, VAlign::Center);
 
     SDL_RenderCopy(renderer, pUnitGraphic, &source, &dest);
 
