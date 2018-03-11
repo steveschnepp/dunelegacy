@@ -214,7 +214,7 @@ void UnitBase::attack() {
         }
 
         if(primaryWeaponTimer == 0) {
-            bulletList.push_back( new Bullet( objectID, &centerPoint, &targetCenterPoint, currentBulletType, currentWeaponDamage, bAirBullet) );
+            currentGameMap->add_bullet(objectID, &centerPoint, &targetCenterPoint, currentBulletType, currentWeaponDamage, bAirBullet);
             if(pObject != nullptr) {
                 currentGameMap->viewMap(pObject->getOwner()->getTeam(), location, 2);
             }
@@ -236,7 +236,7 @@ void UnitBase::attack() {
         }
 
         if((numWeapons == 2) && (secondaryWeaponTimer == 0) && (isBadlyDamaged() == false)) {
-            bulletList.push_back( new Bullet( objectID, &centerPoint, &targetCenterPoint, currentBulletType, currentWeaponDamage, bAirBullet) );
+            currentGameMap->add_bullet(objectID, &centerPoint, &targetCenterPoint, currentBulletType, currentWeaponDamage, bAirBullet);
             if(pObject != nullptr) {
                 currentGameMap->viewMap(pObject->getOwner()->getTeam(), location, 2);
             }

@@ -162,9 +162,9 @@ void TurretBase::attack() {
         ObjectBase* pObject = target.getObjPointer();
         Coord targetCenterPoint = pObject->getClosestCenterPoint(location);
 
-        bulletList.push_back( new Bullet( objectID, &centerPoint, &targetCenterPoint,bulletType,
+        currentGameMap->add_bullet(objectID, &centerPoint, &targetCenterPoint,bulletType,
                                                currentGame->objectData.data[itemID][originalHouseID].weapondamage,
-                                               pObject->isAFlyingUnit() ) );
+                                               pObject->isAFlyingUnit() );
 
         currentGameMap->viewMap(pObject->getOwner()->getTeam(), location, 2);
         soundPlayer->playSoundAt(attackSound, location);

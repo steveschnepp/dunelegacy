@@ -148,7 +148,7 @@ void Palace::doLaunchDeathhand(int x, int y) {
     Coord dest( x * TILESIZE + TILESIZE/2 + deathOffX,
                 y * TILESIZE + TILESIZE/2 + deathOffY);
 
-    bulletList.push_back(new Bullet(objectID, &centerPoint, &dest, Bullet_LargeRocket, PALACE_DEATHHAND_WEAPONDAMAGE, false));
+    currentGameMap->add_bullet(objectID, &centerPoint, &dest, Bullet_LargeRocket, PALACE_DEATHHAND_WEAPONDAMAGE, false);
     soundPlayer->playSoundAt(Sound_Rocket, getLocation());
 
     if(getOwner() != pLocalHouse) {
