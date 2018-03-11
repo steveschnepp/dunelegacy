@@ -2257,6 +2257,15 @@ bool Game::handlePlacementClick(int xPos, int yPos) {
         pBuilder = dynamic_cast<BuilderBase*>(objectManager.getObject(*selectedList.begin()));
     }
 
+    const auto placeItem = pBuilder->getCurrentProducedItem();
+    if (placeItem == ItemID_Invalid) {
+        // We lost a race with another team member
+        currentGame->addToNewsTicker(_("There is no item to place."));
+        soundPlayer->playSound(Sound_InvalidAction);    //can't place noise
+        currentCursorMode = CursorMode_Normal;
+        return true;
+    }
+
     int placeItem = pBuilder->getCurrentProducedItem();
     Coord structuresize = getStructureSize(placeItem);
 
