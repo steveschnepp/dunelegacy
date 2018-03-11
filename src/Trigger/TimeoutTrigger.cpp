@@ -32,11 +32,6 @@ TimeoutTrigger::TimeoutTrigger(InputStream& stream) : Trigger(stream)
 
 TimeoutTrigger::~TimeoutTrigger() = default;
 
-void TimeoutTrigger::save(OutputStream& stream)
-{
-    Trigger::save(stream);
-}
-
 void TimeoutTrigger::trigger()
 {
     if((currentGame->loseFlags & WINLOSEFLAGS_TIMEOUT) != 0) {
