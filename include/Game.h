@@ -606,10 +606,10 @@ private:
     Uint32  finishedLevelTime = 0;              ///< The time in milliseconds when the level was finished (won or lost)
     bool    finishedLevel = false;              ///< Set, when the game is really finished and the end message was shown
 
-    GameInterface*          pInterface = nullptr;                   ///< This is the whole interface (top bar and side bar)
-    InGameMenu*             pInGameMenu = nullptr;                  ///< This is the menu that is opened by the option button
-    MentatHelp*             pInGameMentat = nullptr;                ///< This is the mentat dialog opened by the mentat button
-    WaitingForOtherPlayers* pWaitingForOtherPlayers = nullptr;      ///< This is the dialog that pops up when we are waiting for other players during network hangs
+    std::unique_ptr<GameInterface> pInterface;              ///< This is the whole interface (top bar and side bar)
+    std::unique_ptr<InGameMenu> pInGameMenu;                ///< This is the menu that is opened by the option button
+    std::unique_ptr<MentatHelp>    pInGameMentat;           ///< This is the mentat dialog opened by the mentat button
+    std::unique_ptr<WaitingForOtherPlayers> pWaitingForOtherPlayers;      ///< This is the dialog that pops up when we are waiting for other players during network hangs
     Uint32                  startWaitingForOtherPlayersTime = 0;    ///< The time in milliseconds when we started waiting for other players
 
     bool    bSelectionChanged = false;                      ///< Has the selected list changed (and must be retransmitted to other plays in multiplayer games)

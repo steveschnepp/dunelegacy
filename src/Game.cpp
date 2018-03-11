@@ -104,13 +104,10 @@ Game::~Game() {
         pNetworkManager->setOnPeerDisconnected(std::function<void (const std::string&, bool, int)>());
     }
 
-    delete pInGameMenu;
     pInGameMenu = nullptr;
 
-    delete pInterface;
     pInterface = nullptr;
 
-    delete pWaitingForOtherPlayers;
     pWaitingForOtherPlayers = nullptr;
 
     for(auto pStructure : structureList) {
@@ -580,27 +577,26 @@ void Game::doInput()
             drawnMouseY = std::max(0, std::min(mouse->y, settings.video.height-1));
         }
 
-        if(pInGameMenu != nullptr) {
+        if (pInGameMenu != nullptr) {
             pInGameMenu->handleInput(event);
 
-            if(bMenu == false) {
-                delete pInGameMenu;
+            if (bMenu == false) {
                 pInGameMenu = nullptr;
             }
 
-        } else if(pInGameMentat != nullptr) {
+        }
+        else if (pInGameMentat != nullptr) {
             pInGameMentat->doInput(event);
 
-            if(bMenu == false) {
-                delete pInGameMentat;
+            if (bMenu == false) {
                 pInGameMentat = nullptr;
             }
 
-        } else if(pWaitingForOtherPlayers != nullptr) {
+        }
+        else if (pWaitingForOtherPlayers != nullptr) {
             pWaitingForOtherPlayers->handleInput(event);
 
-            if(bMenu == false) {
-                delete pWaitingForOtherPlayers;
+            if (bMenu == false) {
                 pWaitingForOtherPlayers = nullptr;
             }
 
@@ -1040,9 +1036,9 @@ void Game::runMainLoop() {
     SDL_Log("Starting game...");
 
     // add interface
-    if(pInterface == nullptr) {
-        pInterface = new GameInterface();
-        if(gameState == GameState::Loading) {
+    if (pInterface == nullptr) {
+        pInterface = std::make_unique<GameInterface>();
+        if (gameState == GameState::Loading) {
             // when loading a save game we set radar directly
             pInterface->getRadarView().setRadarMode(pLocalHouse->hasRadarOn());
         } else if(pLocalHouse->hasRadarOn()) {
@@ -1191,8 +1187,8 @@ void Game::runMainLoop() {
                         if(SDL_GetTicks() - startWaitingForOtherPlayersTime > 1000) {
                             // we waited for more than one second
 
-                            if(pWaitingForOtherPlayers == nullptr) {
-                                pWaitingForOtherPlayers = new WaitingForOtherPlayers();
+                            if (pWaitingForOtherPlayers == nullptr) {
+                                pWaitingForOtherPlayers = std::make_unique<WaitingForOtherPlayers>();
                                 bMenu = true;
                             }
                         }
@@ -1201,7 +1197,6 @@ void Game::runMainLoop() {
                     SDL_Delay(10);
                 } else {
                     startWaitingForOtherPlayersTime = 0;
-                    delete pWaitingForOtherPlayers;
                     pWaitingForOtherPlayers = nullptr;
                 }
             }
@@ -1315,9 +1310,10 @@ void Game::onOptions()
     if(bReplay == true) {
         // don't show menu
         quitGame();
-    } else {
-        Uint32 color = SDL2RGB(palette[houseToPaletteIndex[pLocalHouse->getHouseID()] + 3]);
-        pInGameMenu = new InGameMenu((gameType == GameType::CustomMultiplayer), color);
+    }
+    else {
+        const auto color = SDL2RGB(palette[houseToPaletteIndex[pLocalHouse->getHouseID()] + 3]);
+        pInGameMenu = std::make_unique<InGameMenu>((gameType == GameType::CustomMultiplayer), color);
         bMenu = true;
         pauseGame();
     }
@@ -1326,7 +1322,7 @@ void Game::onOptions()
 
 void Game::onMentat()
 {
-    pInGameMentat = new MentatHelp(pLocalHouse->getHouseID(), techLevel, gameInitSettings.getMission());
+    pInGameMentat = std::make_unique<MentatHelp>(pLocalHouse->getHouseID(), techLevel, gameInitSettings.getMission());
     bMenu = true;
     pauseGame();
 }
