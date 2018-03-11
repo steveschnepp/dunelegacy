@@ -70,9 +70,7 @@ void INIMapLoader::loadMap() {
     const auto timeout = inifile->getIntValue("BASIC","TIMEOUT",0);
 
     if((timeout != 0) && ((pGame->winFlags & WINLOSEFLAGS_TIMEOUT) != 0)) {
-        const auto newTrigger = std::static_pointer_cast<Trigger>(
-            std::make_shared<TimeoutTrigger>(MILLI2CYCLES(timeout * 60 * 1000)));
-        pGame->getTriggerManager().addTrigger(newTrigger);
+        pGame->getTriggerManager().addTrigger(std::make_unique<TimeoutTrigger>(MILLI2CYCLES(timeout * 60 * 1000)));
     }
 
     if(version < 2) {
@@ -816,9 +814,7 @@ void INIMapLoader::loadReinforcements()
 
             if(bInserted == false) {
                 getOrCreateHouse(houseID);  // create house if not yet available
-                const auto newTrigger = std::static_pointer_cast<Trigger>(
-                    std::make_shared<ReinforcementTrigger>(houseID, itemID, dropLocation, bRepeat, dropCycle));
-                pGame->getTriggerManager().addTrigger(newTrigger);
+                pGame->getTriggerManager().addTrigger(std::make_unique<ReinforcementTrigger>(houseID, itemID, dropLocation, bRepeat, dropCycle));
             }
         }
     }

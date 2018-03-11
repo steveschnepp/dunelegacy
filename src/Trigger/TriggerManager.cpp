@@ -25,68 +25,93 @@ TriggerManager::TriggerManager() = default;
 
 TriggerManager::~TriggerManager() = default;
 
-void TriggerManager::save(OutputStream& stream) const {
+void TriggerManager::save(OutputStream& stream) const
+{
     stream.writeUint32(triggers.size());
-    for(const std::shared_ptr<Trigger>& pTrigger : triggers) {
-        saveTrigger(stream, pTrigger);
+    for (const auto& pTrigger : triggers)
+    {
+        saveTrigger(stream, pTrigger.get());
     }
 }
 
-void TriggerManager::load(InputStream& stream) {
-    Uint32 numTriggers = stream.readUint32();
+void TriggerManager::load(InputStream& stream)
+{
+    const auto numTriggers = stream.readUint32();
 
-    for(Uint32 i=0;i<numTriggers;i++) {
+    for (auto i = 0u; i < numTriggers; i++)
+    {
         triggers.push_back(loadTrigger(stream));
     }
 }
 
 void TriggerManager::trigger(Uint32 CycleNumber)
 {
-    while((triggers.empty() == false) && (triggers.front()->getCycleNumber() == CycleNumber)) {
-        std::shared_ptr<Trigger> pCurrentTrigger = triggers.front();
-        triggers.pop_front();
-        pCurrentTrigger->trigger();
-    }
-}
+    if (triggers.empty()) return;
 
-void TriggerManager::addTrigger(std::shared_ptr<Trigger> newTrigger)
-{
-    for(auto iter = triggers.begin(); iter != triggers.end(); ++iter) {
-        if((*iter)->getCycleNumber() > newTrigger->getCycleNumber()) {
-            triggers.insert(iter, newTrigger);
-            return;
+    auto clear = true;
+
+    for (auto it = std::begin(triggers); it != std::end(triggers); ++it)
+    {
+        if ((*it)->getCycleNumber() != CycleNumber)
+        {
+            if (it != std::begin(triggers))
+                triggers.erase(std::begin(triggers), it);
+
+            clear = false;
+
+            break;
         }
+
+        active_trigger.push_back(std::move(*it));
     }
 
-    triggers.push_back(newTrigger);
+    if (clear)
+        triggers.clear();
+
+    for (auto& t : active_trigger)
+        t->trigger();
+
+    active_trigger.clear();
 }
 
-void TriggerManager::saveTrigger(OutputStream& stream, const std::shared_ptr<Trigger>& t) const
+void TriggerManager::addTrigger(std::unique_ptr<Trigger> newTrigger)
 {
-    if(dynamic_cast<ReinforcementTrigger*>(t.get())) {
-        stream.writeUint32(TriggerManager::Type_ReinforcementTrigger);
+    const auto it = std::lower_bound(std::begin(triggers), std::end(triggers), newTrigger,
+        [](const std::unique_ptr<Trigger>& lhs, const std::unique_ptr<Trigger>& rhs)
+        {
+            return lhs->getCycleNumber() < rhs->getCycleNumber();
+        });
+
+    triggers.insert(it, std::move(newTrigger));
+}
+
+void TriggerManager::saveTrigger(OutputStream& stream, const Trigger* t)
+{
+    if (dynamic_cast<const ReinforcementTrigger*>(t))
+    {
+        stream.writeUint32(Type_ReinforcementTrigger);
         t->save(stream);
-    } else if(dynamic_cast<TimeoutTrigger*>(t.get())) {
-        stream.writeUint32(TriggerManager::Type_TimeoutTrigger);
+    }
+    else if (dynamic_cast<const TimeoutTrigger*>(t))
+    {
+        stream.writeUint32(Type_TimeoutTrigger);
         t->save(stream);
     }
 }
 
-std::shared_ptr<Trigger> TriggerManager::loadTrigger(InputStream& stream)
+std::unique_ptr<Trigger> TriggerManager::loadTrigger(InputStream& stream) const
 {
-    Uint32 type = stream.readUint32();
+    const auto type = stream.readUint32();
 
-    switch(type) {
-        case TriggerManager::Type_ReinforcementTrigger: {
-            return std::shared_ptr<Trigger>(new ReinforcementTrigger(stream));
-        } break;
+    switch (type)
+    {
+    case Type_ReinforcementTrigger:
+        return std::make_unique<ReinforcementTrigger>(stream);
 
-        case TriggerManager::Type_TimeoutTrigger: {
-            return std::shared_ptr<Trigger>(new TimeoutTrigger(stream));
-        } break;
+    case Type_TimeoutTrigger:
+        return std::make_unique<TimeoutTrigger>(stream);
 
-        default: {
-            THROW(std::runtime_error, "TriggerManager::loadTrigger(): Unknown trigger type!");
-        }
+    default:
+        THROW(std::runtime_error, "TriggerManager::loadTrigger(): Unknown trigger type!");
     }
 }
