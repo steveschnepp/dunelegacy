@@ -42,7 +42,7 @@
 #include <misc/Scaler.h>
 #include <misc/string_util.h>
 #include <misc/exceptions.h>
-#include <misc/format.h>
+#include <fmt/printf.h>
 
 #include <SoundPlayer.h>
 

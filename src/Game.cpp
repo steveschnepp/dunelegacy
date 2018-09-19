@@ -36,7 +36,7 @@
 #include <misc/draw_util.h>
 #include <misc/md5.h>
 #include <misc/exceptions.h>
-#include <misc/format.h>
+#include <fmt/printf.h>
 
 #include <players/HumanPlayer.h>
 

@@ -30,7 +30,7 @@
 #include <misc/fnkdat.h>
 #include <misc/FileSystem.h>
 #include <misc/draw_util.h>
-#include <misc/format.h>
+#include <fmt/printf.h>
 
 #include <INIMap/INIMapPreviewCreator.h>
 
